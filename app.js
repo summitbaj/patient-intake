@@ -17,6 +17,29 @@ const patientDirectory=[
   {id:'grace',name:'Grace Liu',mrn:'PT-12093',dob:'09/18/1972',documents:[recordDocument('grace-referral','Referral.pdf','Referral','file-text','Oct 9, 2026'),recordDocument('grace-sleep','Sleep Study.pdf','Sleep study','file-chart-column','Oct 9, 2026')]}
 ];
 const documents = [];
+const icdCodes=[
+  {code:'G47.33',description:'Obstructive sleep apnea (adult)',primary:true},
+  {code:'E66.9',description:'Obesity, unspecified'},
+  {code:'I10',description:'Essential (primary) hypertension'}
+];
+const coveragePolicies=[
+  {id:'L33718',name:'Positive Airway Pressure (PAP) Devices for the Treatment of Obstructive Sleep Apnea'},
+  {id:'L33800',name:'Respiratory Assist Devices'},
+  {id:'L33797',name:'Oxygen and Oxygen Equipment'}
+];
+const hcpcsCodes=[
+  {code:'E0601',description:'Continuous positive airway pressure (CPAP) device',quantity:1,policy:'',open:true,required:true},
+  {code:'E0562',description:'Humidifier, heated, used with PAP device',quantity:1,policy:'L33718',ai:true},
+  {code:'A7030',description:'Full face mask used with PAP device',quantity:1,policy:'L33718',ai:true},
+  {code:'A7037',description:'Tubing used with PAP device',quantity:1,policy:'L33718',ai:true}
+];
+const requiredDocuments=[
+  {id:'prescription',name:'Standard written order (SWO)'},
+  {id:'face-to-face',name:'Face-to-face clinical evaluation'},
+  {id:'sleep-study',name:'Sleep study (PSG or HST) report'},
+  {id:'aob',name:'Assignment of benefits (AOB)'},
+  {id:'abn',name:'Advance beneficiary notice (ABN)'}
+];
 const existingFiles=[
   {id:'existing-insurance',name:'Insurance Card · Sep 2025.pdf',meta:'Extracted previously',icon:'badge-check',extracted:true,used:false},
   {id:'existing-consent',name:'Consent Form.pdf',meta:'Extracted previously',icon:'file-signature',extracted:true,used:true},
@@ -46,12 +69,18 @@ const documentImages={
   'existing-insurance':'assets/insurance.svg','existing-consent':'assets/consent.svg','existing-sleep':'assets/sleep-study.svg'
 };
 
+const serviceTypes=[
+  {id:'Clinical Services',icon:'stethoscope',description:'Office visits and clinical care'},
+  {id:'DME',icon:'package',description:'Durable medical equipment and supplies'},
+  {id:'Immunization',icon:'syringe',description:'Vaccines and administration'},
+  {id:'Counselling',icon:'messages-square',description:'Behavioral and therapy sessions'}
+];
 const insurancePlans=[
-  {name:'Medicare Part B',rank:'Primary coverage',eligibility:'Active through 12/30/2027',fields:[['Insurance type','Medicare'],['Health insurance company','Medicare Health Care Plan'],['Relationship to insured','Self'],['Member ID prefix','X'],['Member ID','BCB731045298'],['Member ID suffix','03'],['Group number','Not provided'],['Effective from','12/31/2022'],['Effective to','12/30/2027']]},
-  {name:'Aetna Choice POS II',rank:'Secondary coverage',eligibility:'Active through 03/14/2026',fields:[['Insurance type','Commercial PPO'],['Health insurance company','Aetna'],['Relationship to insured','Self'],['Member ID prefix','Z'],['Member ID','AET529187463'],['Member ID suffix','07'],['Group number','GRP-258914'],['Effective from','03/15/2025'],['Effective to','03/14/2026']]}
+  {name:'Medicare Part B',systemRank:'Secondary',eligibility:'Active through 12/30/2027',check:{service:'DME',at:'today at 9:42 AM'},results:{'Clinical Services':{eligible:true,detail:'20% coinsurance after Part B deductible'},DME:{eligible:true,detail:'20% coinsurance after Part B deductible'},Immunization:{eligible:true,detail:'Covered at 100% for flu, pneumococcal, and COVID-19'},Counselling:{eligible:false,detail:'Requires a Medicare-enrolled behavioral health provider'}},fields:[['Insurance type','Medicare'],['Health insurance company','Medicare Health Care Plan'],['Relationship to insured','Self'],['Member ID prefix','X'],['Member ID','BCB731045298'],['Member ID suffix','03'],['Group number','Not provided'],['Effective from','12/31/2022'],['Effective to','12/30/2027']]},
+  {name:'Aetna Choice POS II',systemRank:'Primary',eligibility:'Active through 03/14/2027',check:{service:'DME',at:'today at 9:42 AM'},results:{'Clinical Services':{eligible:true,detail:'$30 copay per visit'},DME:{eligible:true,detail:'20% coinsurance · prior authorization on file'},Immunization:{eligible:true,detail:'Covered at 100% in network'},Counselling:{eligible:true,detail:'$30 copay per session'}},fields:[['Insurance type','Commercial PPO'],['Health insurance company','Aetna'],['Relationship to insured','Self'],['Member ID prefix','Z'],['Member ID','AET529187463'],['Member ID suffix','07'],['Group number','GRP-258914'],['Effective from','03/15/2025'],['Effective to','03/14/2027']]}
 ];
 
-const state = { selected:'', pickerPatient:'', pickerSelection:new Set(), viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:false, provider:false, product:false, patientLinked:false, completed:false };
+const state = { serviceType:'DME', checkingEligibility:false, checkingPlan:false, editingPlan:false, currentPlan:0, physicianName:false, signature:false, authAck:false, selected:'', pickerPatient:'', pickerSelection:new Set(), viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:false, provider:false, product:false, patientLinked:false, completed:false };
 const postIntakeRecommendation={
   patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Start pre-check',reason:'Confirm payer qualification, coverage, and required documentation before creating the new equipment order.',alternatives:['Create order without pre-check'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'}],note:'Final coverage and item eligibility remain subject to payer review.'
 };
@@ -105,8 +134,15 @@ function renderExtractionIssues(){
   icons();
 }
 
+function syncFooter(){
+  const phase=state.completed?'':state.phase;
+  $('#pageFooter').hidden=phase!=='upload'&&phase!=='review';
+  $$('[data-footer-phase]').forEach(group=>{group.hidden=group.dataset.footerPhase!==phase;});
+}
+
 function setPhase(phase){
   state.phase=phase;
+  if(phase==='review')renderRequiredDocuments();
   const workspace=$('#workspace');
   const body=document.body;
 
@@ -115,7 +151,7 @@ function setPhase(phase){
 
   workspace.classList.add(`phase-${phase}`);
   body.classList.add(`phase-${phase}`);
-  $('#pageFooter').hidden=phase!=='upload';
+  syncFooter();
   if(phase==='upload'){
     workspace.classList.add('intake-empty');
     body.classList.add('intake-empty');
@@ -174,6 +210,7 @@ function showPostIntake(){
   $('#completeIntake').innerHTML='<i data-lucide="check"></i> Intake completed';
   $('#completeIntake').disabled=true;
   $('#reviewTrigger').disabled=true;
+  syncFooter();
   renderPostIntake();
   $('#postIntake').scrollIntoView({block:'start'});
 }
@@ -183,6 +220,7 @@ function returnToIntakeReview(){
   $('.review-area').classList.remove('show-post-intake');
   $('#postIntake').hidden=true;
   $('#reviewTrigger').disabled=false;
+  syncFooter();
   updateProgress();
   $('.review-intro').scrollIntoView({block:'start'});
 }
@@ -342,47 +380,123 @@ function openDocument(id){
   requestAnimationFrame(()=>preview.classList.add('source-changed'));
 }
 
-function renderInsurance(index=0){
-  const plan=insurancePlans[index];
-  $$('.plan-item').forEach((button,buttonIndex)=>button.classList.toggle('active',buttonIndex===index));
-  $('#planName').textContent=plan.name;
-  $('#planRank').textContent=plan.rank;
-  $('#eligibilityText').textContent=plan.eligibility;
-  $('#insuranceFields').innerHTML=plan.fields.map(([label,value])=>`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
-  enableInlineEditing();
+const planRank=index=>index===0?'Primary':index===1?'Secondary':'Tertiary';
+const planResult=plan=>plan.check?plan.results[plan.check.service]:null;
+function renderPlanList(){
+  $('#planList').innerHTML=insurancePlans.map((plan,index)=>{const result=planResult(plan),current=plan.check?.service===state.serviceType;return `<button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}"><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="pill rank">${planRank(index)}</span><span class="pill ${plan.systemRank===planRank(index)?'neutral':'warning'}">System: ${plan.systemRank}</span>${current&&result?`<span class="pill ${result.eligible?'success':'danger'}">${result.eligible?'Eligible':'Not covered'}</span>`:'<span class="pill neutral">Not checked</span>'}</span></span><i data-lucide="chevron-right"></i></button>`;}).join('');
+  const mismatch=insurancePlans.some((plan,index)=>plan.systemRank!==planRank(index));
+  $('#orderNotice').hidden=!mismatch;
+  $('#orderNotice').innerHTML=mismatch?'<i data-lucide="arrow-down-up"></i><span><b>Order differs from system</b>The system lists Aetna as primary. Documents show Medicare Part B as primary.</span><button class="text-btn" data-swap-order>Swap order</button>':'';
 }
 
-function issueCount(){ return [state.mobile,state.provider,state.product].filter(value=>!value).length; }
+function servicePill(plan){
+  const type=serviceTypes.find(item=>item.id===state.serviceType),result=planResult(plan),current=plan.check?.service===state.serviceType;
+  if(!current)return `<span class="pill neutral" title="Not checked for ${type.id} yet"><i data-lucide="${type.icon}"></i> ${type.id} · Not checked</span>`;
+  return `<span class="pill ${result.eligible?'info':'danger'}" title="${result.detail} · checked ${plan.check.at}"><i data-lucide="${type.icon}"></i> ${type.id} · ${result.eligible?'Eligible':'Not covered'}</span>`;
+}
+
+function renderInsurance(index=state.currentPlan){
+  if(index!==state.currentPlan)state.editingPlan=false;
+  state.currentPlan=index;
+  const plan=insurancePlans[index],result=planResult(plan);
+  renderPlanList();
+  $('#planName').textContent=plan.name;
+  $('#planPills').innerHTML=`<span class="pill success"><i data-lucide="circle-check"></i> Active</span>${servicePill(plan)}<span class="pill rank">${planRank(index)} coverage</span><span class="pill ${plan.systemRank===planRank(index)?'neutral':'warning'}">System: ${plan.systemRank}</span><span class="plan-dates">${plan.eligibility}</span>`;
+  $('#planActions').innerHTML=state.editingPlan?'<button class="small-btn" data-plan-cancel>Cancel</button><button class="small-btn primary" data-plan-save>Save</button>':`<button class="small-btn" data-plan-edit><i data-lucide="pencil"></i> Edit</button><button class="small-btn" data-plan-check ${state.checkingPlan?'disabled':''}>${state.checkingPlan?'<span class="spinner"></span> Checking…':`<i data-lucide="refresh-cw"></i> Check ${state.serviceType}`}</button>`;
+  $('#insuranceFields').classList.toggle('editing',state.editingPlan);
+  $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>state.editingPlan?`<label><span>${label}</span><input class="input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value}" placeholder="Not provided"></label>`:`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
+  renderEligibility();
+}
+
+function renderEligibility(){
+  const type=serviceTypes.find(item=>item.id===state.serviceType);
+  $('#serviceTriggerText').textContent=type.id;
+  $('#serviceTrigger').querySelector('[data-lucide]:first-child')?.setAttribute('data-lucide',type.icon);
+  const allChecked=insurancePlans.every(plan=>plan.check?.service===state.serviceType);
+  const button=$('#checkEligibility');
+  button.disabled=allChecked||state.checkingEligibility;
+  button.classList.toggle('primary',!allChecked&&!state.checkingEligibility);
+  button.innerHTML=state.checkingEligibility?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check all plans';
+  $('#eligibilityMeta').textContent=state.checkingEligibility?`Checking ${type.id} eligibility for all plans…`:allChecked?`All plans checked for ${type.id} · ${insurancePlans[0].check.at}`:`Not checked for ${type.id} on every plan · check all plans or one plan at a time`;
+  icons();
+}
+
+async function checkEligibility(){
+  state.checkingEligibility=true;renderEligibility();
+  await wait(900);
+  state.checkingEligibility=false;
+  insurancePlans.forEach(plan=>{plan.check={service:state.serviceType,at:'just now'};});
+  renderInsurance();
+  const covered=insurancePlans.filter(plan=>planResult(plan).eligible).length;
+  toast(`${state.serviceType} eligibility checked · ${covered} of ${insurancePlans.length} plans eligible`);
+}
+
+async function checkPlanEligibility(){
+  const plan=insurancePlans[state.currentPlan];
+  state.checkingPlan=true;renderInsurance();
+  await wait(900);
+  state.checkingPlan=false;plan.check={service:state.serviceType,at:'just now'};
+  renderInsurance();
+  toast(`${plan.name}: ${planResult(plan).eligible?'eligible':'not covered'} for ${state.serviceType}`);
+}
+
+function renderServiceMenu(){
+  $('#serviceMenu').innerHTML=serviceTypes.map(type=>`<button class="service-option ${type.id===state.serviceType?'selected':''}" role="option" aria-selected="${type.id===state.serviceType}" data-service-type="${type.id}"><i data-lucide="${type.icon}"></i><span><strong>${type.id}</strong><small>${type.description}</small></span>${type.id===state.serviceType?'<i class="service-check" data-lucide="check"></i>':''}</button>`).join('');
+  icons();
+}
+
+function issueCount(){ return [state.mobile,state.provider,state.product,state.physicianName,state.signature,state.authAck].filter(value=>!value).length; }
 function reviewItems(){
   return [
-    !state.mobile&&{id:'mobileField',label:'Mobile phone',detail:'Digits look blurry',section:'Patient details',severity:'warning'},
-    !state.provider&&{id:'providerField',label:'Provider name',detail:'Not found in any document',section:'Prescription',severity:'missing'},
-    !state.product&&{id:'productField',label:'Product selection',detail:'No specific model found',section:'Prescription',severity:'missing'}
+    !state.mobile&&{id:'mobileField',label:'Mobile phone number',detail:'Digits look blurry',section:'Contact information',severity:'warning'},
+    !state.provider&&{id:'providerField',label:'Physician NPI',detail:'Not found in any document',section:'Prescription',severity:'missing'},
+    !state.physicianName&&{id:'physicianConflict',label:'Physician last name',detail:'Kim and Kimm found in different documents',section:'Prescription',severity:'warning',icon:'git-compare-arrows',tag:'Conflict'},
+    !state.product&&{id:'productField',label:'Medicare coverage for E0601',detail:'Choose the policy that applies',section:'Prescription',severity:'missing',tag:'Select'},
+    !state.signature&&{id:'signatureField',label:'Physician signature',detail:'Not found on the face-to-face note',section:'Physician note',severity:'missing',icon:'pen-line'},
+    !state.authAck&&{id:'authExpiry',label:'Prior authorization period',detail:'Ends 7 months before the rental',section:'Prior authorization',severity:'warning',icon:'calendar-clock',tag:'Expiring'}
   ].filter(Boolean);
 }
 
 function renderReviewMenu(){
-  const items=reviewItems(),trigger=$('#reviewTriggerText');
-  trigger.textContent=items.length?`${items.length} ${items.length===1?'thing':'things'} to review`:'No things to review';
-  $('#reviewItems').innerHTML=items.length?items.map(item=>`<button class="review-item" data-review-target="${item.id}"><span class="review-dot ${item.severity}"></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span><span class="review-section">${item.section}</span></button>`).join(''):'<div class="review-empty"><i data-lucide="circle-check"></i><span>All required information is ready.</span></div>';
+  const items=reviewItems(),count=items.length,reviewed=42-issueCount();
+  $('#reviewTrigger').classList.toggle('all-clear',!count);
+  $('#reviewCount').innerHTML=count?count:'<i data-lucide="check"></i>';
+  $('#reviewTriggerText').textContent=count?`${count===1?'thing':'things'} to review`:'All reviewed';
+  $('#reviewPopoverTitle').textContent=count?`${count} ${count===1?'item needs':'items need'} your attention`:'Everything is reviewed';
+  const sections=[...new Set(items.map(item=>item.section))];
+  $('#reviewItems').innerHTML=count?sections.map(section=>`<div class="review-group"><span class="review-group-title">${section}</span>${items.filter(item=>item.section===section).map(item=>`<button class="review-item ${item.severity}" data-review-target="${item.id}"><span class="review-icon"><i data-lucide="${item.icon||(item.severity==='missing'?'circle-alert':'triangle-alert')}"></i></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span><span class="review-tag">${item.tag||(item.severity==='missing'?'Missing':'Check')}</span><i class="review-go" data-lucide="chevron-right"></i></button>`).join('')}</div>`).join(''):'<div class="review-empty"><i data-lucide="circle-check"></i><span>All required fields are complete. Select Looks good to finish.</span></div>';
+  $('#reviewPopoverFoot').innerHTML=`<span>${reviewed} of 42 fields reviewed</span><span class="review-progress"><span style="width:${Math.round(reviewed/42*100)}%"></span></span>`;
+  $('#footerReviewStatus').textContent=count?`${count} ${count===1?'item':'items'} left to review`:'All fields reviewed';
   icons();
+}
+
+function setSectionStatus(section,done,kind,label){
+  const status=$(`${section} .section-status`);
+  status.className=`section-status ${done?'success':kind}`;
+  status.innerHTML=done?'<i data-lucide="circle-check"></i> Reviewed':`<i data-lucide="${kind==='danger'?'circle-x':'triangle-alert'}"></i> ${label}`;
+}
+function resolveFieldRow(id,badge){
+  const row=$(`#${id}`);
+  row.classList.add('resolved');
+  row.querySelector('.confidence').textContent=badge;
+  row.querySelector('.suggestion').hidden=true;
 }
 
 function updateProgress(){
   const remaining=issueCount();
   const reviewed=42-remaining;
   const patientRemaining=state.mobile?0:1;
-  const prescriptionRemaining=[state.provider,state.product].filter(value=>!value).length;
+  const prescriptionRemaining=[state.provider,state.product,state.physicianName].filter(value=>!value).length;
   $('#reviewedCount').textContent=reviewed;
-  const patientStatus=$('#patient-section .section-status');
-  $('#patient-section .card-header p').textContent=`${24-patientRemaining} of 24 fields complete`;
+  const patientStatus=$('#contact-section .section-status');
+  $('#contact-section .card-header p').textContent=`${8-patientRemaining} of 8 fields complete`;
   patientStatus.className=`section-status ${patientRemaining?'warning':'success'}`;
   patientStatus.innerHTML=patientRemaining?`<i data-lucide="triangle-alert"></i> ${patientRemaining} ${patientRemaining===1?'needs':'need'} review`:'<i data-lucide="circle-check"></i> Reviewed';
-  const prescriptionComplete=2-prescriptionRemaining;
   const prescriptionStatus=$('#prescription-section .section-status');
-  $('#prescription-section .card-header p').textContent=`${4+prescriptionComplete} of 6 fields complete`;
   prescriptionStatus.className=`section-status ${prescriptionRemaining?'danger':'success'}`;
-  prescriptionStatus.innerHTML=prescriptionRemaining?`<i data-lucide="circle-x"></i> ${prescriptionRemaining} missing`:'<i data-lucide="circle-check"></i> Reviewed';
+  prescriptionStatus.innerHTML=prescriptionRemaining?`<i data-lucide="circle-x"></i> ${prescriptionRemaining} to resolve`:'<i data-lucide="circle-check"></i> Reviewed';
+  setSectionStatus('#note-section',state.signature,'danger','1 missing');
+  setSectionStatus('#prior-auth-section',state.authAck,'warning','1 needs review');
   $('#completeIntake').disabled=remaining>0;
   $('#completionCard').hidden=remaining>0;
   if(!remaining){
@@ -396,7 +510,7 @@ function updateProgress(){
 }
 
 function enableInlineEditing(){
-  $$('.compact-fields strong,.insurance-fields strong,.summary-grid strong,#dobValue').forEach(value=>{
+  $$('.compact-fields strong,.summary-grid strong,#dobValue').forEach(value=>{
     value.contentEditable='plaintext-only';
     value.setAttribute('role','textbox');
     value.setAttribute('aria-label',`Edit ${value.previousElementSibling?.textContent||'value'}`);
@@ -415,17 +529,42 @@ function resolveMobile(){
 }
 
 function updateRequired(){
-  state.provider=Boolean($('#providerInput').value.trim());
-  state.product=Boolean($('#productInput').value);
-  $('#providerInput').closest('.resolve-row').classList.toggle('done',state.provider);
-  $('#productInput').closest('.resolve-row').classList.toggle('done',state.product);
-  if(state.provider&&state.product){
-    $('#missingBox').style.borderColor='#9ed39e';
-    $('#prescription-section .section-status').className='section-status success';
-    $('#prescription-section .section-status').innerHTML='<i data-lucide="circle-check"></i> Reviewed';
-    $('#prescription-section .card-header p').textContent='6 of 6 fields complete';
-  }
+  const npi=$('#providerInput').value.trim();
+  state.provider=/^\d{10}$/.test(npi);
+  state.product=Boolean(hcpcsCodes.find(item=>item.required)?.policy);
+  $('#providerField').classList.toggle('done',state.provider);
+  $('#providerHint').textContent=state.provider?'NPI added':npi?'Enter all 10 digits':'Not found in uploaded documents';
+  $('#physicianMeta').textContent=state.provider?'6 of 6 fields':'5 of 6 fields';
   updateProgress();
+}
+
+function renderIcdCodes(){
+  $('#icdMeta').textContent=`${icdCodes.length} codes`;
+  $('#icdList').innerHTML=icdCodes.map(item=>`<span class="code-chip"><b>${item.code}</b><span>${item.description}</span>${item.primary?'<em>Primary</em>':''}</span>`).join('')+'<button class="source-link" data-doc="referral"><i data-lucide="scan-text"></i> Referral.pdf · p1</button>';
+  icons();
+}
+
+function policyName(id){const policy=coveragePolicies.find(item=>item.id===id);return policy?`${policy.id} - ${policy.name}`:'';}
+function renderHcpcs(){
+  const pending=hcpcsCodes.filter(item=>!item.policy).length;
+  $('#hcpcsMeta').textContent=`${hcpcsCodes.length} codes${pending?` · ${pending} need coverage`:''}`;
+  $('#hcpcsList').innerHTML=hcpcsCodes.map((item,index)=>`<article class="hcpcs-card ${item.open?'open':''} ${item.policy?'':'pending'}" ${item.required?'id="productField"':''}>
+    <button class="hcpcs-head" data-hcpcs-toggle="${index}" aria-expanded="${Boolean(item.open)}"><span class="hcpcs-code">${item.code}</span><span class="hcpcs-copy"><strong>${item.description}</strong><small>${item.policy?`${item.ai?'AI selected · ':''}${policyName(item.policy)}`:'Medicare coverage not selected'}</small></span><span class="hcpcs-qty">Qty ${item.quantity}</span>${item.policy?'<span class="hcpcs-state done"><i data-lucide="circle-check"></i></span>':'<span class="hcpcs-state missing">Required</span>'}<i class="hcpcs-chevron" data-lucide="chevron-down"></i></button>
+    <div class="coverage-box" ${item.open?'':'hidden'}>
+      <strong class="coverage-title">Medicare Coverage Requirements</strong>
+      <p>Coverage criteria depend on the intended use of the product. Please review the policies and select the one that applies. Check the Medicare criteria to confirm the patient is medically eligible and the product is covered. <b>Products that are statutorily non-covered by Medicare are explained in the criteria. If the patient has another type of insurance, different coverage criteria may apply.</b></p>
+      <fieldset class="coverage-options"><legend>Please choose the one that applies:</legend>${coveragePolicies.map(policy=>`<label class="coverage-option"><input type="radio" name="coverage-${item.code}" value="${policy.id}" data-hcpcs-policy="${index}" ${item.policy===policy.id?'checked':''}><span>${policy.id} - ${policy.name}${item.policy===policy.id?'<small>Please review the <a href="#" data-coverage-link>detailed criteria guidelines</a> and <a href="#" data-coverage-link>policy article</a></small>':''}</span></label>`).join('')}</fieldset>
+    </div>
+  </article>`).join('');
+  icons();
+}
+
+function renderRequiredDocuments(){
+  const rows=requiredDocuments.map(item=>({...item,file:item.file||documents.find(file=>file.id===item.id)?.name}));
+  const missing=rows.filter(item=>!item.file).length;
+  $('#requiredDocsMeta').textContent=missing?`${missing} to upload`:'All received';
+  $('#requiredDocs').innerHTML=rows.map(item=>`<div class="required-doc ${item.file?'received':'missing'}"><i data-lucide="${item.file?'file-check':'file-x'}"></i><span><strong>${item.name}</strong><small>${item.file?`Received · ${item.file}`:'Not in uploaded documents'}</small></span>${item.file?`<button class="text-btn" data-document="${documents.find(file=>file.name===item.file)?.id||''}">View</button>`:`<button class="small-btn" data-upload-required="${item.id}"><i data-lucide="upload"></i> Upload</button>`}</div>`).join('');
+  icons();
 }
 
 function addFiles(fileList){
@@ -458,6 +597,11 @@ document.addEventListener('click',event=>{
     if(state.documentResolutions.size===2)$('#documentIssue .issue-title>b').textContent='Resolved';icons();checkExtractionReady();return;
   }
   if(target.dataset.plan!==undefined){renderInsurance(+target.dataset.plan);return;}
+  if(target.dataset.planEdit!==undefined){state.editingPlan=true;renderInsurance();$('[data-plan-field]')?.focus();return;}
+  if(target.dataset.planCancel!==undefined){state.editingPlan=false;renderInsurance();return;}
+  if(target.dataset.planSave!==undefined){const plan=insurancePlans[state.currentPlan];$$('[data-plan-field]').forEach(input=>{plan.fields[input.dataset.planField][1]=input.value.trim()||'Not provided';});state.editingPlan=false;plan.check=null;renderInsurance();toast(`${plan.name} updated. Check eligibility again for ${state.serviceType}.`);return;}
+  if(target.dataset.planCheck!==undefined){checkPlanEligibility();return;}
+  if(target.dataset.swapOrder!==undefined){insurancePlans.reverse();state.currentPlan=0;renderInsurance(0);toast('Coverage order swapped');return;}
   if(target.dataset.existing){
     const file=existingFiles.find(item=>item.id===target.dataset.existing);
     if(!file)return;
@@ -476,6 +620,10 @@ document.addEventListener('click',event=>{
     updateProgress();toast(`${patient.name} linked.`);return;
   }
   if(target.dataset.matchNew!==undefined){state.patientLinked=false;$('#matchCard').hidden=true;syncExistingPatientFiles();updateProgress();toast('New patient selected.');return;}
+  if(target.dataset.signature){state.signature=true;$('#signatureValue').textContent=target.dataset.signature==='signed'?'Signed 10/12/2026':'Requested from Dr. Sarah Kim';resolveFieldRow('signatureField',target.dataset.signature==='signed'?'Marked as signed':'Signature requested');updateProgress();toast(target.dataset.signature==='signed'?'Signature marked as present':'Signature request sent to Dr. Sarah Kim');return;}
+  if(target.dataset.authAck!==undefined){state.authAck=true;resolveFieldRow('authExpiry','Acknowledged');updateProgress();toast('Authorization gap acknowledged');return;}
+  if(target.dataset.hcpcsToggle!==undefined){const item=hcpcsCodes[target.dataset.hcpcsToggle];item.open=!item.open;renderHcpcs();return;}
+  if(target.dataset.uploadRequired){$('#requiredDocInput').dataset.requiredId=target.dataset.uploadRequired;$('#requiredDocInput').click();return;}
   if(target.id==='changeDob'){
     target.closest('.ai-decision').innerHTML='<i data-lucide="pencil"></i><span><b>Override AI value</b><input class="input compact-override" id="dobOverride" value="03/15/1978" aria-label="Override date of birth"></span><button class="small-btn" data-save-dob>Save</button>';
     icons();$('#dobOverride').focus();return;
@@ -491,7 +639,12 @@ document.addEventListener('click',event=>{
 });
 
 $('#collapseSources').addEventListener('click',()=>setSourceDrawer(false));
-$('#checkEligibility').addEventListener('click',()=>toast('Eligibility verified: active coverage'));
+$('#checkEligibility').addEventListener('click',checkEligibility);
+const setServiceMenu=open=>{$('#serviceMenu').hidden=!open;$('#serviceTrigger').setAttribute('aria-expanded',open);if(open){renderServiceMenu();$('#serviceMenu .selected')?.focus();}};
+$('#serviceTrigger').addEventListener('click',()=>setServiceMenu($('#serviceMenu').hidden));
+$('#serviceMenu').addEventListener('click',event=>{const option=event.target.closest('[data-service-type]');if(!option)return;state.serviceType=option.dataset.serviceType;setServiceMenu(false);renderInsurance();$('#serviceTrigger').focus();});
+$('#serviceMenu').addEventListener('keydown',event=>{const options=$$('.service-option'),index=options.indexOf(document.activeElement);if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();options[(index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length].focus();}if(event.key==='Escape'){setServiceMenu(false);$('#serviceTrigger').focus();}});
+document.addEventListener('click',event=>{if(!event.composedPath().some(node=>node.classList?.contains('service-select')))setServiceMenu(false);});
 $('#addPlan').addEventListener('click',()=>toast('New insurance plan form opened'));
 $('#queuePatients').addEventListener('click',event=>{
   if(event.target.closest('#findPatient')){closeRecordPicker();$('#patientSearch').hidden=false;$('#patientSearchInput').value='';renderPatientSearch();$('#patientSearchInput').focus();return;}
@@ -520,7 +673,7 @@ $('#cancelUpload').addEventListener('click',()=>{
 $('#expandSources').addEventListener('click',()=>setSourceDrawer(!$('#sourcePanel').classList.contains('drawer-open')));
 $('#sourceScrim').addEventListener('click',()=>setSourceDrawer(false));
 $('#reviewTrigger').addEventListener('click',()=>{const popover=$('#reviewPopover'),open=popover.hidden;popover.hidden=!open;$('#reviewTrigger').setAttribute('aria-expanded',open);});
-document.addEventListener('click',event=>{if(!event.target.closest('.review-menu')){$('#reviewPopover').hidden=true;$('#reviewTrigger').setAttribute('aria-expanded','false');}});
+document.addEventListener('click',event=>{if(!event.composedPath().some(node=>node.classList?.contains('review-menu'))){$('#reviewPopover').hidden=true;$('#reviewTrigger').setAttribute('aria-expanded','false');}});
 $('#collapseViewer').addEventListener('click',()=>{$('#workspace').classList.add('viewer-collapsed');});
 $('#expandViewer').addEventListener('click',()=>{$('#workspace').classList.remove('viewer-collapsed');});
 let viewerDrag=null;
@@ -532,7 +685,29 @@ document.addEventListener('pointerup',stopViewerResize);document.addEventListene
 $('#viewerResize').addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();const current=$('#documentViewer').getBoundingClientRect().width,change=event.key==='ArrowLeft'?20:-20;document.documentElement.style.setProperty('--viewer-w',`${Math.min(680,Math.max(300,current+change))}px`);});
 if($('#confirmMobile'))$('#confirmMobile').addEventListener('click',resolveMobile);
 if($('#providerInput'))$('#providerInput').addEventListener('input',updateRequired);
-if($('#productInput'))$('#productInput').addEventListener('change',updateRequired);
+$('#physicianConflict').addEventListener('change',event=>{if(event.target.dataset.physicianName===undefined)return;state.physicianName=true;resolveFieldRow('physicianConflict',`Resolved · ${event.target.value}`);updateProgress();});
+$('#hcpcsList').addEventListener('change',event=>{const index=event.target.dataset.hcpcsPolicy;if(index===undefined)return;const item=hcpcsCodes[index];item.policy=event.target.value;item.ai=false;renderHcpcs();updateRequired();});
+$('#hcpcsList').addEventListener('click',event=>{if(event.target.closest('[data-coverage-link]')){event.preventDefault();toast('Opens the Medicare coverage policy');}});
+$('#addHcpcsToggle').addEventListener('click',()=>{$('#addHcpcsForm').hidden=false;$('#addHcpcsToggle').hidden=true;$('#newHcpcsCode').focus();});
+const closeHcpcsForm=()=>{$('#addHcpcsForm').reset();$('#addHcpcsForm').hidden=true;$('#addHcpcsToggle').hidden=false;};
+$('#cancelHcpcs').addEventListener('click',closeHcpcsForm);
+$('#addHcpcsForm').addEventListener('submit',event=>{
+  event.preventDefault();
+  const code=$('#newHcpcsCode').value.trim().toUpperCase();
+  if(hcpcsCodes.some(item=>item.code===code)){toast(`${code} is already on this prescription`);return;}
+  hcpcsCodes.push({code,description:$('#newHcpcsDescription').value.trim(),quantity:Number($('#newHcpcsQty').value)||1,policy:'',open:true});
+  closeHcpcsForm();renderHcpcs();toast(`${code} added. Choose the Medicare coverage that applies.`);
+});
+$('#requiredDocInput').addEventListener('change',event=>{
+  const file=event.target.files[0],required=requiredDocuments.find(item=>item.id===event.target.dataset.requiredId);
+  if(!file||!required)return;
+  const id=`required-${required.id}`;
+  documents.push({id,name:file.name,meta:required.name,icon:'file-check',type:required.name,processing:false});
+  required.file=file.name;
+  event.target.value='';
+  renderDocuments();renderRequiredDocuments();
+  toast(`${file.name} added to documents as ${required.name}`);
+});
 if($('#fileInput'))$('#fileInput').addEventListener('change',event=>addFiles(event.target.files));
 if($('#dropZone'))['dragenter','dragover'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.add('over');}));
 if($('#dropZone'))['dragleave','drop'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.remove('over');if(type==='drop')addFiles(event.dataTransfer.files);}));
@@ -546,6 +721,9 @@ renderDocuments();
 renderDuplicateFindings();
 renderPatientMatches();
 renderInsurance();
+renderIcdCodes();
+renderHcpcs();
+renderRequiredDocuments();
 enableInlineEditing();
 updateProgress();
 setSourceDrawer(false);

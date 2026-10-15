@@ -49,7 +49,7 @@
       <button class="header-documents" id="expandSources" aria-label="Open document sidebar" aria-expanded="false" title="Open document sidebar" hidden><i data-lucide="panel-left-open"></i><b id="drawerCount">0</b></button>
       <div class="brand"><span>Patient Intake</span></div>
     </div>
-    <div class="top-actions"><span class="saved"><span class="status-dot"></span> Saved</span><div class="review-menu"><button class="review-trigger" id="reviewTrigger" aria-expanded="false" disabled><i data-lucide="list-checks"></i><span id="reviewTriggerText">3 things to review</span><i data-lucide="chevron-down"></i></button><div class="review-popover" id="reviewPopover" hidden><div class="review-popover-head"><strong>We’d take a look at these</strong></div><div id="reviewItems"></div></div></div><button class="looks-good" id="completeIntake" disabled><i data-lucide="check"></i> Looks good</button></div>
+    <div class="top-actions"><div class="review-menu"><button class="review-trigger" id="reviewTrigger" aria-expanded="false" aria-haspopup="true" disabled><b class="review-count" id="reviewCount">3</b><span id="reviewTriggerText">things to review</span><i data-lucide="chevron-down"></i></button><div class="review-popover" id="reviewPopover" hidden><div class="review-popover-head"><strong id="reviewPopoverTitle">3 items need your attention</strong><span>Select an item to go straight to it.</span></div><div id="reviewItems"></div><div class="review-popover-foot" id="reviewPopoverFoot"></div></div></div></div>
   </header>
 
   <main class="workspace intake-empty phase-upload" id="workspace">
@@ -125,51 +125,102 @@
         <div class="review-intro-copy">
           <span class="ai-label"><i data-lucide="sparkles"></i> AI extracted profile</span>
           <h2>Review Ashlynn Botosh’s intake</h2>
-          <div class="ai-review-guidance">
-            <span class="guidance-icon"><i data-lucide="sparkles"></i></span>
-            <div class="guidance-copy"><strong>Your intake is mostly done</strong><p>AI extracted the details and resolved conflicts. Review each section and correct anything that needs attention.</p></div>
-          </div>
         </div>
         <div class="reviewed-count"><strong id="reviewedCount">39</strong><span>of 42 fields reviewed</span></div>
       </div>
+      <div class="ai-review-guidance">
+        <span class="guidance-icon"><i data-lucide="sparkles"></i></span>
+        <div class="guidance-copy"><strong>Your intake is mostly done</strong><p>AI extracted the details and resolved conflicts. Review each section and correct anything that needs attention.</p></div>
+      </div>
 
-      <section class="review-card" id="patient-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="user-round"></i></span><div><h3>Patient information</h3><p>23 of 24 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
-        <details class="data-group" open><summary><span>Basic information</span><small>8 fields</small><i data-lucide="chevron-down"></i></summary><div class="compact-fields">
-          <div><span>First name</span><strong>Ashlynn</strong></div><div><span>Middle name</span><strong>—</strong></div><div><span>Last name</span><strong>Botosh</strong></div>
-          <div><span>Gender</span><strong>Female</strong></div><div><span>Race</span><strong>Prefer not to say</strong></div><div><span>Ethnicity</span><strong>Prefer not to say</strong></div><div><span>Preferred language</span><strong>English</strong></div>
+      <section class="review-card" id="demographics-section">
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="user-round"></i></span><div><h3>Patient demographics</h3><p>5 of 5 fields complete</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
+        <div class="data-group"><div class="compact-fields">
+          <div><span>First name</span><strong>Ashlynn</strong></div><div><span>Middle name</span><strong>—</strong></div>
+          <div><span>Last name</span><strong>Botosh</strong></div><div><span>Gender</span><strong>Female</strong></div>
         </div><div class="field-grid">
-          <div class="field-row ai-resolved" id="dobConflict"><div class="field-label">Date of birth<span class="confidence ai-confidence">AI resolved · 97%</span></div><div class="field-value"><strong id="dobValue">03/15/1978</strong><button class="source-link" data-doc="referral"><i data-lucide="scan-text"></i> Referral.pdf · p1</button></div><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Conflict resolved automatically</b> Referral and prior patient history agree. The insurance card value was treated as a likely scan error.</span><button class="text-btn" id="changeDob">Change</button></div></div></details>
-        <details class="data-group" open><summary><span>Contact & home address</span><small>8 fields</small><i data-lucide="chevron-down"></i></summary><div class="compact-fields">
-          <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div><span>Home number</span><strong>(206) 555-0142</strong></div>
-          <div class="wide"><span>Street address</span><strong>1234 Healthways Blvd, Suite 200</strong></div><div><span>City</span><strong>Seattle</strong></div><div><span>County</span><strong>King</strong></div><div><span>State</span><strong>WA</strong></div><div><span>ZIP code</span><strong>98101</strong></div>
+          <div class="field-row ai-resolved" id="dobConflict"><div class="field-label"><span class="confidence ai-confidence">AI resolved · 97%</span><span class="field-name">Date of birth</span></div><div class="field-value"><strong id="dobValue">03/15/1978</strong><button class="source-link" data-doc="referral"><i data-lucide="scan-text"></i> Referral.pdf · p1</button></div><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Conflict resolved automatically</b> Referral and prior patient history agree. The insurance card value was treated as a likely scan error.</span><button class="text-btn" id="changeDob">Change</button></div></div>
+        </div></div>
+      </section>
+
+      <section class="review-card" id="contact-section">
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="contact"></i></span><div><h3>Contact information</h3><p>7 of 8 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
+        <div class="data-group"><div class="compact-fields">
+          <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div><span>Home phone number</span><strong>(206) 555-0142</strong></div>
+          <div class="wide"><span>Street address</span><strong>1234 Healthways Blvd, Suite 200</strong></div>
+          <div><span>City</span><strong>Seattle</strong></div><div><span>State/Province</span><strong>WA</strong></div>
+          <div><span>ZIP code</span><strong>98101</strong></div>
         </div><div class="field-grid">
-          <div class="field-row needs-review" id="mobileField"><div class="field-label">Mobile number<span class="confidence low">Low confidence · 62%</span></div><div class="field-value edit-value"><input class="input" id="mobileInput" value="(415) 220-8841" aria-label="Mobile number"><button class="source-link" data-doc="consent"><i data-lucide="scan-text"></i> Consent Form.pdf · p1</button></div><div class="suggestion"><i data-lucide="sparkles"></i><span><b>Suggested action</b> Verify the last four digits against the source.</span><button class="small-btn primary" id="confirmMobile">Confirm</button></div></div>
-        </div></details>
-        <details class="data-group"><summary><span>Notification preferences</span><small>3 fields · Complete</small><i data-lucide="chevron-down"></i></summary><div class="compact-fields"><div><span>Preferred contact</span><strong>Text message</strong></div><div><span>Order reminders</span><strong>Consented</strong></div><div><span>Marketing messages</span><strong>Consented</strong></div></div></details>
-        <details class="data-group"><summary><span>Emergency contact</span><small>3 fields · Complete</small><i data-lucide="chevron-down"></i></summary><div class="compact-fields"><div><span>Full name</span><strong>Daniel Botosh</strong></div><div><span>Phone number</span><strong>(206) 555-0194</strong></div><div><span>Relationship</span><strong>Spouse</strong></div></div></details>
-        <details class="data-group"><summary><span>Legal representative</span><small>2 fields · Not applicable</small><i data-lucide="chevron-down"></i></summary><div class="compact-fields"><div><span>Representative</span><strong>None on file</strong></div><div><span>Relationship</span><strong>Not applicable</strong></div></div></details>
+          <div class="field-row needs-review" id="mobileField"><div class="field-label"><span class="confidence low">Low confidence · 62%</span><span class="field-name">Mobile number</span></div><div class="field-value edit-value"><input class="input" id="mobileInput" value="(415) 220-8841" aria-label="Mobile number"><button class="source-link" data-doc="consent"><i data-lucide="scan-text"></i> Consent Form.pdf · p1</button></div><div class="suggestion"><i data-lucide="sparkles"></i><span><b>Suggested action</b> Verify the last four digits against the source.</span><button class="small-btn primary" id="confirmMobile">Confirm</button></div></div>
+        </div></div>
       </section>
 
       <section class="review-card" id="insurance-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance information</h3><p>2 coverage plans · 12 fields complete</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
+        <div class="eligibility-bar">
+          <div class="eligibility-picker">
+            <span class="eligibility-label" id="serviceTypeLabel">Check eligibility for</span>
+            <div class="service-select">
+              <button class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
+              <div class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></div>
+            </div>
+            <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check eligibility</button>
+          </div>
+          <span class="eligibility-meta" id="eligibilityMeta"></span>
+        </div>
         <div class="insurance-workspace">
-          <aside class="plan-list" aria-label="Insurance coverage order"><p>Drag to change coverage order</p><button class="plan-item active" data-plan="0"><i data-lucide="grip-vertical"></i><span><strong>Medicare Part B</strong><small><b>Primary</b> · Active</small></span><i data-lucide="chevron-right"></i></button><button class="plan-item" data-plan="1"><i data-lucide="grip-vertical"></i><span><strong>Aetna Choice POS II</strong><small>Secondary · Active</small></span><i data-lucide="chevron-right"></i></button><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add another plan</button></aside>
-          <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><span id="planRank">Primary coverage</span></div><button class="small-btn" id="checkEligibility"><i data-lucide="shield-check"></i> Verify eligibility</button></div>
-            <div class="eligibility-banner"><i data-lucide="circle-check"></i><span><b>Coverage detected</b><small id="eligibilityText">Active through 12/30/2027</small></span></div>
+          <aside class="plan-list" aria-label="Insurance coverage order"><p>Coverage order</p><div id="planList"></div><div class="order-notice" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add another plan</button></aside>
+          <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
             <div class="insurance-fields" id="insuranceFields"></div>
-            <div class="insurance-card-files"><span>Insurance card</span><button class="card-file" data-doc="insurance"><i data-lucide="credit-card"></i><span><b>Front side</b><small>Insurance Card.pdf · p1</small></span><i data-lucide="scan-text"></i></button><button class="card-file"><i data-lucide="upload"></i><span><b>Back side</b><small>No file uploaded</small></span></button></div>
           </div>
         </div>
       </section>
 
       <section class="review-card" id="prescription-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="notebook-tabs"></i></span><div><h3>Prescription & order</h3><p>4 of 6 fields complete</p></div></div><span class="section-status danger"><i data-lucide="circle-x"></i> 2 missing</span></div>
-        <div class="missing-box" id="missingBox"><div class="missing-title"><i data-lucide="info"></i><div><strong>Missing required information</strong><span>Add these details before completing intake.</span></div></div>
-          <label class="resolve-row" id="providerField" for="providerInput"><span><b>Provider name</b><small>Not found in uploaded documents</small></span><input class="input" id="providerInput" placeholder="Enter provider name"></label>
-          <label class="resolve-row" id="productField" for="productInput"><span><b>Product selection</b><small>A device category was found, but no model</small></span><select class="input" id="productInput"><option value="">Select product</option><option>ResMed AirSense 11 AutoSet</option><option>Philips DreamStation 2</option><option>Luna G3 Auto CPAP</option></select></label>
-        </div>
-        <div class="summary-grid"><div><span>Diagnosis</span><strong>G47.33 · Obstructive sleep apnea</strong></div><div><span>HCPCS</span><strong>E0601 · CPAP device</strong></div><button class="source-link" data-doc="prescription"><i data-lucide="scan-text"></i> Prescription.pdf · p1</button></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="notebook-tabs"></i></span><div><h3>Prescription</h3><p id="prescriptionMeta">Physician, diagnosis, HCPCS codes, and documents</p></div></div><span class="section-status danger"><i data-lucide="circle-x"></i> 2 missing</span></div>
+        <details class="data-group" open><summary><span>Physician information</span><small id="physicianMeta">5 of 6 fields</small><i data-lucide="chevron-down"></i></summary>
+          <div class="compact-fields">
+            <div><span>First name</span><strong>Sarah</strong></div>
+          </div>
+          <div class="field-grid">
+            <div class="field-row needs-review" id="physicianConflict"><div class="field-label"><span class="confidence low">Conflict · 2 documents disagree</span><span class="field-name">Last name</span></div><div class="field-value conflict-choice" role="radiogroup" aria-label="Physician last name"><label class="choice-pill"><input type="radio" name="physicianLastName" value="Kim" data-physician-name><span><b>Kim</b><small>Prescription.pdf</small></span></label><label class="choice-pill"><input type="radio" name="physicianLastName" value="Kimm" data-physician-name><span><b>Kimm</b><small>Face-to-Face Notes.pdf</small></span></label></div><div class="suggestion"><i data-lucide="sparkles"></i><span><b>Suggested action</b> The NPI registry lists Dr. Sarah Kim. Choose the spelling to keep.</span></div></div>
+          </div>
+          <label class="resolve-row" id="providerField" for="providerInput"><span><b>NPI</b><small id="providerHint">Not found in uploaded documents</small></span><input class="input" id="providerInput" inputmode="numeric" maxlength="10" placeholder="10-digit NPI"></label>
+          <div class="enrollment-row"><span class="enrollment-label">Enrollment</span><span class="enrollment-chip"><i data-lucide="circle-check"></i> DME</span><span class="enrollment-chip"><i data-lucide="circle-check"></i> PMD</span><span class="enrollment-chip"><i data-lucide="circle-check"></i> Part B</span><button class="source-link" data-doc="prescription"><i data-lucide="scan-text"></i> Prescription.pdf · p1</button></div>
+        </details>
+        <details class="data-group" open><summary><span>ICD-10 codes</span><small id="icdMeta"></small><i data-lucide="chevron-down"></i></summary>
+          <div class="code-list" id="icdList"></div>
+        </details>
+        <details class="data-group" open><summary><span>HCPCS codes</span><small id="hcpcsMeta"></small><i data-lucide="chevron-down"></i></summary>
+          <div class="hcpcs-list" id="hcpcsList"></div>
+          <div class="add-hcpcs">
+            <button class="text-btn add-hcpcs-toggle" id="addHcpcsToggle"><i data-lucide="plus"></i> Add HCPCS code</button>
+            <form class="add-hcpcs-form" id="addHcpcsForm" hidden><input class="input" id="newHcpcsCode" placeholder="Code, e.g. A7034" maxlength="5" aria-label="HCPCS code" required><input class="input" id="newHcpcsDescription" placeholder="Description" aria-label="HCPCS description" required><input class="input" id="newHcpcsQty" type="number" min="1" value="1" aria-label="Quantity"><button class="small-btn primary" type="submit">Add</button><button class="text-btn" type="button" id="cancelHcpcs">Cancel</button></form>
+          </div>
+        </details>
+        <details class="data-group" open><summary><span>Required documents</span><small id="requiredDocsMeta"></small><i data-lucide="chevron-down"></i></summary>
+          <div class="required-docs" id="requiredDocs"></div>
+          <input type="file" id="requiredDocInput" accept=".pdf,.png,.jpg,.jpeg" hidden>
+        </details>
+      </section>
+
+      <section class="review-card" id="note-section">
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="stethoscope"></i></span><div><h3>Physician note</h3><p>Extracted from Face-to-Face Notes.pdf</p></div></div><span class="section-status danger"><i data-lucide="circle-x"></i> 1 missing</span></div>
+        <div class="data-group"><div class="field-grid">
+          <div class="field-row has-error" id="signatureField"><div class="field-label"><span class="confidence error">Missing signature</span><span class="field-name">Physician signature</span></div><div class="field-value"><strong id="signatureValue">Not found</strong><button class="source-link" data-doc="face-to-face"><i data-lucide="scan-text"></i> Face-to-Face Notes.pdf · p2</button></div><div class="suggestion error"><i data-lucide="pen-line"></i><span><b>Signature and date required</b> Medicare requires a signed, dated face-to-face note before dispensing.</span><button class="small-btn" data-signature="signed">Mark as signed</button><button class="small-btn primary" data-signature="requested">Request signature</button></div></div>
+        </div></div>
+        <div class="note-body"><label class="note-label" for="physicianNote">Clinical note</label><textarea class="input note-input" id="physicianNote" rows="5">Patient seen 10/12/2026 for loud snoring, witnessed apneas, and daytime sleepiness (Epworth score 14). Home sleep test on 10/08/2026 shows AHI 18.4 events/hr, consistent with moderate obstructive sleep apnea. Recommend auto-titrating CPAP 5–15 cm H2O with heated humidifier and full face mask. Patient educated on therapy and agrees to start. Follow up in 31–90 days to assess compliance and benefit.</textarea><button class="source-link" data-doc="face-to-face"><i data-lucide="scan-text"></i> Face-to-Face Notes.pdf · p1</button></div>
+      </section>
+
+      <section class="review-card" id="prior-auth-section">
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="file-check"></i></span><div><h3>Prior authorization</h3><p>6 of 6 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
+        <div class="data-group"><div class="compact-fields">
+          <div><span>HCPCS</span><strong>E0601</strong></div><div><span>Prior authorization number</span><strong>PA-26-0418873</strong></div>
+          <div><span>Payer</span><strong>Aetna Choice POS II</strong></div><div><span>Effective date</span><strong>10/15/2026 – 04/15/2027</strong></div>
+          <div><span>Quantity/Amount</span><strong>1 unit</strong></div><div><span>Dispensing frequency</span><strong>Monthly rental · 13 months</strong></div>
+        </div><div class="field-grid">
+          <div class="field-row needs-review" id="authExpiry"><div class="field-label"><span class="confidence low">Expires before rental ends</span><span class="field-name">Authorization period</span></div><div class="field-value"><strong>Ends 04/15/2027 · rental runs to 11/15/2027</strong></div><div class="suggestion"><i data-lucide="calendar-clock"></i><span><b>7 months not covered</b> Request an extension from Aetna before 04/15/2027, or acknowledge to continue.</span><button class="small-btn primary" data-auth-ack>Acknowledge</button></div></div>
+        </div></div>
       </section>
 
       <section class="completion-card" id="completionCard" hidden>
@@ -220,8 +271,14 @@
     </aside>
   </main>
   <footer class="page-footer" id="pageFooter">
-    <button class="footer-btn" id="cancelUpload">Cancel</button>
-    <button class="footer-btn primary" id="extractDocuments" disabled><i data-lucide="sparkles"></i> Extract</button>
+    <div class="footer-group" data-footer-phase="upload">
+      <button class="footer-btn" id="cancelUpload">Cancel</button>
+      <button class="footer-btn primary" id="extractDocuments" disabled><i data-lucide="sparkles"></i> Extract</button>
+    </div>
+    <div class="footer-group" data-footer-phase="review" hidden>
+      <span class="footer-status" id="footerReviewStatus"></span>
+      <button class="footer-btn primary" id="completeIntake" disabled><i data-lucide="check"></i> Looks good</button>
+    </div>
   </footer>
   </div>
 
