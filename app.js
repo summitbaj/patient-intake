@@ -78,9 +78,18 @@ function renderExtractionIssues(){
 function setPhase(phase){
   state.phase=phase;
   const workspace=$('#workspace');
+  const body=document.body;
+
   workspace.classList.remove('phase-upload','phase-extraction','phase-review','intake-empty');
+  body.classList.remove('phase-upload','phase-extraction','phase-review','intake-empty');
+
   workspace.classList.add(`phase-${phase}`);
-  if(phase==='upload')workspace.classList.add('intake-empty');
+  body.classList.add(`phase-${phase}`);
+  if(phase==='upload'){
+    workspace.classList.add('intake-empty');
+    body.classList.add('intake-empty');
+  }
+
   $('#intakeStart').hidden=phase!=='upload';
   $('#extractionView').hidden=phase!=='extraction';
   $('#extractionIssues').hidden=phase!=='extraction';
@@ -430,17 +439,17 @@ document.addEventListener('pointermove',event=>{if(!viewerDrag)return;const widt
 const stopViewerResize=()=>{viewerDrag=null;document.body.classList.remove('resizing-viewer');};
 document.addEventListener('pointerup',stopViewerResize);document.addEventListener('pointercancel',stopViewerResize);
 $('#viewerResize').addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();const current=$('#documentViewer').getBoundingClientRect().width,change=event.key==='ArrowLeft'?20:-20;document.documentElement.style.setProperty('--viewer-w',`${Math.min(680,Math.max(300,current+change))}px`);});
-$('#confirmMobile').addEventListener('click',resolveMobile);
-$('#providerInput').addEventListener('input',updateRequired);
-$('#productInput').addEventListener('change',updateRequired);
-$('#fileInput').addEventListener('change',event=>addFiles(event.target.files));
-['dragenter','dragover'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.add('over');}));
-['dragleave','drop'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.remove('over');if(type==='drop')addFiles(event.dataTransfer.files);}));
-$('#completeIntake').addEventListener('click',()=>{
+if($('#confirmMobile'))$('#confirmMobile').addEventListener('click',resolveMobile);
+if($('#providerInput'))$('#providerInput').addEventListener('input',updateRequired);
+if($('#productInput'))$('#productInput').addEventListener('change',updateRequired);
+if($('#fileInput'))$('#fileInput').addEventListener('change',event=>addFiles(event.target.files));
+if($('#dropZone'))['dragenter','dragover'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.add('over');}));
+if($('#dropZone'))['dragleave','drop'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.remove('over');if(type==='drop')addFiles(event.dataTransfer.files);}));
+if($('#completeIntake'))$('#completeIntake').addEventListener('click',()=>{
   showPostIntake();
   toast('Intake completed successfully');
 });
-$('#returnToReview').addEventListener('click',returnToIntakeReview);
+if($('#returnToReview'))$('#returnToReview').addEventListener('click',returnToIntakeReview);
 
 renderDocuments();
 renderDuplicateFindings();
