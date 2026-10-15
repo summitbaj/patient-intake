@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="980" viewBox="0 0 760 980">
+<rect width="760" height="980" fill="#f2f4f6"/><rect x="45" y="32" width="670" height="916" rx="4" fill="#fff" stroke="#c9d0d6"/>
+<rect x="45" y="32" width="670" height="118" fill="#eaf4fb"/><circle cx="112" cy="90" r="28" fill="#0878bd"/><path d="M98 90h28M112 76v28" stroke="#fff" stroke-width="7"/>
+<text x="158" y="82" font-family="Segoe UI,Arial" font-size="25" font-weight="700" fill="#07426f">Oakwood Medical Associates</text><text x="158" y="112" font-family="Segoe UI,Arial" font-size="14" fill="#56616a">PATIENT REFERRAL</text>
+<text x="78" y="198" font-family="Segoe UI,Arial" font-size="13" font-weight="700" fill="#07426f">PATIENT INFORMATION</text><path d="M78 214h604" stroke="#abd1ee"/>
+<g font-family="Segoe UI,Arial" font-size="14" fill="#49545d"><text x="78" y="256">Patient name</text><text x="280" y="256" font-weight="700">Ashlynn Botosh</text><text x="78" y="300">Date of birth</text><rect x="270" y="278" width="145" height="30" rx="3" fill="#fff4ce"/><text x="280" y="300" font-weight="700">03/15/1978</text><text x="78" y="344">Address</text><text x="280" y="344" font-weight="700">1234 Healthways Blvd</text><text x="280" y="367">Seattle, WA 98101</text></g>
+<text x="78" y="430" font-family="Segoe UI,Arial" font-size="13" font-weight="700" fill="#07426f">REASON FOR REFERRAL</text><path d="M78 446h604" stroke="#abd1ee"/><text x="78" y="488" font-family="Segoe UI,Arial" font-size="14" fill="#49545d">Evaluation and treatment of obstructive sleep apnea.</text>
+<g stroke="#d7dce0"><path d="M78 540h604M78 582h604M78 624h604M78 666h604M78 708h604"/></g><text x="78" y="760" font-family="Segoe UI,Arial" font-size="12" fill="#7a838a">Electronically signed by Sarah Chen, MD</text><path d="M470 805q45-60 95 0t92-10" fill="none" stroke="#315f86" stroke-width="3"/>
+</svg>
