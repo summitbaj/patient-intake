@@ -4,6 +4,18 @@ const demoDocuments = [
   { id:'prescription', name:'Prescription.pdf', meta:'1 page · Extracted', icon:'notebook-tabs', type:'Prescription' },
   { id:'consent', name:'Consent Form.pdf', meta:'2 pages · Low confidence', icon:'file-signature', type:'Consent form' }
 ];
+const recordDocument=(id,name,type,icon,date)=>({id,name,type,icon,date});
+const intakeQueue=[
+  {id:'ashlynn',name:'Ashlynn Botosh',mrn:'PT-10482',dob:'03/15/1978',documents:[...demoDocuments.map(file=>({...file,date:'Oct 14, 2026'})),recordDocument('sleep-study','Sleep Study.pdf','Sleep study','file-chart-column','Oct 12, 2026'),recordDocument('face-to-face','Face-to-Face Notes.pdf','Clinical notes','stethoscope','Oct 12, 2026')]},
+  {id:'marcus',name:'Marcus Thornton',mrn:'PT-11207',dob:'07/02/1961',documents:[recordDocument('marcus-rx','Prescription.pdf','Prescription','notebook-tabs','Oct 15, 2026'),recordDocument('marcus-insurance','Insurance Card.pdf','Insurance card','badge-check','Oct 15, 2026')]},
+  {id:'jaydon',name:'Jaydon Vetrovs',mrn:'PT-09954',dob:'11/23/1990',documents:[recordDocument('jaydon-referral','Referral.pdf','Referral','file-text','Oct 13, 2026'),recordDocument('jaydon-insurance','Insurance Card.pdf','Insurance card','badge-check','Oct 13, 2026'),recordDocument('jaydon-rx','Prescription.pdf','Prescription','notebook-tabs','Oct 13, 2026'),recordDocument('jaydon-consent','Consent Form.pdf','Consent form','file-signature','Oct 13, 2026')]}
+];
+const patientDirectory=[
+  ...intakeQueue,
+  {id:'priya',name:'Priya Shah',mrn:'PT-07718',dob:'05/09/1984',documents:[recordDocument('priya-referral','Referral.pdf','Referral','file-text','Oct 10, 2026'),recordDocument('priya-insurance','Insurance Card.pdf','Insurance card','badge-check','Oct 10, 2026'),recordDocument('priya-rx','Prescription.pdf','Prescription','notebook-tabs','Oct 10, 2026')]},
+  {id:'daniel',name:'Daniel Ortiz',mrn:'PT-05561',dob:'01/30/1957',documents:[recordDocument('daniel-rx','Prescription.pdf','Prescription','notebook-tabs','Oct 8, 2026')]},
+  {id:'grace',name:'Grace Liu',mrn:'PT-12093',dob:'09/18/1972',documents:[recordDocument('grace-referral','Referral.pdf','Referral','file-text','Oct 9, 2026'),recordDocument('grace-sleep','Sleep Study.pdf','Sleep study','file-chart-column','Oct 9, 2026')]}
+];
 const documents = [];
 const existingFiles=[
   {id:'existing-insurance',name:'Insurance Card · Sep 2025.pdf',meta:'Extracted previously',icon:'badge-check',extracted:true,used:false},
@@ -30,6 +42,7 @@ const paperContent = {
 
 const documentImages={
   referral:'assets/referral.svg',insurance:'assets/insurance.svg',prescription:'assets/prescription.svg',consent:'assets/consent.svg',
+  'sleep-study':'assets/sleep-study.svg','face-to-face':'assets/referral.svg',
   'existing-insurance':'assets/insurance.svg','existing-consent':'assets/consent.svg','existing-sleep':'assets/sleep-study.svg'
 };
 
@@ -38,7 +51,7 @@ const insurancePlans=[
   {name:'Aetna Choice POS II',rank:'Secondary coverage',eligibility:'Active through 03/14/2026',fields:[['Insurance type','Commercial PPO'],['Health insurance company','Aetna'],['Relationship to insured','Self'],['Member ID prefix','Z'],['Member ID','AET529187463'],['Member ID suffix','07'],['Group number','GRP-258914'],['Effective from','03/15/2025'],['Effective to','03/14/2026']]}
 ];
 
-const state = { selected:'', viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:false, provider:false, product:false, patientLinked:false, completed:false };
+const state = { selected:'', pickerPatient:'', pickerSelection:new Set(), viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:false, provider:false, product:false, patientLinked:false, completed:false };
 const postIntakeRecommendation={
   patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Start pre-check',reason:'Confirm payer qualification, coverage, and required documentation before creating the new equipment order.',alternatives:['Create order without pre-check'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'}],note:'Final coverage and item eligibility remain subject to payer review.'
 };
@@ -58,20 +71,37 @@ function renderDocuments(){
 
 function renderUploadQueue(){
   const queue=$('#uploadQueue');
-  queue.innerHTML=documents.length?documents.map(file=>`<div><i data-lucide="file-text"></i><span><strong>${file.name}</strong><small>${file.type}</small></span><i data-lucide="check-circle"></i></div>`).join(''):'<span>No documents added yet</span>';
+  queue.innerHTML=documents.length?documents.map(file=>`<div><i data-lucide="file-text"></i><span><strong>${file.name}</strong><small>${file.type}</small></span><i data-lucide="check-circle"></i></div>`).join(''):'';
   $('#extractDocuments').disabled=!documents.length||state.extracting;
+  $('#cancelUpload').disabled=!documents.length||state.extracting;
+  $('#uploadList').hidden=!documents.length;
+  $('#uploadListCount').textContent=`${documents.length} ${documents.length===1?'document':'documents'}`;
   icons();
 }
 
 function renderExtractionFiles(){
-  $('#extractionFileList').innerHTML=documents.map(file=>`<div><i data-lucide="file-text"></i><span><strong>${file.name}</strong><small>${file.meta}</small></span>${file.processing?'<span class="spinner"></span>':'<i data-lucide="circle-check"></i>'}</div>`).join('');
+  $('#extractionFileList').innerHTML=documents.map(file=>`<div><i data-lucide="file-text"></i><span><strong>${file.name}</strong><small>${file.meta}</small></span>${file.processing?'<span class="spinner"></span>':''}</div>`).join('');
   icons();
 }
 
+function renderExtractionPatientMatches(){
+  $('#patientIssue').classList.remove('is-resolved');
+  $('#patientIssue .issue-title>b').textContent='Required';
+  $('#extractionPatientMatches').innerHTML=patientMatches.map((patient,index)=>`<article class="extract-patient ${index===0?'best':''}" id="extract-patient-${patient.id}"><div class="extract-patient-summary"><span class="avatar">${patient.initials}</span><span><strong>${patient.name}${index===0?'<em class="best-tag">Best match</em>':''}</strong><small>DOB ${patient.dob} · ${patient.mrn}</small></span></div><p class="match-reason"><i data-lucide="sparkles"></i><span>${patient.reason}</span></p><div class="extract-patient-details" hidden><dl><div><dt>Address</dt><dd>${patient.address}</dd></div><div><dt>Phone</dt><dd>${patient.phone}</dd></div><div><dt>Patient ID</dt><dd>${patient.mrn}</dd></div></dl></div><div class="extract-patient-actions"><button class="text-btn" data-extract-patient-details="${patient.id}" aria-expanded="false">View details</button><button class="small-btn ${index===0?'primary':''}" data-extract-patient="${patient.id}">Select patient</button></div></article>`).join('');
+  $('.create-new-patient').hidden=false;
+  icons();
+}
+function resolvePatientIssue(title,detail){
+  $('#patientIssue').classList.add('is-resolved');
+  $('#patientIssue .issue-title>b').textContent='Resolved';
+  $('#extractionPatientMatches').innerHTML=`<div class="issue-resolved"><i data-lucide="circle-check"></i><span><strong>${title}</strong><small>${detail}</small></span><button class="text-btn" data-change-patient>Change</button></div>`;
+  $('.create-new-patient').hidden=true;
+}
+
 function renderExtractionIssues(){
-  $('#extractionPatientMatches').innerHTML=patientMatches.map((patient,index)=>`<article class="extract-patient" id="extract-patient-${patient.id}"><div class="extract-patient-summary"><span class="avatar">${patient.initials}</span><span><strong>${patient.name}</strong><small>DOB ${patient.dob} · ${patient.mrn}</small></span><b>${patient.confidence}%</b></div><p>${patient.reason}</p><div class="extract-patient-details" hidden><dl><div><dt>Address</dt><dd>${patient.address}</dd></div><div><dt>Phone</dt><dd>${patient.phone}</dd></div><div><dt>Patient ID</dt><dd>${patient.mrn}</dd></div></dl></div><div class="extract-patient-actions"><button class="small-btn ${index===0?'primary':''}" data-extract-patient="${patient.id}">Select patient</button><button class="text-btn" data-extract-patient-details="${patient.id}" aria-expanded="false">View details</button></div></article>`).join('');
+  renderExtractionPatientMatches();
   const findings=[duplicateFindings[0],duplicateFindings[2]];
-  $('#extractionDocumentMatches').innerHTML=findings.map(item=>`<article class="extract-document" id="extract-${item.id}"><div class="finding-type"><span>${item.kind==='exact'?'Same document':'Similar content'}</span><b>${item.score}%</b></div><strong>${item.upload}</strong><p>${item.reason}</p><small>Existing: ${item.existing}</small><div class="extract-document-actions">${item.kind==='exact'?`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="existing">Use existing document</button><button class="text-btn" data-extract-document="${item.id}" data-decision="upload">Keep uploaded copy</button>`:`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="replace">Replace existing</button><button class="small-btn" data-extract-document="${item.id}" data-decision="new">Add as new</button>`}</div></article>`).join('');
+  $('#extractionDocumentMatches').innerHTML=findings.map(item=>`<article class="extract-document" id="extract-${item.id}"><div class="finding-type"><span>${item.kind==='exact'?'Same document':'Similar content'}</span></div><strong>${item.upload}</strong><p>${item.reason}</p><small>Existing: ${item.existing}</small><div class="extract-document-actions">${item.kind==='exact'?`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="existing">Use existing document</button><button class="text-btn" data-extract-document="${item.id}" data-decision="upload">Keep uploaded copy</button>`:`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="replace">Replace existing</button><button class="small-btn" data-extract-document="${item.id}" data-decision="new">Add as new</button>`}</div></article>`).join('');
   icons();
 }
 
@@ -85,6 +115,7 @@ function setPhase(phase){
 
   workspace.classList.add(`phase-${phase}`);
   body.classList.add(`phase-${phase}`);
+  $('#pageFooter').hidden=phase!=='upload';
   if(phase==='upload'){
     workspace.classList.add('intake-empty');
     body.classList.add('intake-empty');
@@ -205,12 +236,49 @@ function setSourceDrawer(open,force=false){
 }
 
 const wait=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
-function startPrototype(){
-  if(documents.length)return;
-  demoDocuments.forEach(file=>documents.push({...file,meta:'Ready to extract'}));
-  state.selected='referral';
+function patientInitials(name){return name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase();}
+function renderQueuePatients(){
+  $('#queuePatients').innerHTML=intakeQueue.map(patient=>{const added=patient.documents.filter(file=>documents.some(item=>item.id===file.id)).length;return `<button class="queue-patient ${state.pickerPatient===patient.id?'active':''}" data-queue-patient="${patient.id}" aria-expanded="${state.pickerPatient===patient.id}"><span class="patient-initials">${patientInitials(patient.name)}</span><strong>${patient.name}</strong><small>${added?`${added} of ${patient.documents.length} added`:`${patient.documents.length} docs`}</small></button>`;}).join('')+`<button class="queue-patient find-patient" id="findPatient"><i data-lucide="search"></i> Find another patient</button>`;
+  icons();
+}
+function openRecordPicker(patientId){
+  const patient=[...intakeQueue,...patientDirectory].find(item=>item.id===patientId);
+  if(!patient)return;
+  if(!intakeQueue.includes(patient))intakeQueue.push(patient);
+  state.pickerPatient=patient.id;
+  state.pickerSelection=new Set(patient.documents.filter(file=>!documents.some(item=>item.id===file.id)).map(file=>file.id));
+  $('#patientSearch').hidden=true;
+  $('#recordPicker').hidden=false;
+  $('#recordPickerInitials').textContent=patientInitials(patient.name);
+  $('#recordPickerTitle').textContent=patient.name;
+  $('#recordPickerMeta').textContent=`${patient.mrn} · ${patient.documents.length} documents in record`;
+  renderRecordPicker();renderQueuePatients();
+}
+function renderRecordPicker(){
+  const patient=intakeQueue.find(item=>item.id===state.pickerPatient);
+  if(!patient)return;
+  $('#recordPickerList').innerHTML=patient.documents.map(file=>{const added=documents.some(item=>item.id===file.id);return `<label class="record-doc ${added?'added':''}"><input type="checkbox" data-record-doc="${file.id}" ${added||state.pickerSelection.has(file.id)?'checked':''} ${added?'disabled':''}><i data-lucide="${file.icon}"></i><span><strong>${file.name}</strong><small>${added?'Already added':`${file.type} · ${file.date}`}</small></span></label>`;}).join('');
+  const count=state.pickerSelection.size;
+  $('#addRecordDocs').disabled=!count;
+  $('#addRecordDocs').textContent=count?`Add ${count} ${count===1?'document':'documents'}`:'Add documents';
+  $('#toggleRecordDocs').textContent=count?'Clear all':'Select all';
+  icons();
+}
+function closeRecordPicker(){state.pickerPatient='';$('#recordPicker').hidden=true;renderQueuePatients();}
+function addRecordDocuments(){
+  const patient=intakeQueue.find(item=>item.id===state.pickerPatient);
+  const selected=patient.documents.filter(file=>state.pickerSelection.has(file.id));
+  if(!selected.length)return;
+  selected.forEach(file=>documents.push({...file,meta:'Ready to extract'}));
+  if(!state.selected)state.selected=documents[0].id;
+  closeRecordPicker();
   renderDocuments();renderUploadQueue();
-  toast('Sample documents added. Select Extract when ready.');
+  toast(`${selected.length} ${selected.length===1?'document':'documents'} from ${patient.name} ready to extract.`);
+}
+function renderPatientSearch(){
+  const query=$('#patientSearchInput').value.trim().toLowerCase();
+  const results=patientDirectory.filter(patient=>!intakeQueue.includes(patient)&&(!query||patient.name.toLowerCase().includes(query)||patient.mrn.toLowerCase().includes(query)));
+  $('#patientSearchResults').innerHTML=results.length?results.map(patient=>`<button class="search-result" role="option" data-search-patient="${patient.id}"><span class="patient-initials">${patientInitials(patient.name)}</span><span><strong>${patient.name}</strong><small>DOB ${patient.dob} · ${patient.mrn}</small></span><small>${patient.documents.length} docs</small></button>`).join(''):'<p class="search-empty">No patients found</p>';
 }
 
 function checkExtractionReady(){
@@ -245,7 +313,7 @@ async function startExtraction(){
     documents.forEach(file=>{file.meta=stage.label;});renderExtractionFiles();
     await wait(700);
     row.classList.remove('active');row.classList.add('done');
-    row.querySelector('i')?.setAttribute('data-lucide','check');icons();
+    row.querySelector('.step-marker').innerHTML='<i data-lucide="check"></i>';icons();
     if(index===2)$('#patientIssue').hidden=false;
   }
   state.extracting=false;state.extractionComplete=true;
@@ -380,10 +448,11 @@ document.addEventListener('click',event=>{
   if(target.dataset.extractPatient){
     const patient=patientMatches.find(item=>item.id===target.dataset.extractPatient);state.patientResolved=true;state.patientLinked=true;
     syncExistingPatientFiles();
-    $('#patientIssue .issue-title>b').textContent='Resolved';$('#extractionPatientMatches').innerHTML=`<div class="issue-resolved"><i data-lucide="check"></i><span><strong>${patient.name}</strong><small>${patient.mrn} · Existing patient selected</small></span></div>`;$('.create-new-patient').hidden=true;$('#documentIssue').hidden=false;icons();toast(`${patient.name} selected. Review document matches next.`);setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;
+    resolvePatientIssue(patient.name,`${patient.mrn} · Existing patient linked`);$('#documentIssue').hidden=false;icons();toast(`${patient.name} selected. Review document matches next.`);setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;
   }
+  if(target.dataset.changePatient!==undefined){state.patientResolved=false;state.patientLinked=false;syncExistingPatientFiles();renderExtractionPatientMatches();return;}
   if(target.dataset.extractPatientDetails){const card=$(`#extract-patient-${target.dataset.extractPatientDetails}`),details=card.querySelector('.extract-patient-details'),open=details.hidden;details.hidden=!open;target.setAttribute('aria-expanded',open);target.textContent=open?'Hide details':'View details';return;}
-  if(target.dataset.extractNewPatient!==undefined){state.patientResolved=true;state.patientLinked=false;syncExistingPatientFiles();$('#patientIssue .issue-title>b').textContent='Resolved';$('#extractionPatientMatches').innerHTML='<div class="issue-resolved"><i data-lucide="check"></i><span><strong>Create a new patient</strong><small>No existing record will be linked.</small></span></div>';target.hidden=true;$('#documentIssue').hidden=false;icons();setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;}
+  if(target.dataset.extractNewPatient!==undefined){state.patientResolved=true;state.patientLinked=false;syncExistingPatientFiles();resolvePatientIssue('Create a new patient','No existing record will be linked');$('#documentIssue').hidden=false;icons();setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;}
   if(target.dataset.extractDocument){
     const id=target.dataset.extractDocument;state.documentResolutions.add(id);const card=$(`#extract-${id}`);card.classList.add('resolved');card.querySelector('.extract-document-actions').innerHTML=`<div class="issue-resolved"><i data-lucide="check"></i><span><strong>Decision saved</strong><small>${target.dataset.decision==='existing'?'Existing document will be used.':target.dataset.decision==='replace'?'Existing document will be replaced.':'Uploaded document will be stored.'}</small></span></div>`;
     if(state.documentResolutions.size===2)$('#documentIssue .issue-title>b').textContent='Resolved';icons();checkExtractionReady();return;
@@ -424,8 +493,30 @@ document.addEventListener('click',event=>{
 $('#collapseSources').addEventListener('click',()=>setSourceDrawer(false));
 $('#checkEligibility').addEventListener('click',()=>toast('Eligibility verified: active coverage'));
 $('#addPlan').addEventListener('click',()=>toast('New insurance plan form opened'));
-$('#startPrototype').addEventListener('click',startPrototype);
+$('#queuePatients').addEventListener('click',event=>{
+  if(event.target.closest('#findPatient')){closeRecordPicker();$('#patientSearch').hidden=false;$('#patientSearchInput').value='';renderPatientSearch();$('#patientSearchInput').focus();return;}
+  const chip=event.target.closest('[data-queue-patient]');
+  if(chip)state.pickerPatient===chip.dataset.queuePatient?closeRecordPicker():openRecordPicker(chip.dataset.queuePatient);
+});
+$('#patientSearchInput').addEventListener('input',renderPatientSearch);
+$('#patientSearchInput').addEventListener('keydown',event=>{if(event.key==='Escape')$('#patientSearch').hidden=true;});
+$('#closePatientSearch').addEventListener('click',()=>{$('#patientSearch').hidden=true;});
+$('#patientSearchResults').addEventListener('click',event=>{const result=event.target.closest('[data-search-patient]');if(result)openRecordPicker(result.dataset.searchPatient);});
+$('#recordPickerList').addEventListener('change',event=>{const id=event.target.dataset.recordDoc;if(!id)return;event.target.checked?state.pickerSelection.add(id):state.pickerSelection.delete(id);renderRecordPicker();});
+$('#toggleRecordDocs').addEventListener('click',()=>{const patient=intakeQueue.find(item=>item.id===state.pickerPatient);state.pickerSelection=state.pickerSelection.size?new Set():new Set(patient.documents.filter(file=>!documents.some(item=>item.id===file.id)).map(file=>file.id));renderRecordPicker();});
+$('#addRecordDocs').addEventListener('click',addRecordDocuments);
+$('#closeRecordPicker').addEventListener('click',closeRecordPicker);
+['dragenter','dragover'].forEach(type=>$('#uploadStartZone').addEventListener(type,event=>{event.preventDefault();$('#uploadStartZone').classList.add('over');}));
+['dragleave','drop'].forEach(type=>$('#uploadStartZone').addEventListener(type,event=>{event.preventDefault();$('#uploadStartZone').classList.remove('over');if(type==='drop')addFiles(event.dataTransfer.files);}));
+renderQueuePatients();
 $('#extractDocuments').addEventListener('click',startExtraction);
+$('#cancelUpload').addEventListener('click',()=>{
+  if(!documents.length)return;
+  documents.length=0;state.selected='';
+  closeRecordPicker();$('#patientSearch').hidden=true;$('#fileInput').value='';
+  renderDocuments();renderUploadQueue();
+  toast('Upload cancelled. Documents removed.');
+});
 $('#expandSources').addEventListener('click',()=>setSourceDrawer(!$('#sourcePanel').classList.contains('drawer-open')));
 $('#sourceScrim').addEventListener('click',()=>setSourceDrawer(false));
 $('#reviewTrigger').addEventListener('click',()=>{const popover=$('#reviewPopover'),open=popover.hidden;popover.hidden=!open;$('#reviewTrigger').setAttribute('aria-expanded',open);});
@@ -461,3 +552,10 @@ setSourceDrawer(false);
 renderUploadQueue();
 setPhase('upload');
 icons();
+const setNavCollapsed=collapsed=>{document.body.classList.toggle('nav-collapsed',collapsed);const toggle=$('#navToggle');toggle.setAttribute('aria-expanded',String(!collapsed));toggle.setAttribute('aria-label',collapsed?'Expand navigation':'Collapse navigation');toggle.title=toggle.getAttribute('aria-label');};
+setNavCollapsed(window.matchMedia('(max-width:900px)').matches);
+$('#navToggle').addEventListener('click',()=>setNavCollapsed(!document.body.classList.contains('nav-collapsed')));
+$$('[data-nav-section]').forEach(section=>section.addEventListener('click',()=>{const open=section.parentElement.classList.toggle('open');section.setAttribute('aria-expanded',String(open));}));
+$$('.shell-nav a[href="#"]').forEach(link=>link.addEventListener('click',event=>event.preventDefault()));
+$('#shellBack').addEventListener('click',()=>history.back());
+$('#shellRefresh').addEventListener('click',()=>location.reload());
