@@ -27,8 +27,7 @@
           <a class="nav-item" href="#" title="Popup Clinics"><i data-lucide="store"></i><span>Popup Clinics</span></a>
           <a class="nav-item" href="#" title="Care Events"><i data-lucide="hand-heart"></i><span>Care Events</span></a>
           <a class="nav-item" href="#" title="Schedules"><i data-lucide="calendar-days"></i><span>Schedules</span></a>
-          <a class="nav-item" href="#" title="Patients"><i data-lucide="users"></i><span>Patients</span></a>
-          <a class="nav-item active" href="#" aria-current="page" title="Patient Intake"><i data-lucide="file-text"></i><span>Patient Intake</span></a>
+          <a class="nav-item active" href="#" aria-current="page" title="Patients"><i data-lucide="users"></i><span>Patients</span></a>
         </div>
       </div>
       <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>DME</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
@@ -49,7 +48,7 @@
       <button class="header-documents" id="expandSources" aria-label="Open document sidebar" aria-expanded="false" title="Open document sidebar" hidden><i data-lucide="panel-left-open"></i><b id="drawerCount">0</b></button>
       <div class="brand"><span>Patient Intake</span></div>
     </div>
-    <div class="top-actions"><div class="review-menu"><button class="review-trigger" id="reviewTrigger" aria-expanded="false" aria-haspopup="true" disabled><b class="review-count" id="reviewCount">3</b><span id="reviewTriggerText">things to review</span><i data-lucide="chevron-down"></i></button><div class="review-popover" id="reviewPopover" hidden><div class="review-popover-head"><strong id="reviewPopoverTitle">3 items need your attention</strong><span>Select an item to go straight to it.</span></div><div id="reviewItems"></div><div class="review-popover-foot" id="reviewPopoverFoot"></div></div></div></div>
+    <div class="top-actions"></div>
   </header>
 
   <main class="workspace intake-empty phase-upload" id="workspace">
@@ -130,7 +129,7 @@
       </div>
       <div class="ai-review-guidance">
         <span class="guidance-icon"><i data-lucide="sparkles"></i></span>
-        <div class="guidance-copy"><strong>Your intake is mostly done</strong><p>AI extracted the details and resolved conflicts. Review each section and correct anything that needs attention.</p></div>
+        <div class="guidance-copy"><strong>Your intake is mostly done</strong><p>AI extracted the details and resolved conflicts, but it may make mistakes. Please review each section and correct any information as needed. Check fields marked “AI resolved” against their source document.</p></div>
       </div>
 
       <section class="review-card" id="demographics-section">
@@ -139,7 +138,7 @@
           <div><span>First name</span><strong>Ashlynn</strong></div><div><span>Middle name</span><strong>—</strong></div>
           <div><span>Last name</span><strong>Botosh</strong></div><div><span>Gender</span><strong>Female</strong></div>
         </div><div class="field-grid">
-          <div class="field-row ai-resolved" id="dobConflict"><div class="field-label"><span class="confidence ai-confidence">AI resolved · 97%</span><span class="field-name">Date of birth</span></div><div class="field-value"><strong id="dobValue">03/15/1978</strong><button class="source-link" data-doc="referral"><i data-lucide="scan-text"></i> Referral.pdf · p1</button></div><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Conflict resolved automatically</b> Referral and prior patient history agree. The insurance card value was treated as a likely scan error.</span><button class="text-btn" id="changeDob">Change</button></div></div>
+          <div class="field-row ai-resolved" id="dobConflict"><div class="field-label"><span class="confidence ai-confidence">AI resolved</span><span class="field-name">Date of birth</span></div><div class="field-value"><strong id="dobValue">03/15/1978</strong><button class="source-link" data-doc="referral"><i data-lucide="scan-text"></i> Referral.pdf · p1</button></div><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Conflict resolved automatically</b> Referral and prior patient history agree. The insurance card value was treated as a likely scan error.</span><button class="text-btn" id="changeDob">Change</button></div></div>
         </div></div>
       </section>
 
@@ -151,15 +150,15 @@
           <div><span>City</span><strong>Seattle</strong></div><div><span>State/Province</span><strong>WA</strong></div>
           <div><span>ZIP code</span><strong>98101</strong></div>
         </div><div class="field-grid">
-          <div class="field-row needs-review" id="mobileField"><div class="field-label"><span class="confidence low">Low confidence · 62%</span><span class="field-name">Mobile number</span></div><div class="field-value edit-value"><input class="input" id="mobileInput" value="(415) 220-8841" aria-label="Mobile number"><button class="source-link" data-doc="consent"><i data-lucide="scan-text"></i> Consent Form.pdf · p1</button></div><div class="suggestion"><i data-lucide="sparkles"></i><span><b>Suggested action</b> Verify the last four digits against the source.</span><button class="small-btn primary" id="confirmMobile">Confirm</button></div></div>
+          <div class="field-row ai-resolved" id="mobileField"><div class="field-label"><span class="confidence ai-confidence">AI resolved</span><span class="field-name">Mobile number</span></div><div class="field-value"><strong id="mobileValue">(415) 220-8841</strong><button class="source-link" data-doc="consent"><i data-lucide="scan-text"></i> Consent Form.pdf · p1</button></div><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Unclear digits resolved</b> The last four digits were blurry on the consent form. AI matched them to the number on the patient’s existing record.</span><button class="text-btn" data-ai-change="mobile">Change</button></div></div>
         </div></div>
       </section>
 
       <section class="review-card" id="insurance-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance information</h3><p>2 coverage plans · 12 fields complete</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
         <div class="eligibility-bar">
           <div class="eligibility-picker">
-            <span class="eligibility-label" id="serviceTypeLabel">Check eligibility for</span>
+            <span class="eligibility-label" id="serviceTypeLabel">Service type</span>
             <div class="service-select">
               <button class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
               <div class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></div>
@@ -169,58 +168,44 @@
           <span class="eligibility-meta" id="eligibilityMeta"></span>
         </div>
         <div class="insurance-workspace">
-          <aside class="plan-list" aria-label="Insurance coverage order"><p>Coverage order</p><div id="planList"></div><div class="order-notice" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add another plan</button></aside>
+          <aside class="plan-list" aria-label="Insurance coverage order"><p class="plan-list-head"><span>Coverage order</span><span class="pill info" id="orderSource"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="planList" role="list"></div><div class="order-hint" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add another plan</button></aside>
           <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
+            <p class="plan-ai-note" id="planAiNote" hidden></p>
             <div class="insurance-fields" id="insuranceFields"></div>
           </div>
         </div>
       </section>
 
-      <section class="review-card" id="prescription-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="notebook-tabs"></i></span><div><h3>Prescription</h3><p id="prescriptionMeta">Physician, diagnosis, HCPCS codes, and documents</p></div></div><span class="section-status danger"><i data-lucide="circle-x"></i> 2 missing</span></div>
-        <details class="data-group" open><summary><span>Physician information</span><small id="physicianMeta">5 of 6 fields</small><i data-lucide="chevron-down"></i></summary>
-          <div class="compact-fields">
-            <div><span>First name</span><strong>Sarah</strong></div>
-          </div>
-          <div class="field-grid">
-            <div class="field-row needs-review" id="physicianConflict"><div class="field-label"><span class="confidence low">Conflict · 2 documents disagree</span><span class="field-name">Last name</span></div><div class="field-value conflict-choice" role="radiogroup" aria-label="Physician last name"><label class="choice-pill"><input type="radio" name="physicianLastName" value="Kim" data-physician-name><span><b>Kim</b><small>Prescription.pdf</small></span></label><label class="choice-pill"><input type="radio" name="physicianLastName" value="Kimm" data-physician-name><span><b>Kimm</b><small>Face-to-Face Notes.pdf</small></span></label></div><div class="suggestion"><i data-lucide="sparkles"></i><span><b>Suggested action</b> The NPI registry lists Dr. Sarah Kim. Choose the spelling to keep.</span></div></div>
-          </div>
-          <label class="resolve-row" id="providerField" for="providerInput"><span><b>NPI</b><small id="providerHint">Not found in uploaded documents</small></span><input class="input" id="providerInput" inputmode="numeric" maxlength="10" placeholder="10-digit NPI"></label>
-          <div class="enrollment-row"><span class="enrollment-label">Enrollment</span><span class="enrollment-chip"><i data-lucide="circle-check"></i> DME</span><span class="enrollment-chip"><i data-lucide="circle-check"></i> PMD</span><span class="enrollment-chip"><i data-lucide="circle-check"></i> Part B</span><button class="source-link" data-doc="prescription"><i data-lucide="scan-text"></i> Prescription.pdf · p1</button></div>
-        </details>
-        <details class="data-group" open><summary><span>ICD-10 codes</span><small id="icdMeta"></small><i data-lucide="chevron-down"></i></summary>
-          <div class="code-list" id="icdList"></div>
-        </details>
-        <details class="data-group" open><summary><span>HCPCS codes</span><small id="hcpcsMeta"></small><i data-lucide="chevron-down"></i></summary>
-          <div class="hcpcs-list" id="hcpcsList"></div>
-          <div class="add-hcpcs">
-            <button class="text-btn add-hcpcs-toggle" id="addHcpcsToggle"><i data-lucide="plus"></i> Add HCPCS code</button>
-            <form class="add-hcpcs-form" id="addHcpcsForm" hidden><input class="input" id="newHcpcsCode" placeholder="Code, e.g. A7034" maxlength="5" aria-label="HCPCS code" required><input class="input" id="newHcpcsDescription" placeholder="Description" aria-label="HCPCS description" required><input class="input" id="newHcpcsQty" type="number" min="1" value="1" aria-label="Quantity"><button class="small-btn primary" type="submit">Add</button><button class="text-btn" type="button" id="cancelHcpcs">Cancel</button></form>
-          </div>
-        </details>
-        <details class="data-group" open><summary><span>Required documents</span><small id="requiredDocsMeta"></small><i data-lucide="chevron-down"></i></summary>
-          <div class="required-docs" id="requiredDocs"></div>
-          <input type="file" id="requiredDocInput" accept=".pdf,.png,.jpg,.jpeg" hidden>
-        </details>
-      </section>
+      <div id="prescriptions"></div>
+      <button class="add-prescription" id="addPrescription"><i data-lucide="plus"></i> Add prescription</button>
+      <datalist id="hcpcsOptions"></datalist>
+      <datalist id="icdOptions"></datalist>
 
       <section class="review-card" id="note-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="stethoscope"></i></span><div><h3>Physician note</h3><p>Extracted from Face-to-Face Notes.pdf</p></div></div><span class="section-status danger"><i data-lucide="circle-x"></i> 1 missing</span></div>
-        <div class="data-group"><div class="field-grid">
-          <div class="field-row has-error" id="signatureField"><div class="field-label"><span class="confidence error">Missing signature</span><span class="field-name">Physician signature</span></div><div class="field-value"><strong id="signatureValue">Not found</strong><button class="source-link" data-doc="face-to-face"><i data-lucide="scan-text"></i> Face-to-Face Notes.pdf · p2</button></div><div class="suggestion error"><i data-lucide="pen-line"></i><span><b>Signature and date required</b> Medicare requires a signed, dated face-to-face note before dispensing.</span><button class="small-btn" data-signature="signed">Mark as signed</button><button class="small-btn primary" data-signature="requested">Request signature</button></div></div>
-        </div></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="stethoscope"></i></span><div><h3>Physician note</h3><p>Extracted from Face-to-Face Notes.pdf</p></div></div><span class="section-status warning"><i data-lucide="info"></i> Signature missing</span></div>
+        <div class="note-message"><i data-lucide="info"></i><span><b>Physician signature not found</b> The face-to-face note doesn’t appear to be signed. This doesn’t block the intake.</span><button class="source-link" data-doc="face-to-face"><i data-lucide="scan-text"></i> Face-to-Face Notes.pdf · p2</button></div>
         <div class="note-body"><label class="note-label" for="physicianNote">Clinical note</label><textarea class="input note-input" id="physicianNote" rows="5">Patient seen 10/12/2026 for loud snoring, witnessed apneas, and daytime sleepiness (Epworth score 14). Home sleep test on 10/08/2026 shows AHI 18.4 events/hr, consistent with moderate obstructive sleep apnea. Recommend auto-titrating CPAP 5–15 cm H2O with heated humidifier and full face mask. Patient educated on therapy and agrees to start. Follow up in 31–90 days to assess compliance and benefit.</textarea><button class="source-link" data-doc="face-to-face"><i data-lucide="scan-text"></i> Face-to-Face Notes.pdf · p1</button></div>
       </section>
 
       <section class="review-card" id="prior-auth-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="file-check"></i></span><div><h3>Prior authorization</h3><p>6 of 6 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
-        <div class="data-group"><div class="compact-fields">
-          <div><span>HCPCS</span><strong>E0601</strong></div><div><span>Prior authorization number</span><strong>PA-26-0418873</strong></div>
-          <div><span>Payer</span><strong>Aetna Choice POS II</strong></div><div><span>Effective date</span><strong>10/15/2026 – 04/15/2027</strong></div>
-          <div><span>Quantity/Amount</span><strong>1 unit</strong></div><div><span>Dispensing frequency</span><strong>Monthly rental · 13 months</strong></div>
-        </div><div class="field-grid">
-          <div class="field-row needs-review" id="authExpiry"><div class="field-label"><span class="confidence low">Expires before rental ends</span><span class="field-name">Authorization period</span></div><div class="field-value"><strong>Ends 04/15/2027 · rental runs to 11/15/2027</strong></div><div class="suggestion"><i data-lucide="calendar-clock"></i><span><b>7 months not covered</b> Request an extension from Aetna before 04/15/2027, or acknowledge to continue.</span><button class="small-btn primary" data-auth-ack>Acknowledge</button></div></div>
-        </div></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="file-check"></i></span><div><h3>Prior authorization</h3><p id="priorAuthMeta">2 authorizations</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
+        <div class="pa-list" id="priorAuthList"></div>
+        <div class="pa-add">
+          <button class="text-btn" id="addPriorAuthToggle"><i data-lucide="plus"></i> Add prior authorization</button>
+          <form class="pa-form" id="priorAuthForm" hidden novalidate>
+            <div class="pa-form-grid">
+              <label><span>HCPCS <em>*</em></span><input class="input" name="code" list="hcpcsOptions" maxlength="5" placeholder="e.g. E0601" required></label>
+              <label><span>Authorization number <em>*</em></span><input class="input" name="number" placeholder="e.g. PA-26-0000000" required></label>
+              <label><span>Payer <em>*</em></span><select class="input" name="payer" id="priorAuthPayer" required></select></label>
+              <label><span>Effective from</span><input class="input" type="date" name="from"></label>
+              <label><span>Effective to</span><input class="input" type="date" name="to"></label>
+              <label><span>Quantity/Amount</span><input class="input" name="qty" placeholder="e.g. 1 unit"></label>
+              <label class="wide"><span>Dispensing frequency</span><input class="input" name="frequency" placeholder="e.g. Monthly rental · 13 months"></label>
+            </div>
+            <p class="form-error" id="priorAuthError" hidden>Fill in HCPCS, authorization number and payer.</p>
+            <div class="pa-form-actions"><button class="small-btn" type="button" id="cancelPriorAuth">Cancel</button><button class="small-btn primary" type="submit">Add authorization</button></div>
+          </form>
+        </div>
       </section>
 
       <section class="completion-card" id="completionCard" hidden>
@@ -243,6 +228,8 @@
           <button class="primary-action next-action-primary" id="recommendedAction" data-post-action></button>
         </section>
 
+        <section class="precheck-result" id="precheckResult" aria-labelledby="precheckTitle" hidden></section>
+
         <section class="other-actions" aria-labelledby="otherActionsTitle"><h3 id="otherActionsTitle">Other available actions</h3><div id="otherActionButtons"></div></section>
 
         <section class="intake-recommendations" aria-labelledby="recommendationsTitle">
@@ -257,7 +244,7 @@
       </section>
     </section>
 
-    <aside class="extraction-issues" id="extractionIssues" aria-label="Extraction issues" hidden><div class="extraction-issues-head"><span class="action-badge"><span class="action-dot"></span>Action needed</span><h2>Confirm two matches</h2><p>We’ll take you to review as soon as these are resolved.</p></div><section class="extraction-issue" id="patientIssue"><div class="issue-title"><span class="issue-number">1</span><div><strong>Select the patient</strong><span>Review details when needed, then choose one record.</span></div><b>Required</b></div><div id="extractionPatientMatches"></div><button class="create-new-patient" data-extract-new-patient><i data-lucide="user-plus"></i><span><strong>None of these</strong><small>Create a new patient record</small></span><i data-lucide="chevron-right"></i></button></section><section class="extraction-issue" id="documentIssue"><div class="issue-title"><span class="issue-number">2</span><div><strong>Choose document handling</strong><span>Decide how to store the same and similar documents.</span></div><b>Required</b></div><div id="extractionDocumentMatches"></div></section><div class="extraction-waiting" id="extractionWaiting"><span class="spinner"></span><span>Complete the required items while extraction finishes.</span></div></aside>
+    <aside class="extraction-issues" id="extractionIssues" aria-label="Extraction issues" hidden><div class="extraction-issues-head"><span class="action-badge"><span class="action-dot"></span>Action needed</span><h2 id="extractionIssuesTitle">Confirm two matches</h2><p>We’ll take you to review as soon as these are resolved.</p></div><section class="extraction-issue" id="patientIssue"><div class="issue-title"><span class="issue-number">1</span><div><strong>Select the patient</strong><span>Review details when needed, then choose one record.</span></div><b>Required</b></div><div id="extractionPatientMatches"></div><button class="create-new-patient" data-extract-new-patient><i data-lucide="user-plus"></i><span><strong>None of these</strong><small>Create a new patient record</small></span><i data-lucide="chevron-right"></i></button></section><section class="extraction-issue" id="documentIssue"><div class="issue-title"><span class="issue-number" id="documentIssueNumber">2</span><div><strong>Choose document handling</strong><span id="documentIssueHint">Decide how to store the same and similar documents.</span></div><b>Required</b></div><div id="extractionDocumentMatches"></div></section><div class="extraction-waiting" id="extractionWaiting"><span class="spinner"></span><span>Complete the required items while extraction finishes.</span></div></aside>
 
     <aside class="action-panel" id="documentViewer" aria-label="Source document viewer" hidden>
       <div class="viewer-resize" id="viewerResize" role="separator" aria-orientation="vertical" aria-label="Resize document viewer"></div>
@@ -276,11 +263,63 @@
       <button class="footer-btn primary" id="extractDocuments" disabled><i data-lucide="sparkles"></i> Extract</button>
     </div>
     <div class="footer-group" data-footer-phase="review" hidden>
-      <span class="footer-status" id="footerReviewStatus"></span>
+      <button class="footer-btn footer-cancel" id="cancelIntake">Cancel intake</button>
+      <span class="footer-status" id="footerReviewStatus" hidden></span>
+      <div class="review-menu footer-review"><button class="review-chip" id="reviewTrigger" aria-expanded="false" aria-haspopup="true" disabled><span class="review-chip-dot" aria-hidden="true"></span><b id="reviewCount">7</b><span id="reviewTriggerText">to review</span><span class="review-chip-required" id="reviewRequired">(3 required)</span><i data-lucide="chevron-up"></i></button><div class="review-popover" id="reviewPopover" hidden><div class="review-popover-head"><strong id="reviewPopoverTitle">3 items need your attention</strong><span>Select an item to go straight to it.</span></div><div id="reviewItems"></div><div class="review-popover-foot" id="reviewPopoverFoot"></div></div></div>
       <button class="footer-btn primary" id="completeIntake" disabled><i data-lucide="check"></i> Looks good</button>
     </div>
   </footer>
   </div>
+
+  <dialog class="confirm-dialog" id="cancelIntakeDialog" aria-labelledby="cancelIntakeTitle" aria-describedby="cancelIntakeBody">
+    <form method="dialog">
+      <h2 id="cancelIntakeTitle">Cancel this intake?</h2>
+      <p id="cancelIntakeBody">All extracted information and any changes you made will be discarded. A cancelled intake can’t be resumed later. To try again, you’ll need to start a new intake.</p>
+      <div class="confirm-actions">
+        <button class="footer-btn" value="keep" autofocus>Keep working</button>
+        <button class="footer-btn danger" value="cancel">Cancel intake</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="confirm-dialog response-dialog" id="eligibilityDialog" aria-labelledby="eligibilityDialogTitle">
+    <form method="dialog">
+      <header class="response-head"><div><span class="eyebrow">Eligibility response</span><h2 id="eligibilityDialogTitle"></h2><p id="eligibilityDialogMeta"></p></div><button class="icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div id="eligibilityDialogBody"></div>
+      <div class="confirm-actions"><button class="footer-btn" value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="confirm-dialog add-plan-dialog" id="addPlanDialog" aria-labelledby="addPlanTitle">
+    <form id="addPlanForm" novalidate>
+      <header class="response-head"><div><span class="eyebrow">Insurance</span><h2 id="addPlanTitle">Add another plan</h2><p>Enter the details from the patient’s insurance card. You can check eligibility after saving.</p></div><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
+
+      <button type="button" class="card-scan" id="scanCard"><i data-lucide="scan-line"></i><span><strong>Upload insurance card</strong><small>AI fills in the fields for you to review</small></span></button>
+
+      <div class="form-grid">
+        <label class="span-2"><span>Health insurance company <em>*</em></span><input class="input" name="company" required placeholder="e.g. Blue Cross Blue Shield" autocomplete="off"></label>
+        <label class="span-2"><span>Plan name <em>*</em></span><input class="input" name="plan" required placeholder="e.g. Premera Blue Cross PPO"></label>
+        <label><span>Insurance type <em>*</em></span><select class="input" name="type" required><option value="">Select</option><option>Commercial PPO</option><option>Commercial HMO</option><option>Medicare</option><option>Medicare Advantage</option><option>Medicaid</option><option>Medicare Supplement</option><option>TRICARE</option><option>Workers’ compensation</option><option>Other</option></select></label>
+        <label><span>Relationship to insured <em>*</em></span><select class="input" name="relationship" required><option>Self</option><option>Spouse</option><option>Child</option><option>Other</option></select></label>
+        <div class="span-2 member-field" role="group" aria-labelledby="memberIdLabel"><span class="field-title" id="memberIdLabel">Member ID <em>*</em></span><div class="member-id"><input class="input" name="prefix" placeholder="Prefix" aria-label="Member ID prefix"><input class="input" name="member" required placeholder="Member ID" aria-label="Member ID"><input class="input" name="suffix" placeholder="Suffix" aria-label="Member ID suffix"></div></div>
+        <label><span>Group number</span><input class="input" name="group" placeholder="Optional"></label>
+        <label><span>Coverage order</span><select class="input" name="position" id="addPlanPosition"></select></label>
+        <label><span>Effective from <em>*</em></span><input class="input" type="date" name="from" required></label>
+        <label><span>Effective to</span><input class="input" type="date" name="to"></label>
+      </div>
+      <p class="form-error" id="addPlanError" hidden>Fill in the required fields marked with *.</p>
+      <label class="check-row"><input type="checkbox" name="checkNow" checked> Check eligibility after adding</label>
+      <div class="confirm-actions"><button class="footer-btn" type="button" data-close-add-plan>Cancel</button><button class="footer-btn primary" type="submit">Add plan</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="confirm-dialog response-dialog" id="itemDocsDialog" aria-labelledby="itemDocsTitle">
+    <form method="dialog">
+      <header class="response-head"><div><span class="eyebrow">Required documents</span><h2 id="itemDocsTitle"></h2><p id="itemDocsMeta"></p></div><button class="icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="item-docs" id="itemDocsList"></div>
+      <div class="confirm-actions"><button class="footer-btn" value="close">Close</button></div>
+    </form>
+  </dialog>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
