@@ -127,3 +127,14 @@ a.footer-btn{text-decoration:none}
   .pc-kv{grid-template-columns:1fr}
   .pcd-check-body{padding-left:var(--space-6)}
 }
+/* AI messaging */
+.pc-ai-pill{vertical-align:middle;margin-left:var(--space-3);font-size:11px}
+.pc-ai-run{display:inline-flex;align-items:center;gap:var(--space-3);font-size:12px;color:var(--muted)}
+.pc-ai-run .lucide{width:14px;height:14px;color:var(--primary)}
+.pc-ai-note{display:grid;grid-template-columns:32px minmax(0,1fr);gap:var(--space-6);align-items:start;margin:var(--space-6) var(--space-8) 0;padding:var(--space-6) var(--space-7);border:1px solid var(--line);border-radius:8px;background:#fafcfe}
+.pc-ai-icon{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--blue-soft);color:var(--primary)}
+.pc-ai-icon .lucide{width:16px;height:16px}
+.pc-ai-note strong{font-size:13px;font-weight:600;color:var(--text)}
+.pc-ai-note p{margin:var(--space-1) 0 0;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.pc-ai-note+.pc-disclaimer{margin-top:var(--space-4);background:transparent;border-bottom:0;padding-top:0}
+.pill.ai.pc-ai-pill{background:var(--blue-soft);color:var(--primary);border:1px solid #d3e6f5}

@@ -100,7 +100,7 @@ function evaluate(line,rx){
 }
 const items=intake.prescriptions.flatMap(rx=>rx.items.flatMap(item=>item.lines.map(line=>evaluate(line,rx))));
 items.forEach((item,i)=>item.id=i);
-const ui={selected:items.findIndex(i=>i.status!=='pass'),filter:'all',reviewed:new Set(),open:new Set()};
+const ui={selected:items.findIndex(i=>i.status!=='pass'),filter:'all',open:new Set()};
 if(ui.selected<0)ui.selected=0;
 
 const statusText={pass:'Qualified',warn:'Needs attention',fail:'Not qualified'};
@@ -111,25 +111,20 @@ const issueCount=item=>item.checks.filter(c=>c.status!=='pass').length;
 function renderStats(){
   const n=counts();
   $('#pcStats').innerHTML=[['all','Total items'],['pass','Qualified'],['warn','Needs attention'],['fail','Not qualified']].map(([key,label])=>`<button class="pc-stat ${key} ${ui.filter===key?'active':''}" data-filter="${key}" aria-pressed="${ui.filter===key}"><b>${String(n[key]).padStart(2,'0')}</b><span>${label}</span></button>`).join('');
-  const done=ui.reviewed.size;
-  $('#pcProgressText').textContent=`${done} of ${items.length} items reviewed`;
-  $('#pcProgressBar').style.width=`${Math.round(done/items.length*100)}%`;
-  const open=items.filter(i=>i.status!=='pass'&&!ui.reviewed.has(i.id)).length;
-  $('#pcFooterStatus').textContent=open?`${open} ${open===1?'item needs':'items need'} a look`:'All flagged items reviewed';
+  const flagged=n.warn+n.fail;
+  $('#pcFooterStatus').textContent=flagged?`AI flagged ${flagged} of ${items.length} ${items.length===1?'item':'items'}`:`AI found no issues across ${items.length} items`;
 }
 function renderList(){
   const visible=item=>ui.filter==='all'||item.status===ui.filter;
   $('#pcList').innerHTML=intake.prescriptions.map(rx=>{
     const rows=items.filter(i=>i.rx===rx&&visible(i));
     if(!rows.length)return '';
-    return `<section class="pc-rx"><header><strong>${esc(rx.title)}</strong><span>Dr. ${esc(rx.physician)}${rx.npi?` · NPI ${esc(rx.npi)}`:''}</span></header>${rows.map(item=>{const issues=issueCount(item);return `<button class="pc-item ${item.status} ${ui.selected===item.id?'active':''}" data-item="${item.id}" aria-current="${ui.selected===item.id}"><span class="pc-item-icon"><i data-lucide="${statusIcon[item.status]}"></i></span><span class="pc-item-copy"><span class="pc-item-top"><b>${item.code}</b>${ui.reviewed.has(item.id)?'<span class="pc-reviewed" title="Reviewed"><i data-lucide="check"></i> Reviewed</span>':''}</span><span class="pc-item-desc">${esc(item.description)}</span><small>${issues?`${issues} of ${item.checks.length} checks need attention`:`All ${item.checks.length} checks passed`}</small></span></button>`;}).join('')}</section>`;
+    return `<section class="pc-rx"><header><strong>${esc(rx.title)}</strong><span>Dr. ${esc(rx.physician)}${rx.npi?` · NPI ${esc(rx.npi)}`:''}</span></header>${rows.map(item=>{const issues=issueCount(item);return `<button class="pc-item ${item.status} ${ui.selected===item.id?'active':''}" data-item="${item.id}" aria-current="${ui.selected===item.id}"><span class="pc-item-icon"><i data-lucide="${statusIcon[item.status]}"></i></span><span class="pc-item-copy"><span class="pc-item-top"><b>${item.code}</b></span><span class="pc-item-desc">${esc(item.description)}</span><small>${issues?`${issues} of ${item.checks.length} checks need attention`:`All ${item.checks.length} checks passed`}</small></span></button>`;}).join('')}</section>`;
   }).join('')||'<p class="pc-empty">No items in this group.</p>';
 }
 function renderDetail(){
   const item=items[ui.selected];if(!item)return;
   const issues=item.checks.filter(c=>c.status!=='pass');
-  const index=items.indexOf(item),prev=items[index-1],next=items[index+1];
-  const reviewed=ui.reviewed.has(item.id);
   $('#pcDetail').innerHTML=`
     <header class="pcd-head">
       <div><span class="pcd-rx">${esc(item.rx.title)} · Qty ${item.qty} · ${esc(item.frequency)}</span><h2><span class="pcd-code">${item.code}</span> ${esc(item.description)}</h2></div>
@@ -137,11 +132,7 @@ function renderDetail(){
     </header>
     ${issues.length?`<section class="pcd-todo ${item.status}"><h3>${item.status==='fail'?'Why it doesn’t qualify':'What needs attention'}</h3><ul>${issues.map(c=>`<li><button class="pcd-todo-link" data-jump="${c.key}"><i data-lucide="${statusIcon[c.status]}"></i><span><b>${c.label}:</b> ${esc(c.summary)}${c.action?`<small>${esc(c.action)}</small>`:''}</span><i data-lucide="chevron-right" class="go"></i></button></li>`).join('')}</ul></section>`:`<section class="pcd-todo pass"><h3><i data-lucide="circle-check"></i> All ${item.checks.length} checks passed</h3><p>Nothing to resolve for this item. Expand any check below to see the details.</p></section>`}
     <div class="pcd-checks">${item.checks.map(c=>{const open=c.status!=='pass'||ui.open.has(`${item.id}-${c.key}`);return `<section class="pcd-check ${c.status}" id="check-${c.key}"><button class="pcd-check-head" data-toggle="${c.key}" aria-expanded="${open}"><i data-lucide="${statusIcon[c.status]}" class="st"></i><span><b>${c.label}</b><small>${esc(c.summary)}</small></span><span class="pc-mini ${c.status}">${c.status==='pass'?'Pass':c.status==='warn'?'Review':'Fail'}</span><i data-lucide="chevron-down" class="chev"></i></button><div class="pcd-check-body" ${open?'':'hidden'}>${c.body}${c.action?`<p class="pcd-action"><i data-lucide="arrow-right"></i> ${esc(c.action)}</p>`:''}</div></section>`;}).join('')}</div>
-    ${item.recommended.length?`<section class="pcd-reco"><h3><i data-lucide="sparkles"></i> Other items to consider <span>AI suggestion · review required</span></h3><ul>${item.recommended.map(r=>`<li><b>${esc(r.name)}</b><small>${esc(r.why)}</small></li>`).join('')}</ul></section>`:''}
-    <footer class="pcd-nav">
-      <button class="footer-btn" data-nav="${prev?prev.id:''}" ${prev?'':'disabled'}><i data-lucide="chevron-left"></i> Previous</button>
-      <div class="pcd-nav-right"><button class="footer-btn ${reviewed?'':'primary'}" data-review="${item.id}">${reviewed?'<i data-lucide="check"></i> Reviewed':next?'Mark reviewed &amp; next':'Mark reviewed'}</button>${next?`<button class="footer-btn" data-nav="${next.id}">Next <i data-lucide="chevron-right"></i></button>`:''}</div>
-    </footer>`;
+    ${item.recommended.length?`<section class="pcd-reco"><h3><i data-lucide="sparkles"></i> Other items to consider <span>AI suggestion · review required</span></h3><ul>${item.recommended.map(r=>`<li><b>${esc(r.name)}</b><small>${esc(r.why)}</small></li>`).join('')}</ul></section>`:''}`;
 }
 function render(){renderStats();renderList();renderDetail();icons();}
 function select(id,focus=true){ui.selected=+id;render();if(focus){$('#pcDetail').scrollTop=0;window.matchMedia('(max-width:900px)').matches&&$('#pcDetail').scrollIntoView({behavior:'smooth',block:'start'});}}
@@ -156,17 +147,8 @@ document.addEventListener('click',event=>{
   const el=event.target.closest('button');if(!el)return;
   if(el.dataset.filter){ui.filter=el.dataset.filter;const first=items.find(i=>ui.filter==='all'||i.status===ui.filter);if(first&&!(ui.filter==='all'||items[ui.selected].status===ui.filter))ui.selected=first.id;render();return;}
   if(el.dataset.item!==undefined){select(el.dataset.item);return;}
-  if(el.dataset.nav!==undefined&&el.dataset.nav!==''){select(el.dataset.nav);return;}
   if(el.dataset.toggle){const key=`${ui.selected}-${el.dataset.toggle}`,body=el.nextElementSibling,open=body.hidden;body.hidden=!open;el.setAttribute('aria-expanded',String(open));open?ui.open.add(key):ui.open.delete(key);return;}
   if(el.dataset.jump){const section=$(`#check-${el.dataset.jump}`);const body=section.querySelector('.pcd-check-body');body.hidden=false;section.querySelector('.pcd-check-head').setAttribute('aria-expanded','true');section.scrollIntoView({behavior:'smooth',block:'start'});section.classList.add('flash');setTimeout(()=>section.classList.remove('flash'),900);return;}
-  if(el.dataset.review!==undefined){
-    const id=+el.dataset.review;
-    if(ui.reviewed.has(id)){ui.reviewed.delete(id);render();return;}
-    ui.reviewed.add(id);
-    const next=items.slice(id+1).find(i=>ui.filter==='all'||i.status===ui.filter);
-    if(next){select(next.id);toast(`${items[id].code} reviewed`);}else{render();toast(ui.reviewed.size===items.length?'All items reviewed':`${items[id].code} reviewed`);}
-    return;
-  }
 });
 document.addEventListener('keydown',event=>{
   if(event.target.matches('input,textarea,select'))return;

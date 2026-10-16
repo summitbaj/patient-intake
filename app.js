@@ -26,7 +26,8 @@ const coveragePolicies=[
 const existingFiles=[
   {id:'existing-insurance',name:'Insurance Card · Sep 2025.pdf',meta:'Extracted previously',icon:'badge-check',extracted:true,used:false},
   {id:'existing-consent',name:'Consent Form.pdf',meta:'Extracted previously',icon:'file-signature',extracted:true,used:true},
-  {id:'existing-sleep',name:'Sleep Study · Aug 2022.pdf',meta:'Not extracted yet',icon:'file-chart-column',extracted:false,used:false}
+  {id:'existing-sleep',name:'Sleep Study · Aug 2022.pdf',meta:'Not extracted yet',icon:'file-chart-column',extracted:false,used:false},
+  {id:'existing-progress',name:'Progress Notes · Jul 2026.pdf',meta:'Not extracted yet',icon:'file-text',extracted:false,used:false}
 ];
 const patientMatches=[
   {id:'ashlynn',initials:'AB',name:'Ashlynn Botosh',confidence:94,dob:'03/15/1978',address:'1234 Healthways Blvd, Seattle, WA 98101',phone:'(415) 220-8841',mrn:'PT-10482',reason:'Name, DOB, address, and phone match'},
@@ -64,7 +65,7 @@ const insurancePlans=[
   {id:'medicaid',name:'Washington Apple Health',systemRank:null,aiRank:'Tertiary',source:'Referral.pdf · p2',docId:'referral',aiReason:'Medicaid is always the payer of last resort. This plan isn’t in the system yet.',eligibility:'Active through 06/30/2027',check:null,response:{payer:'Washington State HCA',trace:'WAHCA-7731902',deductible:'$0.00',deductibleMet:'$0.00',oop:'Not applicable',network:'Enrolled provider'},results:{'Clinical Services':{eligible:true,detail:'No copay'},DME:{eligible:true,detail:'Covers Medicare coinsurance as secondary payer'},Immunization:{eligible:true,detail:'Covered at 100%'},Counselling:{eligible:true,detail:'No copay with enrolled provider'}},fields:[['Insurance type','Medicaid'],['Health insurance company','Washington State Health Care Authority'],['Relationship to insured','Self'],['Member ID prefix','—'],['Member ID','200458812WA'],['Member ID suffix','—'],['Group number','Not provided'],['Effective from','07/01/2026'],['Effective to','06/30/2027']]}
 ];
 
-const state = { serviceType:'DME', checkingEligibility:false, checkingPlan:false, editingPlan:false, currentPlan:0, physicianName:false, signature:true, authAck:false, selected:'', pickerPatient:'', pickerSelection:new Set(), viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:true, provider:false, product:true, patientLinked:false, completed:false, precheck:null, precheckAt:'', knownPatient:null, docDecisionsNeeded:2, aiEdited:new Set(), aiReviewed:new Set() };
+const state = { recordDecisions:new Map(), serviceType:'DME', checkingEligibility:false, checkingPlan:false, editingPlan:false, currentPlan:0, physicianName:true, signature:true, authAck:false, selected:'', pickerPatient:'', pickerSelection:new Set(), viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:true, provider:false, product:true, patientLinked:false, completed:false, precheck:null, precheckAt:'', knownPatient:null, docDecisionsNeeded:2, aiEdited:new Set(), aiReviewed:new Set() };
 // Conflicts AI resolved during extraction. They don't block completion, but stay listed so the user can review them.
 const aiResolvedFields=[
   {id:'dobConflict',key:'dob',label:'Date of birth',detail:'Kept 03/15/1978 · insurance card showed 03/16/1978',section:'Patient demographics'},
@@ -90,6 +91,7 @@ function renderDocuments(){
   $('#documentList').innerHTML=documents.length?documents.map(document=>`<button class="document-item new-doc ${document.id===state.selected?'active':''}" data-document="${document.id}"><span class="doc-icon"><i data-lucide="${document.icon}"></i></span><span class="doc-info"><strong>${document.name}</strong><span>${document.meta}</span></span><span class="doc-state">${document.processing?'<span class="spinner"></span>':'<i data-lucide="circle-check"></i>'}</span></button>`).join(''):'<div class="empty-documents">No documents uploaded yet</div>';
   $('#fileCount').textContent=documents.length;
   $('#drawerCount').textContent=documents.length;
+  updateSourceCount();
   renderViewerGallery();
   icons();
 }
@@ -116,10 +118,10 @@ function renderExtractionPatientMatches(){
   $('.create-new-patient').hidden=false;
   icons();
 }
-function resolvePatientIssue(title,detail){
+function resolvePatientIssue(title,detail,changeable=true){
   $('#patientIssue').classList.add('is-resolved');
   $('#patientIssue .issue-title>b').textContent='Resolved';
-  $('#extractionPatientMatches').innerHTML=`<div class="issue-resolved"><i data-lucide="circle-check"></i><span><strong>${title}</strong><small>${detail}</small></span><button class="text-btn" data-change-patient>Change</button></div>`;
+  $('#extractionPatientMatches').innerHTML=`<div class="issue-resolved"><i data-lucide="circle-check"></i><span><strong>${title}</strong><small>${detail}</small></span>${changeable?'<button class="text-btn" data-change-patient>Change</button>':''}</div>`;
   $('.create-new-patient').hidden=true;
 }
 
@@ -133,8 +135,8 @@ function renderExtractionIssues(){
     findings=[{id:'known-duplicate',kind:'exact',upload:file.name,existing:`${base} · Aug 2026.pdf`,reason:`Exact copy of a document already stored in ${known.name}’s record`}];
   }
   state.docDecisionsNeeded=findings.length;
-  $('#extractionIssuesTitle').textContent=known?'Confirm one document':'Confirm two matches';
-  $('#documentIssueNumber').textContent=known?'1':'2';
+  $('#documentIssueNumber').textContent='2';
+  $('#documentIssue').classList.remove('is-resolved');$('#documentIssue .issue-title>b').textContent='Required';
   $('#documentIssueHint').textContent=known?'One document is already in the patient’s record.':'Decide how to store the same and similar documents.';
   $('#extractionDocumentMatches').innerHTML=findings.map(item=>`<article class="extract-document" id="extract-${item.id}"><div class="finding-type"><span>${item.kind==='exact'?'Same document':'Similar content'}</span></div><strong>${item.upload}</strong><p>${item.reason}</p><small>Existing: ${item.existing}</small><div class="extract-document-actions">${item.kind==='exact'?`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="existing">Use existing document</button><button class="text-btn" data-extract-document="${item.id}" data-decision="upload">Keep uploaded copy</button>`:`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="replace">Replace existing</button><button class="small-btn" data-extract-document="${item.id}" data-decision="new">Add as new</button>`}</div></article>`).join('');
   icons();
@@ -165,14 +167,17 @@ function setPhase(phase){
 
   $('#intakeStart').hidden=phase!=='upload';
   $('#extractionView').hidden=phase!=='extraction';
-  $('#extractionIssues').hidden=phase!=='extraction';
-  $('#documentViewer').hidden=phase!=='review';
-  $('#expandSources').hidden=phase!=='review';
-  $('#reviewTrigger').disabled=phase!=='review';
+  $('#extractionIssues').hidden=!(phase==='extraction'&&state.extractionComplete);
+  document.body.classList.toggle('modal-open',!$('#extractionIssues').hidden);
+  $('#reviewPanel').hidden=phase!=='review'||state.completed;
+  $('#expandSources').hidden=true;
   if(phase==='review'){
     syncExistingPatientFiles();
-    setSourceDrawer(false,true);
-    openDocument(state.selected||'referral');
+    setSourceDrawer(window.innerWidth>=1024,true);
+    setReviewPanel(window.innerWidth>=1280);
+    setViewerMode('list');
+    openDocument(state.selected||documents[0]?.id||'referral',false);
+    tagSourceFields();
     updateProgress();
   }
 }
@@ -181,6 +186,7 @@ function renderExistingFiles(){
   $('#existingCount').textContent=existingFiles.length;
   $('#existingList').innerHTML=existingFiles.map(file=>`<article class="existing-file-row ${file.used?'in-use':''}"><button class="document-item existing-file" data-existing="${file.id}"><span class="doc-icon"><i data-lucide="${file.icon}"></i></span><span class="doc-info"><strong>${file.name}</strong><span>${file.meta}</span></span><span class="doc-state ${file.extracted?'':'pending-state'}">${file.extracted?'<i data-lucide="circle-check"></i>':'<i data-lucide="sparkles"></i>'}</span></button><button class="use-existing" data-use-existing="${file.id}" aria-pressed="${file.used}">${file.used?'<i data-lucide="check"></i> In this intake':'Use in intake'}</button></article>`).join('');
   $('#drawerCount').textContent=documents.length+existingFiles.length;
+  updateSourceCount();
   renderViewerGallery();
   icons();
 }
@@ -189,6 +195,7 @@ function syncExistingPatientFiles(){
   $('#existingSection').hidden=!state.patientLinked;
   if(state.patientLinked)renderExistingFiles();
   else $('#drawerCount').textContent=documents.length;
+  updateSourceCount();
 }
 
 function renderPostIntake(){
@@ -216,7 +223,8 @@ function showPostIntake(){
   $('#postIntake').hidden=false;
   $('#completeIntake').innerHTML='<i data-lucide="check"></i> Intake completed';
   $('#completeIntake').disabled=true;
-  $('#reviewTrigger').disabled=true;
+  $('#reviewPanel').hidden=true;
+  $('#workspace').classList.add('review-done');
   syncFooter();
   renderPostIntake();
   $('#postIntake').scrollIntoView({block:'start'});
@@ -226,7 +234,8 @@ function returnToIntakeReview(){
   state.completed=false;
   $('.review-area').classList.remove('show-post-intake');
   $('#postIntake').hidden=true;
-  $('#reviewTrigger').disabled=false;
+  $('#reviewPanel').hidden=false;
+  $('#workspace').classList.remove('review-done');
   syncFooter();
   updateProgress();
   $('.review-intro').scrollIntoView({block:'start'});
@@ -251,11 +260,85 @@ function renderViewerGallery(){
 }
 
 function setViewerMode(mode){
-  state.viewerMode=mode;
-  $('#paperPreview').hidden=mode!=='preview';
+  // The preview is always shown on top; this switches the list area below it.
+  if(mode==='preview')mode=state.listMode||'list';
+  state.viewerMode=mode;state.listMode=mode;
+  $('#sourceList').hidden=mode!=='list';
   $('#documentGallery').hidden=mode!=='gallery';
   $$('[data-view-mode]').forEach(button=>button.setAttribute('aria-pressed',button.dataset.viewMode===mode));
   if(mode==='gallery')renderViewerGallery();
+}
+
+function renderPreviewMenu(){
+  const files=viewerFiles(),uploaded=files.filter(file=>!existingFiles.includes(file)),existing=files.filter(file=>existingFiles.includes(file));
+  const option=file=>`<button class="preview-option ${file.id===state.selected?'selected':''}" role="option" aria-selected="${file.id===state.selected}" data-preview-doc="${file.id}"><i data-lucide="${file.icon||'file-text'}"></i><span><strong>${file.name}</strong><small>${file.meta}</small></span>${file.id===state.selected?'<i class="preview-check" data-lucide="check"></i>':''}</button>`;
+  $('#previewMenu').innerHTML=`<span class="preview-menu-label">Uploaded files · ${uploaded.length}</span>${uploaded.map(option).join('')}${existing.length?`<span class="preview-menu-label">Existing files · ${existing.length}</span>${existing.map(option).join('')}`:''}`;
+  icons();
+}
+function setPreviewMenu(open){
+  $('#previewMenu').hidden=!open;$('#previewTrigger').setAttribute('aria-expanded',open);
+  if(open){renderPreviewMenu();$('#previewMenu .selected')?.focus();}
+}
+
+
+// Where each extracted value sits on each document page (SVG units, 760×980 pages).
+const sourceBoxes={"referral":{"firstName":[280,241,52.9,19],"lastName":[336.7,241,46.1,19],"dob":[280,285,76.8,19],"street":[280,329,145.1,19],"city":[280,352,42.1,19],"state":[328.9,352,21.6,19],"zip":[354.4,352,37.8,19]},"insurance":{"firstName":[86,352,93.2,27],"lastName":[184.7,352,79.9,27],"dob":[430,361,98.8,24],"memberId":[103.7,431,134.6,26],"memberPrefix":[86,431,12.5,26],"memberSuffix":[243.5,431,21.9,26]},"prescription":{"firstName":[280,175,52.9,19],"lastName":[336.7,175,46.1,19],"icd":[280,221,46,19],"hcpcs":[280,267,39.7,19],"physician":[284,624,174.3,20]},"consent":{"firstName":[280,209,52.9,19],"lastName":[336.7,209,46.1,19],"mobile":[280,253,99.4,19],"email":[280,301,181.3,19]},"sleep-study":{"firstName":[270,165,52.9,19],"lastName":[326.7,165,46.1,19]}};
+const sourcePage={width:760,height:980};
+const sourceFieldLabels={firstName:'First name',lastName:'Last name',dob:'Date of birth',email:'Email',mobile:'Mobile number',homePhone:'Home phone number',street:'Street address',city:'City',state:'State/Province',zip:'ZIP code',gender:'Gender',middleName:'Middle name',memberId:'Member ID',memberPrefix:'Member ID prefix',memberSuffix:'Member ID suffix'};
+// Values that differ from the reviewed value in a given document.
+const sourceConflicts={dob:{insurance:'03/16/1978'}};
+const sourceFieldByLabel={'First name':'firstName','Middle name':'middleName','Last name':'lastName','Gender':'gender','Email':'email','Home phone number':'homePhone','Street address':'street','City':'city','State/Province':'state','ZIP code':'zip'};
+const insuranceFieldByLabel={'Member ID':'memberId','Member ID prefix':'memberPrefix','Member ID suffix':'memberSuffix'};
+
+function tagSourceFields(){
+  $$('#demographics-section .compact-fields>div,#contact-section .compact-fields>div').forEach(cell=>{const key=sourceFieldByLabel[cell.querySelector('span')?.textContent.trim()];if(key)cell.dataset.sourceField=key;});
+  $('#dobConflict')?.setAttribute('data-source-field','dob');
+  $('#mobileField')?.setAttribute('data-source-field','mobile');
+  const medicare=/medicare/i.test(insurancePlans[state.currentPlan]?.name||'');
+  $$('#insuranceFields>div,#insuranceFields>label').forEach(cell=>{const key=insuranceFieldByLabel[cell.querySelector('span')?.textContent.trim()];if(key&&medicare)cell.dataset.sourceField=key;else delete cell.dataset.sourceField;});
+}
+
+const sourceHover={field:null,timer:null,clearTimer:null};
+function sourceLocations(field){return viewerFiles().filter(file=>sourceBoxes[file.id]?.[field]);}
+function drawSourceHighlights(){
+  const field=sourceHover.field,box=field&&sourceBoxes[state.selected]?.[field];
+  const layer=$('#docHighlights');
+  if(!box){layer.innerHTML='';return;}
+  const [x,y,w,h]=box,pad=4,conflict=sourceConflicts[field]?.[state.selected];
+  layer.innerHTML=`<span class="doc-mark ${conflict?'conflict':''}" style="left:${(x-pad)/sourcePage.width*100}%;top:${(y-pad)/sourcePage.height*100}%;width:${(w+pad*2)/sourcePage.width*100}%;height:${(h+pad*2)/sourcePage.height*100}%"><em>${conflict?'Different value':sourceFieldLabels[field]||'Source'}</em></span>`;
+  const stage=$('#paperPreview'),image=$('#documentImage');
+  const top=(y/sourcePage.height)*image.clientHeight;
+  if(top<stage.scrollTop+24||top>stage.scrollTop+stage.clientHeight-48)stage.scrollTo({top:Math.max(0,top-stage.clientHeight/3),behavior:'smooth'});
+}
+function renderSourceMatches(){
+  const field=sourceHover.field,bar=$('#sourceMatches');
+  $$('[data-document].source-match,[data-gallery-doc].source-match').forEach(item=>item.classList.remove('source-match','source-conflict'));
+  if(!field){bar.hidden=true;bar.innerHTML='';return;}
+  const files=sourceLocations(field);
+  files.forEach(file=>$$(`[data-document="${file.id}"],[data-gallery-doc="${file.id}"]`).forEach(item=>item.classList.add('source-match',...(sourceConflicts[field]?.[file.id]?['source-conflict']:[]))));
+  bar.hidden=false;
+  bar.innerHTML=files.length?`<span class="source-matches-label"><i data-lucide="scan-search"></i> ${sourceFieldLabels[field]||'Field'} found in ${files.length} ${files.length===1?'document':'documents'}</span><span class="source-chips">${files.map(file=>{const conflict=sourceConflicts[field]?.[file.id];return `<button class="source-chip ${file.id===state.selected?'current':''} ${conflict?'conflict':''}" data-source-doc="${file.id}" title="${conflict?`Shows ${conflict}`:file.name}">${conflict?'<i data-lucide="triangle-alert"></i>':''}${file.name}</button>`;}).join('')}</span>`:`<span class="source-matches-label muted"><i data-lucide="search-x"></i> ${sourceFieldLabels[field]||'This field'} isn’t in the uploaded documents</span>`;
+  icons();
+}
+function showFieldSource(field){
+  clearTimeout(sourceHover.timer);clearTimeout(sourceHover.clearTimer);
+  if(state.phase!=='review'||$('#workspace').classList.contains('sources-collapsed'))field=null;
+  sourceHover.field=field;
+  renderSourceMatches();drawSourceHighlights();
+  if(!field)return;
+  const files=sourceLocations(field);
+  if(files.length&&!files.some(file=>file.id===state.selected)){
+    // Short hover intent so the preview doesn't flicker while the pointer passes over fields.
+    sourceHover.timer=setTimeout(()=>{if(sourceHover.field!==field)return;openDocument(files[0].id,false);renderSourceMatches();drawSourceHighlights();},220);
+  }
+}
+function scheduleSourceClear(){clearTimeout(sourceHover.clearTimer);sourceHover.clearTimer=setTimeout(()=>showFieldSource(null),700);}
+
+function updateSourceCount(){
+  const count=viewerFiles().length;
+  $('#sourceCount').textContent=count;
+  $('#fileAreaCount').textContent=count;
+  $('#sourceRailCount').textContent=count;
 }
 
 function renderDuplicateFindings(){
@@ -271,13 +354,14 @@ function renderPatientMatches(){
 function setSourceDrawer(open,force=false){
   if(!open&&state.resolutionPending&&!force){toast('Resolve the patient match before continuing.');return;}
   $('#workspace').classList.toggle('sources-collapsed',!open);
-  $('#sourceScrim').hidden=!open;
   $('#sourcePanel').classList.toggle('drawer-open',open);
-  $('#expandSources').setAttribute('aria-label',open?'Close document sidebar':'Open document sidebar');
-  $('#expandSources').setAttribute('title',open?'Close document sidebar':'Open document sidebar');
-  $('#expandSources').setAttribute('aria-expanded',open);
-  $('#expandSources').querySelector('i')?.setAttribute('data-lucide',open?'panel-left-close':'panel-left-open');
-  icons();
+  $('#collapseSources').setAttribute('aria-expanded',open);
+  $('#expandSourcesRail').setAttribute('aria-expanded',open);
+}
+function setReviewPanel(open){
+  $('#workspace').classList.toggle('review-collapsed',!open);
+  $('#collapseReview').setAttribute('aria-expanded',open);
+  $('#expandReviewRail').setAttribute('aria-expanded',open);
 }
 
 const wait=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
@@ -328,12 +412,35 @@ function renderPatientSearch(){
   $('#patientSearchResults').innerHTML=results.length?results.map(patient=>`<button class="search-result" role="option" data-search-patient="${patient.id}"><span class="patient-initials">${patientInitials(patient.name)}</span><span><strong>${patient.name}</strong><small>DOB ${patient.dob} · ${patient.mrn}</small></span><small>${patient.documents.length} docs</small></button>`).join(''):'<p class="search-empty">No patients found</p>';
 }
 
-function checkExtractionReady(){
-  const ready=state.extractionComplete&&state.patientResolved&&state.documentResolutions.size===state.docDecisionsNeeded;
-  if(!ready)return;
-  $('#extractionWaiting').innerHTML='<i data-lucide="circle-check"></i><span>All issues resolved. Opening review…</span>';
+function pendingRecordFiles(){return existingFiles.filter(file=>!file.extracted||state.recordDecisions.has(file.id));}
+function renderRecordIssue(){
+  const files=state.patientLinked?pendingRecordFiles():[];
+  $('#recordIssue').hidden=!files.length||!state.patientResolved;
+  $('#recordDocuments').innerHTML=files.map(file=>{const decision=state.recordDecisions.get(file.id);return `<article class="record-doc ${decision?'decided':''}"><span class="doc-icon"><i data-lucide="${file.icon}"></i></span><span class="record-doc-copy"><strong>${file.name}</strong><small>${decision==='add'?(file.extracted?'Extracted and added to this intake':'Extracting…'):decision==='skip'?'Skipped · stays in the patient’s record':'In the patient’s record · not extracted'}</small></span>${decision?`<span class="pill ${decision==='add'?'success':'neutral'}">${decision==='add'?(file.extracted?'Added':'<span class="spinner"></span> Extracting'):'Skipped'}</span><button class="text-btn" data-record-undo="${file.id}">Undo</button>`:`<button class="small-btn" data-record-decision="skip" data-record-file="${file.id}">Skip</button><button class="small-btn primary" data-record-decision="add" data-record-file="${file.id}"><i data-lucide="scan-text"></i> Extract and add</button>`}</article>`;}).join('');
   icons();
-  setTimeout(()=>{setPhase('review');toast('Extraction complete. Review the extracted information.');},650);
+}
+
+function checkExtractionReady(){
+  const docsDone=state.documentResolutions.size===state.docDecisionsNeeded;
+  const recordFiles=state.patientLinked?pendingRecordFiles():[];
+  const recordPending=recordFiles.filter(file=>!state.recordDecisions.has(file.id)).length;
+  const extracting=recordFiles.some(file=>state.recordDecisions.get(file.id)==='add'&&!file.extracted);
+  const ready=state.extractionComplete&&state.patientResolved&&docsDone&&!extracting;
+  const remaining=[!state.patientResolved&&'select the patient',state.patientResolved&&!docsDone&&'choose document handling'].filter(Boolean);
+  $('#continueToReview').disabled=!ready;
+  $('#extractionWaiting').innerHTML=extracting?'<span class="spinner"></span><span>Extracting record documents…</span>':ready?`<i data-lucide="circle-check"></i><span>${recordPending?`Ready. ${recordPending} record ${recordPending===1?'document':'documents'} will be skipped.`:'All set. Continue to the extracted details.'}</span>`:`<i data-lucide="info"></i><span>To continue, ${remaining.join(' and ')}.</span>`;
+  icons();
+}
+
+function openIssuesModal(){
+  const known=patientDirectory.find(patient=>patient.id===state.knownPatient);
+  $('#patientIssue').hidden=false;
+  if(known)resolvePatientIssue(known.name,`${known.mrn} · Selected before extraction`,false);
+  $('#documentIssue').hidden=!state.patientResolved;
+  renderRecordIssue();
+  setPhase('extraction');
+  checkExtractionReady();
+  setTimeout(()=>$('#extractionIssues .intake-modal button:not([disabled])')?.focus(),50);
 }
 
 async function startExtraction(){
@@ -342,7 +449,7 @@ async function startExtraction(){
   documents.forEach(file=>{file.processing=true;file.meta='Waiting';});
   renderExtractionIssues();renderExtractionFiles();
   $('#patientIssue').hidden=true;$('#documentIssue').hidden=true;
-  $('#extractionWaiting').innerHTML='<span class="spinner"></span><span>Extraction is running. Issues will appear here.</span>';
+  state.recordDecisions.clear();
   setPhase('extraction');
   const stages=[
     {id:'read',label:'Reading uploaded documents'},
@@ -373,22 +480,24 @@ async function startExtraction(){
   documents.forEach(file=>{file.processing=false;file.meta='Extracted';});renderDocuments();renderExtractionFiles();
   $('#extractionSpinner').outerHTML='<i data-lucide="circle-check" id="extractionSpinner"></i>';
   $('#demoStatus').textContent='Extraction complete';$('#extractionSummary').textContent='Resolve any remaining issues to continue to review.';
-  $('#extractionWaiting').innerHTML='<span class="spinner"></span><span>Extraction complete. Waiting for required issues.</span>';
-  icons();checkExtractionReady();
+  icons();openIssuesModal();
 }
 
-function openDocument(id){
+function openDocument(id,reveal=true){
   const retained=id==='consent'?{id:'consent',name:'Consent Form.pdf',meta:'Existing file · Extracted previously',type:'Consent form'}:null;
   const document=documents.find(item=>item.id===id) || existingFiles.find(item=>item.id===id) || retained || documents[0];
   if(!document)return;
   state.selected=document.id;
   $('#previewName').textContent=document.name;
+  $('#previewTrigger').querySelector('[data-lucide]')?.setAttribute('data-lucide',document.icon||'file-text');
+  $('#previewTrigger').title=document.name;
   $('#previewMeta').textContent=document.meta.includes('page')?document.meta.split(' · ')[0]:'Page 1';
   const image=$('#documentImage');
   image.src=imageForDocument(document);
   image.alt=`${document.name} document preview`;
-  $('#sourcePreview').hidden=false;
-  setViewerMode('preview');
+  if(reveal)setSourceDrawer(true,true);
+  renderViewerGallery();
+  if(sourceHover?.field){renderSourceMatches();drawSourceHighlights();}
   renderDocuments();
   const preview=$('#sourcePreview');
   preview.classList.remove('source-changed');
@@ -428,7 +537,7 @@ function renderOrderHint(){
   const ai=orderBy('aiRank'),system=orderBy('systemRank'),current=currentOrder();
   const usingAi=sameOrder(current,ai),allInSystem=insurancePlans.every(plan=>plan.systemRank),usingSystem=allInSystem&&sameOrder(current,system);
   const changes=insurancePlans.filter((plan,index)=>plan.systemRank!==planRank(index)).length;
-  $('#orderSource').className=`pill ${usingAi?'info':'neutral'}`;
+  $('#orderSource').className=`pill ${usingAi?'ai':'neutral'}`;
   $('#orderSource').innerHTML=usingAi?'<i data-lucide="sparkles"></i> AI sorted':usingSystem?'System order':'Custom order';
   $('#orderNotice').innerHTML=`<span>${changes?`${changes} ${changes===1?'change':'changes'} from system. `:''}Drag to reorder.</span>${usingAi?(allInSystem?'<button class="text-btn" data-order="system">Use system order</button>':''):'<button class="text-btn" data-order="ai">Reset to AI order</button>'}`;
   $('#insuranceMeta').textContent=`${insurancePlans.length} coverage plans${changes?' · order updated from system':''}`;
@@ -467,6 +576,7 @@ function renderInsurance(index=state.currentPlan){
   $('#insuranceFields').classList.toggle('editing',state.editingPlan);
   $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>state.editingPlan?`<label><span>${label}</span><input class="input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value}" placeholder="Not provided"></label>`:`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
   renderEligibility();
+  tagSourceFields();
 }
 
 function renderEligibility(){
@@ -524,16 +634,20 @@ function renderReviewMenu(){
   const warnings=items.filter(item=>item.severity!=='missing');
   const aiItems=aiResolvedFields.filter(item=>!state.aiEdited.has(item.key)&&!state.aiReviewed.has(item.key));
   const count=required.length,optional=warnings.length+aiItems.length,total=count+optional;
-  $('#reviewTrigger').classList.toggle('all-clear',!total);
-  $('#reviewTrigger').classList.toggle('optional-only',!count&&total>0);
-  $('#reviewCount').textContent=total||'';
-  $('#reviewTriggerText').textContent=total?'to review':'All reviewed';
-  $('#reviewRequired').textContent=total?(count?`(${count} required)`:'(none required)'):'';
-  $('#reviewTrigger').setAttribute('aria-label',total?`${total} to review, ${count} required`:'All reviewed');
+  $('#reviewPanel').classList.toggle('all-clear',!total);
+  $('#reviewPanel').classList.toggle('optional-only',!count&&total>0);
+  $('#reviewPanel').classList.toggle('has-required',count>0);
+  $('#reviewCount').textContent=total;
+  $('#reviewRailCount').textContent=total||'✓';
+  $('#reviewRequired').textContent=total?(count?`${count} required · ${optional} optional`:`${optional} optional to check`):'';
+  aiResolvedFields.forEach(item=>$(`#${item.id}`)?.classList.toggle('ai-checked',state.aiEdited.has(item.key)||state.aiReviewed.has(item.key)));
+  const summaryState=count?'required':total?'optional':'done';
+  $('#reviewSummary').className=`review-summary ${summaryState}`;
+  $('#reviewSummaryIcon').innerHTML=`<i data-lucide="${summaryState==='required'?'circle-alert':summaryState==='optional'?'list-checks':'circle-check'}"></i>`;
   $('#reviewPopoverTitle').textContent=count?`${count} missing ${count===1?'field is':'fields are'} required`:total?'All required information is complete':'Everything is reviewed';
   const row=item=>`<button class="review-item ${item.severity}" data-review-target="${item.id}"><span class="review-icon"><i data-lucide="${item.icon||(item.severity==='missing'?'circle-alert':item.severity==='ai'?'sparkles':'triangle-alert')}"></i></span><span class="review-copy"><b>${item.label}</b><small>${item.section} · ${item.detail}</small></span><span class="review-tag">${item.tag||(item.severity==='missing'?'Missing':'Check')}</span><i class="review-go" data-lucide="chevron-right"></i></button>`;
   const optionalRows=[...warnings,...aiItems.map(item=>({...item,severity:'ai',tag:'AI resolved'}))];
-  $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required · missing information</span>${required.map(row).join('')}</div>`:'<div class="review-empty"><i data-lucide="circle-check"></i><span>All required information is filled in. Select Looks good to finish.</span></div>')
+  $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required · missing information</span>${required.map(row).join('')}</div>`:(optionalRows.length?'':'<div class="review-empty"><i data-lucide="circle-check"></i><span>Everything is reviewed. Select Looks good to finish.</span></div>'))
     +(optionalRows.length?`<div class="review-group"><span class="review-group-title">Optional · review if needed</span>${optionalRows.map(row).join('')}</div>`:'');
   $('#reviewPopoverFoot').innerHTML=`<span>${reviewed} of 42 fields reviewed</span><span class="review-progress"><span style="width:${Math.round(reviewed/42*100)}%"></span></span>`;
   $('#footerReviewStatus').textContent=count?`${count} required ${count===1?'item':'items'} left`:'All required fields complete';
@@ -629,14 +743,25 @@ document.addEventListener('click',event=>{
   if(target.dataset.extractPatient){
     const patient=patientMatches.find(item=>item.id===target.dataset.extractPatient);state.patientResolved=true;state.patientLinked=true;
     syncExistingPatientFiles();
-    resolvePatientIssue(patient.name,`${patient.mrn} · Existing patient linked`);$('#documentIssue').hidden=false;icons();toast(`${patient.name} selected. Review document matches next.`);setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;
+    resolvePatientIssue(patient.name,`${patient.mrn} · Existing patient linked`);$('#documentIssue').hidden=false;renderRecordIssue();icons();toast(`${patient.name} selected. Review document matches next.`);setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;
   }
-  if(target.dataset.changePatient!==undefined){state.patientResolved=false;state.patientLinked=false;syncExistingPatientFiles();renderExtractionPatientMatches();return;}
+  if(target.dataset.changePatient!==undefined){state.patientResolved=false;state.patientLinked=false;state.recordDecisions.clear();syncExistingPatientFiles();renderExtractionPatientMatches();$('#documentIssue').hidden=true;renderRecordIssue();checkExtractionReady();return;}
   if(target.dataset.extractPatientDetails){const card=$(`#extract-patient-${target.dataset.extractPatientDetails}`),details=card.querySelector('.extract-patient-details'),open=details.hidden;details.hidden=!open;target.setAttribute('aria-expanded',open);target.textContent=open?'Hide details':'View details';return;}
-  if(target.dataset.extractNewPatient!==undefined){state.patientResolved=true;state.patientLinked=false;syncExistingPatientFiles();resolvePatientIssue('Create a new patient','No existing record will be linked');$('#documentIssue').hidden=false;icons();setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;}
+  if(target.dataset.extractNewPatient!==undefined){state.patientResolved=true;state.patientLinked=false;syncExistingPatientFiles();resolvePatientIssue('Create a new patient','No existing record will be linked');$('#documentIssue').hidden=false;renderRecordIssue();icons();setTimeout(()=>$('#documentIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);checkExtractionReady();return;}
+  if(target.dataset.recordDecision){
+    const file=existingFiles.find(item=>item.id===target.dataset.recordFile);if(!file)return;
+    state.recordDecisions.set(file.id,target.dataset.recordDecision);
+    if(target.dataset.recordDecision==='add'){file.used=true;file.meta='Extracting for this intake…';setTimeout(()=>{file.extracted=true;file.meta='Extracted for this intake';renderRecordIssue();renderExistingFiles();checkExtractionReady();toast(`${file.name} extracted and added`);},900);}
+    renderRecordIssue();renderExistingFiles();checkExtractionReady();return;
+  }
+  if(target.dataset.recordUndo){
+    const file=existingFiles.find(item=>item.id===target.dataset.recordUndo);if(!file)return;
+    if(state.recordDecisions.get(file.id)==='add'){file.used=false;file.extracted=false;file.meta='Not extracted yet';}
+    state.recordDecisions.delete(file.id);renderRecordIssue();renderExistingFiles();checkExtractionReady();return;
+  }
   if(target.dataset.extractDocument){
     const id=target.dataset.extractDocument;state.documentResolutions.add(id);const card=$(`#extract-${id}`);card.classList.add('resolved');card.querySelector('.extract-document-actions').innerHTML=`<div class="issue-resolved"><i data-lucide="check"></i><span><strong>Decision saved</strong><small>${target.dataset.decision==='existing'?'Existing document will be used.':target.dataset.decision==='replace'?'Existing document will be replaced.':'Uploaded document will be stored.'}</small></span></div>`;
-    if(state.documentResolutions.size===state.docDecisionsNeeded)$('#documentIssue .issue-title>b').textContent='Resolved';icons();checkExtractionReady();return;
+    if(state.documentResolutions.size===state.docDecisionsNeeded){$('#documentIssue .issue-title>b').textContent='Resolved';$('#documentIssue').classList.add('is-resolved');}icons();checkExtractionReady();return;
   }
   if(target.dataset.plan!==undefined){renderInsurance(+target.dataset.plan);return;}
   if(target.dataset.planEdit!==undefined){state.editingPlan=true;renderInsurance();$('[data-plan-field]')?.focus();return;}
@@ -688,7 +813,7 @@ document.addEventListener('click',event=>{
     const destination=$(`#${target.dataset.reviewTarget}`),group=destination?.closest('details');if(group)group.open=true;
     const aiItem=aiResolvedFields.find(item=>item.id===target.dataset.reviewTarget);
     if(aiItem){state.aiReviewed.add(aiItem.key);renderReviewMenu();}
-    $('#reviewPopover').hidden=true;$('#reviewTrigger').setAttribute('aria-expanded','false');
+    $$('.review-item.current').forEach(item=>item.classList.remove('current'));
     setTimeout(()=>{destination?.scrollIntoView({behavior:'smooth',block:'center'});destination?.querySelector('input,select')?.focus({preventScroll:true});},30);return;
   }
   if(target.dataset.match){setSourceDrawer(true);$('#matchCard').hidden=false;setTimeout(()=>$('#matchCard').scrollIntoView({block:'nearest',behavior:'smooth'}),50);return;}
@@ -719,6 +844,7 @@ $('#closeRecordPicker').addEventListener('click',closeRecordPicker);
 ['dragleave','drop'].forEach(type=>$('#uploadStartZone').addEventListener(type,event=>{event.preventDefault();$('#uploadStartZone').classList.remove('over');if(type==='drop')addFiles(event.dataTransfer.files);}));
 renderQueuePatients();
 $('#extractDocuments').addEventListener('click',startExtraction);
+$('#continueToReview').addEventListener('click',()=>{setPhase('review');toast('Review the extracted information.');});
 $('#cancelUpload').addEventListener('click',()=>{
   if(!documents.length)return;
   documents.length=0;state.selected='';state.knownPatient=null;
@@ -727,18 +853,38 @@ $('#cancelUpload').addEventListener('click',()=>{
   toast('Upload cancelled. Documents removed.');
 });
 $('#expandSources').addEventListener('click',()=>setSourceDrawer(!$('#sourcePanel').classList.contains('drawer-open')));
+$('#expandSourcesRail').addEventListener('click',()=>setSourceDrawer(true));
+$('#collapseReview').addEventListener('click',()=>setReviewPanel(false));
+$('#expandReviewRail').addEventListener('click',()=>setReviewPanel(true));
 $('#sourceScrim').addEventListener('click',()=>setSourceDrawer(false));
-$('#reviewTrigger').addEventListener('click',()=>{const popover=$('#reviewPopover'),open=popover.hidden;popover.hidden=!open;$('#reviewTrigger').setAttribute('aria-expanded',open);});
-document.addEventListener('click',event=>{if(!event.composedPath().some(node=>node.classList?.contains('review-menu'))){$('#reviewPopover').hidden=true;$('#reviewTrigger').setAttribute('aria-expanded','false');}});
-$('#collapseViewer').addEventListener('click',()=>{$('#workspace').classList.add('viewer-collapsed');});
-$('#expandViewer').addEventListener('click',()=>{$('#workspace').classList.remove('viewer-collapsed');});
-let viewerDrag=null;
-$('#viewerResize').tabIndex=0;
-$('#viewerResize').addEventListener('pointerdown',event=>{viewerDrag={startX:event.clientX,startWidth:$('#documentViewer').getBoundingClientRect().width};document.body.classList.add('resizing-viewer');event.preventDefault();});
-document.addEventListener('pointermove',event=>{if(!viewerDrag)return;const width=Math.min(680,Math.max(300,viewerDrag.startWidth+viewerDrag.startX-event.clientX));document.documentElement.style.setProperty('--viewer-w',`${width}px`);});
-const stopViewerResize=()=>{viewerDrag=null;document.body.classList.remove('resizing-viewer');};
-document.addEventListener('pointerup',stopViewerResize);document.addEventListener('pointercancel',stopViewerResize);
-$('#viewerResize').addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();const current=$('#documentViewer').getBoundingClientRect().width,change=event.key==='ArrowLeft'?20:-20;document.documentElement.style.setProperty('--viewer-w',`${Math.min(680,Math.max(300,current+change))}px`);});
+$('#previewTrigger').addEventListener('click',()=>setPreviewMenu($('#previewMenu').hidden));
+$('#previewMenu').addEventListener('click',event=>{const option=event.target.closest('[data-preview-doc]');if(!option)return;setPreviewMenu(false);openDocument(option.dataset.previewDoc);$('#previewTrigger').focus();});
+$('#previewMenu').addEventListener('keydown',event=>{const options=$$('.preview-option'),index=options.indexOf(document.activeElement);if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();options[(index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}if(event.key==='Escape'){setPreviewMenu(false);$('#previewTrigger').focus();}});
+document.addEventListener('click',event=>{if(!event.composedPath().some(node=>node.classList?.contains('preview-picker')))setPreviewMenu(false);});
+$('#workspace').addEventListener('mouseover',event=>{
+  const cell=event.target.closest('[data-source-field]');
+  if(cell){if(cell.dataset.sourceField!==sourceHover.field)showFieldSource(cell.dataset.sourceField);else clearTimeout(sourceHover.clearTimer);return;}
+  if(event.target.closest('#sourcePanel')){clearTimeout(sourceHover.clearTimer);return;}
+  if(sourceHover.field)scheduleSourceClear();
+});
+$('#workspace').addEventListener('mouseleave',()=>{if(sourceHover.field)scheduleSourceClear();});
+$('#workspace').addEventListener('focusin',event=>{const cell=event.target.closest('[data-source-field]');if(cell)showFieldSource(cell.dataset.sourceField);});
+$('#sourceMatches').addEventListener('click',event=>{const chip=event.target.closest('[data-source-doc]');if(chip){clearTimeout(sourceHover.clearTimer);openDocument(chip.dataset.sourceDoc,false);}});
+let previewDrag=null;
+const setPreviewHeight=height=>{const max=$('#sourcePanel').getBoundingClientRect().height-180;document.documentElement.style.setProperty('--preview-h',`${Math.round(Math.min(max,Math.max(160,height)))}px`);};
+$('#previewDivider').addEventListener('pointerdown',event=>{previewDrag={startY:event.clientY,startHeight:$('#sourcePreview').getBoundingClientRect().height};document.body.classList.add('resizing-preview');event.preventDefault();});
+document.addEventListener('pointermove',event=>{if(previewDrag)setPreviewHeight(previewDrag.startHeight+event.clientY-previewDrag.startY);});
+const stopPreviewResize=()=>{previewDrag=null;document.body.classList.remove('resizing-preview');};
+document.addEventListener('pointerup',stopPreviewResize);document.addEventListener('pointercancel',stopPreviewResize);
+$('#previewDivider').addEventListener('dblclick',()=>document.documentElement.style.removeProperty('--preview-h'));
+$('#previewDivider').addEventListener('keydown',event=>{if(event.key!=='ArrowUp'&&event.key!=='ArrowDown')return;event.preventDefault();setPreviewHeight($('#sourcePreview').getBoundingClientRect().height+(event.key==='ArrowDown'?24:-24));});
+let sourceDrag=null;
+const setSourceWidth=width=>document.documentElement.style.setProperty('--source-w',`${Math.min(640,Math.max(260,width))}px`);
+$('#sourceResize').addEventListener('pointerdown',event=>{sourceDrag={startX:event.clientX,startWidth:$('#sourcePanel').getBoundingClientRect().width};document.body.classList.add('resizing-viewer');event.preventDefault();});
+document.addEventListener('pointermove',event=>{if(sourceDrag)setSourceWidth(sourceDrag.startWidth+event.clientX-sourceDrag.startX);});
+const stopSourceResize=()=>{sourceDrag=null;document.body.classList.remove('resizing-viewer');};
+document.addEventListener('pointerup',stopSourceResize);document.addEventListener('pointercancel',stopSourceResize);
+$('#sourceResize').addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();setSourceWidth($('#sourcePanel').getBoundingClientRect().width+(event.key==='ArrowRight'?20:-20));});
 if($('#confirmMobile'))$('#confirmMobile').addEventListener('click',resolveMobile);
 if($('#fileInput'))$('#fileInput').addEventListener('change',event=>addFiles(event.target.files));
 // Demo mode: "Browse & Upload Files" simulates picking files instead of opening the OS file explorer.
@@ -877,7 +1023,7 @@ function itemHtml(rx,item){
     :item.lines.map(l=>`<div class="hcpcs-row ${l.code?'':'unmapped'}"><span class="hcpcs-badge">${l.code||'—'}</span><span class="hcpcs-desc">${l.code?(hcpcsCatalog[l.code]||'Code not in catalog · verify'):'No HCPCS match. Select Edit to enter a code.'}${l.ai?'<i data-lucide="sparkles" class="ai-dot" aria-label="AI mapped" title="AI mapped"></i>':''}</span><span class="hcpcs-qty">Qty ${l.qty}</span><span class="hcpcs-freq">${l.frequency}</span></div>`).join('');
   return `<article class="rx-item" id="rx-${rx.id}-${item.id}">
     <header class="rx-item-head">
-      <div class="rx-item-title"><strong>${item.bundle?item.name:(mapped||!/^[A-Z]\d{4}$/.test(item.name)?item.name:hcpcsCatalog[item.name]||item.name)}</strong><span class="rx-item-tags">${item.bundle?`<span class="pill neutral"><i data-lucide="boxes"></i> Bundle · ${item.lines.length} items</span>`:''}${mapped?'<span class="pill info"><i data-lucide="sparkles"></i> AI mapped</span>':''}</span></div>
+      <div class="rx-item-title"><strong>${item.bundle?item.name:(mapped||!/^[A-Z]\d{4}$/.test(item.name)?item.name:hcpcsCatalog[item.name]||item.name)}</strong><span class="rx-item-tags">${item.bundle?`<span class="pill neutral"><i data-lucide="boxes"></i> Bundle · ${item.lines.length} items</span>`:''}${mapped?'<span class="pill ai"><i data-lucide="sparkles"></i> AI mapped</span>':''}</span></div>
       <button type="button" class="doc-info" data-item-docs="${ref}" title="Required documents" aria-label="Required documents for this item"><i data-lucide="file-text"></i><span>${docs.length} docs</span></button>
       <button type="button" class="text-btn" data-edit-item="${ref}">${item.editing?'Done':'Edit'}</button>
       <button type="button" class="icon-btn" data-remove-item="${ref}" aria-label="Remove item" title="Remove item"><i data-lucide="trash-2"></i></button>

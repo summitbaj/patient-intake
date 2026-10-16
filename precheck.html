@@ -47,13 +47,17 @@
   <div class="app-body">
     <div class="order-shell pc-shell">
       <header class="order-header">
-        <div class="order-title"><a class="icon-btn" href="index.html" id="pcBackLink" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></a><div><h1>Coverage Pre-check</h1><p class="pc-sub" id="pcPatient"></p></div></div>
+        <div class="order-title"><a class="icon-btn" href="index.html" id="pcBackLink" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></a><div><h1>Coverage Pre-check <span class="pill ai pc-ai-pill"><i data-lucide="sparkles"></i> AI</span></h1><p class="pc-sub" id="pcPatient"></p></div></div>
         <div class="order-header-actions"><span class="pc-from"><i data-lucide="file-input"></i> From Patient Intake: <b id="pcIntakeId"></b></span></div>
       </header>
 
       <section class="pc-summary-bar" aria-label="Pre-check summary">
         <div class="pc-stats" id="pcStats" role="group" aria-label="Filter items by result"></div>
-        <div class="pc-progress"><span id="pcProgressText"></span><span class="pc-progress-track"><span id="pcProgressBar"></span></span></div>
+        <span class="pc-ai-run" id="pcAiRun"><i data-lucide="sparkles"></i> Checked by AI · just now</span>
+      </section>
+      <section class="pc-ai-note" aria-label="About this pre-check">
+        <span class="pc-ai-icon"><i data-lucide="sparkles"></i></span>
+        <div><strong>This pre-check was done by AI</strong><p>AI checked each item against Medicare coverage policies (LCDs), payer rules, and the reviewed intake and documents. AI can make mistakes, so review flagged items before you create the order.</p></div>
       </section>
       <p class="pc-disclaimer"><i data-lucide="info"></i> Decision support only. It doesn’t guarantee coverage, payment or reimbursement. The provider makes the final determination before dispensing.</p>
 
