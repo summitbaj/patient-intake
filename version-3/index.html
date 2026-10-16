@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Patient Intake · Version 3</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="review.css">
+</head>
+<body>
+  <div class="explore-bar" role="navigation" aria-label="Design explorations">
+    <span class="explore-label">Explorations</span>
+    <a class="explore-tab" href="../index.html">Generic Flow</a>
+    <a class="explore-tab" href="../different-direction.html">Different direction</a>
+    <a class="explore-tab active" aria-current="page" href="index.html">Version 3</a>
+  </div>
+  <header class="shell-ribbon" aria-label="Signetic">
+    <div class="ribbon-start"><button class="ribbon-btn" type="button" aria-label="App launcher" title="App launcher"><i data-lucide="grip"></i></button><span class="ribbon-logo">SIGNETIC</span><span class="ribbon-portal">Manager Portal</span></div>
+    <div class="ribbon-env">SANDBOX</div>
+    <div class="ribbon-end"><button class="ribbon-btn" type="button" aria-label="Search" title="Search"><i data-lucide="search"></i></button><button class="ribbon-btn" type="button" aria-label="Create new" title="Create new"><i data-lucide="plus"></i></button><button class="ribbon-btn" type="button" aria-label="Filter" title="Filter"><i data-lucide="filter"></i></button><button class="ribbon-btn" type="button" aria-label="Settings" title="Settings"><i data-lucide="settings"></i></button><button class="ribbon-btn" type="button" aria-label="Help" title="Help"><span aria-hidden="true">?</span></button><button class="ribbon-avatar" type="button" aria-label="Account" title="Account">PS</button></div>
+  </header>
+  <nav class="shell-nav" id="shellNav" aria-label="Main navigation">
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation"><i data-lucide="menu"></i></button>
+    <div class="nav-scroll">
+      <a class="nav-item" href="#" title="Home"><i data-lucide="house"></i><span>Home</span></a>
+      <button class="nav-item" type="button" title="Recent"><i data-lucide="clock"></i><span>Recent</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <button class="nav-item" type="button" title="Pinned"><i data-lucide="pin"></i><span>Pinned</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <div class="nav-group open"><button class="nav-section" type="button" aria-expanded="true" data-nav-section><span>Practice Management</span><i class="nav-chevron" data-lucide="chevron-down"></i></button><div class="nav-children">
+        <a class="nav-item" href="#" title="Get Started"><i data-lucide="list-todo"></i><span>Get Started</span></a>
+        <a class="nav-item" href="#" title="Clinic Groups"><i data-lucide="layout-grid"></i><span>Clinic Groups</span></a>
+        <a class="nav-item" href="#" title="Popup Clinics"><i data-lucide="store"></i><span>Popup Clinics</span></a>
+        <a class="nav-item" href="#" title="Care Events"><i data-lucide="hand-heart"></i><span>Care Events</span></a>
+        <a class="nav-item" href="#" title="Schedules"><i data-lucide="calendar-days"></i><span>Schedules</span></a>
+        <a class="nav-item active" href="#" aria-current="page" title="Patients"><i data-lucide="users"></i><span>Patients</span></a>
+      </div></div>
+      <div class="nav-group"><button class="nav-section" type="button" aria-expanded="false" data-nav-section><span>DME</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" type="button" aria-expanded="false" data-nav-section><span>Payment</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" type="button" aria-expanded="false" data-nav-section><span>Claims Processing</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" type="button" aria-expanded="false" data-nav-section><span>NCPDP</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" type="button" aria-expanded="false" data-nav-section><span>Logs</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" type="button" aria-expanded="false" data-nav-section><span>Tools</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" type="button" aria-expanded="false" data-nav-section><span>Settings</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+    </div>
+  </nav>
+  <div class="shell-commands" aria-label="Page commands"><button class="command-btn" id="shellBack" type="button" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></button><button class="command-btn" id="shellRefresh" type="button" aria-label="Refresh" title="Refresh"><i data-lucide="rotate-ccw"></i></button><button class="command-btn" type="button" aria-label="Page details" title="Page details"><i data-lucide="file"></i></button></div>
+
+  <header class="app-header">
+    <div class="header-start">
+      <button class="icon-button drawer-toggle" id="drawerToggle" type="button" aria-controls="documentDrawer" aria-expanded="false" aria-label="Open document drawer" title="Open document drawer" hidden>
+        <i data-lucide="panel-left-open"></i><span class="count-badge" id="documentCount">0</span>
+      </button>
+      <div class="title-block"><h1>Patient Intake</h1><span id="reviewStatus">Add documents</span></div>
+      <ol class="phase-progress" id="phaseProgress" aria-label="Intake progress">
+        <li class="current"><span>1</span>Upload</li><li><span>2</span>Extract</li><li><span>3</span>Review</li>
+      </ol>
+    </div>
+    <div class="header-actions">
+      <div class="issues-wrap" id="issuesWrap" hidden>
+        <button class="secondary-button issue-trigger" id="issuesTrigger" type="button" aria-controls="issuesPopover" aria-expanded="false">
+          <i data-lucide="circle-alert"></i><span>Review issues</span><b id="issueCount">0</b>
+        </button>
+        <div class="issues-popover" id="issuesPopover" role="dialog" aria-label="Unresolved review issues" hidden></div>
+      </div>
+      <button class="primary-button" id="completeButton" type="button" disabled hidden><i data-lucide="check"></i><span>Looks good</span></button>
+    </div>
+  </header>
+
+  <button class="scrim" id="drawerScrim" type="button" aria-label="Close document drawer" hidden></button>
+  <aside class="document-drawer" id="documentDrawer" aria-label="Documents" aria-hidden="true" hidden>
+    <header class="drawer-header"><div><span class="eyebrow">Source files</span><h2>Documents</h2></div><button class="icon-button" id="drawerClose" type="button" aria-label="Close document drawer" title="Close document drawer"><i data-lucide="panel-left-close"></i></button></header>
+    <div class="drawer-content" id="drawerContent"></div>
+  </aside>
+
+  <main class="flow" id="flow">
+    <section class="flow-view upload-view" id="uploadView" aria-labelledby="uploadTitle">
+      <div class="upload-intro">
+        <span class="phase-kicker"><i data-lucide="sparkles"></i> New patient intake</span>
+        <h2 id="uploadTitle">Drop the paperwork.<br><span>AI does the typing.</span></h2>
+        <p>Add prescriptions, insurance cards, referrals, and clinical records. Nothing is processed until you select Extract.</p>
+      </div>
+      <div class="upload-layout">
+        <div class="upload-primary">
+          <label class="drop-zone" id="dropZone" tabindex="0">
+            <input id="fileInput" type="file" accept=".pdf,.png,.jpg,.jpeg" multiple hidden>
+            <span class="drop-icon"><i data-lucide="upload-cloud"></i></span>
+            <strong>Drop documents here</strong>
+            <span>PDF, JPG, or PNG up to 10 MB</span>
+            <span class="primary-button">Browse files</span>
+          </label>
+          <section class="queue-panel" aria-labelledby="queueTitle">
+            <header><div><span class="eyebrow">Current intake</span><h3 id="queueTitle">Ready to extract</h3></div><span class="queue-count" id="queueCount">0</span></header>
+            <div class="upload-queue" id="uploadQueue"></div>
+            <button class="primary-button extract-button" id="extractButton" type="button" disabled><i data-lucide="sparkles"></i>Extract documents</button>
+          </section>
+        </div>
+        <aside class="patient-record-panel" aria-labelledby="recordQueueTitle">
+          <header><span class="record-panel-icon"><i data-lucide="users"></i></span><div><h3 id="recordQueueTitle">Pull from a patient’s record</h3><p>Choose a patient waiting in the intake queue and add their documents.</p></div></header>
+          <label class="patient-search"><i data-lucide="search"></i><input type="search" placeholder="Find patient by name or ID" aria-label="Find patient by name or ID"></label>
+          <span class="eyebrow">In the intake queue</span>
+          <div class="patient-record-list">
+            <button class="patient-record" type="button" data-add-record="ashlynn"><span class="patient-avatar">AB</span><span><strong>Ashlynn Botosh</strong><small>PT-10482 · 4 documents</small></span><i data-lucide="plus"></i></button>
+            <button class="patient-record" type="button" data-add-record="maria"><span class="patient-avatar alt">MR</span><span><strong>Maria Rodriguez</strong><small>PT-08731 · 3 documents</small></span><i data-lucide="plus"></i></button>
+            <button class="patient-record" type="button" data-add-record="daniel"><span class="patient-avatar warm">DC</span><span><strong>Daniel Chen</strong><small>PT-12045 · 2 documents</small></span><i data-lucide="plus"></i></button>
+          </div>
+          <button class="secondary-button sample-documents" id="addSamples" type="button"><i data-lucide="files"></i>Add sample documents</button>
+        </aside>
+      </div>
+    </section>
+
+    <section class="flow-view extraction-view" id="extractionView" aria-labelledby="extractionTitle" hidden>
+      <div class="extraction-main">
+        <span class="scan-visual"><i data-lucide="scan-text"></i></span>
+        <span class="phase-kicker"><i data-lucide="sparkles"></i> AI extraction</span>
+        <h2 id="extractionTitle">Reading patient documents</h2>
+        <p id="extractionMessage">Identifying patient, coverage, order, and clinical details.</p>
+        <div class="progress-track" role="progressbar" aria-label="Extraction progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="progressBar"></span></div>
+        <strong class="progress-value" id="progressValue">0%</strong>
+        <ol class="extraction-steps" id="extractionSteps"></ol>
+      </div>
+      <aside class="match-panel" aria-labelledby="matchTitle">
+        <header><span class="attention-icon"><i data-lucide="user-round-check"></i></span><div><span class="eyebrow">Required decision</span><h3 id="matchTitle">Confirm the patient</h3></div></header>
+        <p>AI found an existing patient matching the uploaded documents.</p>
+        <div class="patient-match"><div class="patient-avatar">AB</div><div><strong>Ashlynn Botosh</strong><span>DOB 03/15/1978 · PT-10482</span><small>Matched on name, date of birth, and phone</small></div></div>
+        <div class="match-actions" id="patientActions"><button class="primary-button" type="button" data-patient-choice="existing">Link existing patient</button><button class="secondary-button" type="button" data-patient-choice="new">Create new patient</button></div>
+        <div class="patient-decision" id="patientDecision" hidden></div>
+        <div class="duplicate-decision" id="duplicateDecision" hidden>
+          <div class="decision-divider"></div><span class="eyebrow">Document match</span><h4>Insurance card already exists</h4><p>The uploaded card matches a file in this patient’s record.</p>
+          <div class="match-actions"><button class="primary-button" type="button" data-document-choice="existing">Use existing</button><button class="secondary-button" type="button" data-document-choice="upload">Keep upload</button></div>
+        </div>
+        <button class="primary-button continue-button" id="continueReview" type="button" disabled>Continue to review<i data-lucide="arrow-right"></i></button>
+      </aside>
+    </section>
+  </main>
+
+  <main class="workspace" id="workspace" hidden>
+    <section class="review-workspace" id="reviewWorkspace" aria-label="Patient intake review">
+      <div class="review-content" id="reviewContent">
+        <section class="guidance" aria-labelledby="guidanceTitle"><span class="guidance-icon"><i data-lucide="sparkles"></i></span><div><h2 id="guidanceTitle">Your intake is mostly done</h2><p>AI extracted the details and resolved conflicts. Review each section and correct anything that needs attention.</p></div></section>
+        <div class="patient-context"><div><span class="eyebrow">Linked patient</span><h2>Ashlynn Botosh</h2><p>DOB 03/15/1978 · Patient ID PT-10482</p></div><span class="status-label reviewed"><i data-lucide="link"></i> Existing patient linked</span></div>
+        <div class="review-sections" id="reviewSections"></div>
+      </div>
+      <section class="handoff" id="handoff" aria-labelledby="handoffTitle" hidden></section>
+    </section>
+
+    <aside class="viewer" id="viewer" aria-label="Source document viewer">
+      <div class="resize-handle" id="resizeHandle" role="separator" tabindex="0" aria-label="Resize source document viewer" aria-orientation="vertical" aria-valuemin="320" aria-valuemax="620" aria-valuenow="420"></div>
+      <header class="viewer-header">
+        <div class="viewer-tabs" role="tablist" aria-label="Document viewer mode">
+          <button id="previewTab" type="button" role="tab" aria-selected="true" aria-controls="previewPanel"><i data-lucide="file-search"></i> Preview</button>
+          <button id="galleryTab" type="button" role="tab" aria-selected="false" aria-controls="galleryPanel"><i data-lucide="layout-grid"></i> Gallery</button>
+        </div>
+        <button class="icon-button" id="viewerCollapse" type="button" aria-controls="viewer" aria-expanded="true" aria-label="Collapse document viewer" title="Collapse document viewer"><i data-lucide="panel-right-close"></i></button>
+      </header>
+      <section class="preview-panel" id="previewPanel" role="tabpanel" aria-labelledby="previewTab">
+        <div class="document-toolbar"><div><strong id="viewerTitle"></strong><span id="pageLabel"></span></div><div class="toolbar-actions"><button class="icon-button" id="previousPage" type="button" aria-label="Previous page" title="Previous page"><i data-lucide="chevron-left"></i></button><button class="icon-button" id="nextPage" type="button" aria-label="Next page" title="Next page"><i data-lucide="chevron-right"></i></button><span class="toolbar-divider"></span><button class="icon-button" id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out"><i data-lucide="zoom-out"></i></button><span id="zoomLabel">100%</span><button class="icon-button" id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in"><i data-lucide="zoom-in"></i></button></div></div>
+        <div class="document-stage" id="documentStage"><img id="documentImage" alt=""></div>
+      </section>
+      <section class="gallery-panel" id="galleryPanel" role="tabpanel" aria-labelledby="galleryTab" hidden></section>
+    </aside>
+    <button class="viewer-restore" id="viewerRestore" type="button" aria-label="Open document viewer" title="Open document viewer" hidden><i data-lucide="panel-right-open"></i><span>Sources</span></button>
+  </main>
+
+  <div class="live-region" id="liveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="review.js"></script>
+</body>
+</html>
