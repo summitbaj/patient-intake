@@ -1052,3 +1052,13 @@ body:not(.phase-review) .file-area-head{display:none}
 .issues-title-row h2{margin:0!important}
 .issues-title-row .action-badge{flex:none}
 .intake-modal .extraction-issues-head p{margin-top:var(--space-3)}
+
+/* Exploration bar — sits above the Signetic ribbon to switch between design directions */
+:root{--explore-h:36px;--shell-top:calc(var(--explore-h) + var(--ribbon-h) + var(--commands-h))}
+.explore-bar{position:fixed;top:0;left:0;right:0;height:var(--explore-h);z-index:72;display:flex;align-items:stretch;gap:var(--space-2);padding:0 var(--space-6);background:var(--white);border-bottom:1px solid var(--line)}
+.explore-label{display:flex;align-items:center;margin-right:var(--space-6);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.explore-tab{display:flex;align-items:center;padding:0 var(--space-6);font-size:13px;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}
+.explore-tab:hover{color:var(--text);background:#f5f5f5}
+.explore-tab.active{color:var(--text);font-weight:600;border-bottom-color:var(--primary)}
+.shell-ribbon{top:var(--explore-h)}
+.shell-nav,.shell-commands{top:calc(var(--explore-h) + var(--ribbon-h))}

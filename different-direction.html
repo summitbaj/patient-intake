@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Patient Intake · Different direction | Signetic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="direction.css">
+</head>
+<body class="dd-page">
+  <div class="explore-bar" role="navigation" aria-label="Design explorations">
+    <span class="explore-label">Explorations</span>
+    <a class="explore-tab" href="index.html">Generic Flow</a>
+    <a class="explore-tab active" aria-current="page" href="different-direction.html">Different direction</a>
+  </div>
+  <header class="shell-ribbon" aria-label="Signetic">
+    <div class="ribbon-start"><button class="ribbon-btn" aria-label="App launcher" title="App launcher"><i data-lucide="grip"></i></button><span class="ribbon-logo">SIGNETIC</span><span class="ribbon-portal">Manager Portal</span></div>
+    <div class="ribbon-env">SANDBOX</div>
+    <div class="ribbon-end"><button class="ribbon-btn" aria-label="Search" title="Search"><i data-lucide="search"></i></button><button class="ribbon-btn" aria-label="Create new" title="Create new"><i data-lucide="plus"></i></button><button class="ribbon-btn" aria-label="Filter" title="Filter"><i data-lucide="filter"></i></button><button class="ribbon-btn" aria-label="Settings" title="Settings"><i data-lucide="settings"></i></button><button class="ribbon-btn" aria-label="Help" title="Help"><span aria-hidden="true">?</span></button><button class="ribbon-avatar" aria-label="Account" title="Account">PS</button></div>
+  </header>
+
+  <nav class="shell-nav" id="shellNav" aria-label="Main navigation">
+    <button class="nav-toggle" id="navToggle" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation"><i data-lucide="menu"></i></button>
+    <div class="nav-scroll">
+      <a class="nav-item" href="#" title="Home"><i data-lucide="house"></i><span>Home</span></a>
+      <button class="nav-item" title="Recent"><i data-lucide="clock"></i><span>Recent</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <button class="nav-item" title="Pinned"><i data-lucide="pin"></i><span>Pinned</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <div class="nav-group open">
+        <button class="nav-section" aria-expanded="true" data-nav-section><span>Practice Management</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children">
+          <a class="nav-item" href="#" title="Get Started"><i data-lucide="list-todo"></i><span>Get Started</span></a>
+          <a class="nav-item" href="#" title="Clinic Groups"><i data-lucide="layout-grid"></i><span>Clinic Groups</span></a>
+          <a class="nav-item" href="#" title="Popup Clinics"><i data-lucide="store"></i><span>Popup Clinics</span></a>
+          <a class="nav-item" href="#" title="Care Events"><i data-lucide="hand-heart"></i><span>Care Events</span></a>
+          <a class="nav-item" href="#" title="Schedules"><i data-lucide="calendar-days"></i><span>Schedules</span></a>
+          <a class="nav-item active" href="#" aria-current="page" title="Patients"><i data-lucide="users"></i><span>Patients</span></a>
+        </div>
+      </div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>DME</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Payment</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Claims Processing</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>NCPDP</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Logs</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Tools</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Settings</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+    </div>
+  </nav>
+
+  <div class="shell-commands" aria-label="Page commands"><button class="command-btn" id="shellBack" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></button><button class="command-btn" id="shellRefresh" aria-label="Refresh" title="Refresh"><i data-lucide="rotate-ccw"></i></button><button class="command-btn" aria-label="Page details" title="Page details"><i data-lucide="file"></i></button></div>
+
+  
+
+  <div class="app-body dd-body">
+  <div class="dd-app" id="ddApp" data-stage="upload">
+    <header class="dd-top">
+      <div class="dd-brand"><span class="dd-brand-mark"><i data-lucide="sparkles"></i></span><div><h1>Patient Intake</h1><small>#INT-0023 · AI assisted</small></div></div>
+      <ol class="dd-journey" id="ddJourney" aria-label="Intake progress"></ol>
+      <div class="dd-patient-chip" id="ddPatientChip" hidden></div>
+    </header>
+
+    <!-- 1. Upload -->
+    <section class="dd-view dd-upload" data-stage="upload">
+      <div class="dd-hero">
+        <span class="dd-kicker"><i data-lucide="sparkles"></i> New patient intake</span>
+        <h2>Drop the paperwork.<br><span class="dd-grad-text">AI does the typing.</span></h2>
+        <p>Add prescriptions, insurance cards, referrals and clinical records. Nothing is processed until you select Extract.</p>
+      </div>
+      <div class="dd-upload-grid">
+        <div class="dd-drop-col">
+          <label class="dd-drop" id="ddDrop" tabindex="0" role="button" aria-label="Upload documents">
+            <span class="dd-drop-art" aria-hidden="true"><span class="p1"></span><span class="p2"></span><span class="p3"><i data-lucide="arrow-up"></i></span></span>
+            <strong>Drag and drop documents here</strong>
+            <span class="dd-drop-hint">PDF, JPG or PNG up to <b>10 MB</b> per file</span>
+            <span class="dd-btn primary">Browse &amp; upload files</span>
+          </label>
+          <section class="dd-uploaded" id="ddUploaded" hidden aria-labelledby="ddUploadedTitle">
+            <header><h3 id="ddUploadedTitle">Ready to extract</h3><span class="dd-count" id="ddUploadCount"></span></header>
+            <div class="dd-tiles" id="ddUploadTiles"></div>
+          </section>
+        </div>
+        <aside class="dd-queue-card" aria-labelledby="ddQueueTitle">
+          <header><span class="dd-queue-ico"><i data-lucide="users"></i></span><div><h3 id="ddQueueTitle">Pull from a patient’s record</h3><p>Patients waiting in the intake queue. Pick documents straight from their record.</p></div></header>
+          <div class="dd-search-wrap">
+            <label class="dd-search"><i data-lucide="search"></i><input id="ddSearch" type="text" placeholder="Find another patient by name or ID" autocomplete="off" aria-label="Find another patient"></label>
+            <div class="dd-search-results" id="ddSearchResults" role="listbox" hidden></div>
+          </div>
+          <span class="dd-group-title">In the intake queue</span>
+          <div class="dd-queue" id="ddQueue"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 2. Extract -->
+    <section class="dd-view dd-extract" data-stage="extract" hidden>
+      <div class="dd-extract-card">
+        <div class="dd-scan" id="ddScanStack" aria-hidden="true"></div>
+        <div class="dd-extract-copy">
+          <span class="dd-kicker light"><i data-lucide="sparkles"></i> AI extraction</span>
+          <h2 id="ddExtractTitle">Reading your documents…</h2>
+          <p id="ddExtractSub">Getting started</p>
+          <div class="dd-meter-row"><div class="dd-meter"><span id="ddExtractBar"></span></div><b id="ddExtractPct">0%</b></div>
+          <ol class="dd-steps" id="ddSteps"></ol>
+        </div>
+      </div>
+      <div class="dd-extract-files" id="ddExtractFiles"></div>
+    </section>
+
+    <!-- 3. Confirm -->
+    <section class="dd-view dd-confirm" data-stage="confirm" hidden>
+      <div class="dd-confirm-head">
+        <div><span class="dd-kicker"><i data-lucide="circle-check"></i> Extraction complete</span><h2>A couple of quick calls before review</h2><p>Confirm the patient and how look-alike documents are stored. Then the extracted details are all yours.</p></div>
+        <span class="dd-action-badge"><span class="dd-pulse"></span>Action needed</span>
+      </div>
+      <div class="dd-confirm-grid">
+        <nav class="dd-decisions" id="ddDecisions" aria-label="Decisions"></nav>
+        <div class="dd-decision-panel" id="ddDecisionPanel"></div>
+      </div>
+    </section>
+
+    <!-- 4. Review -->
+    <section class="dd-view dd-review" data-stage="review" hidden>
+      <div class="dd-review-hero">
+        <span class="dd-avatar xl" style="--h:262">AB</span>
+        <div class="dd-review-title"><span class="dd-kicker"><i data-lucide="sparkles"></i> AI extracted profile</span><h2>Review <span id="ddReviewName">Ashlynn Botosh</span>’s intake</h2><div class="dd-chips" id="ddReviewChips"></div></div>
+        <div class="dd-ring" id="ddRing" style="--p:95"><div class="dd-ring-inner"><b id="ddRingValue">40</b><small>of 42 fields<br>reviewed</small></div></div>
+      </div>
+      <div class="dd-ai-banner"><span class="dd-ai-orb"><i data-lucide="sparkles"></i></span><p><b>Your intake is mostly done.</b> AI extracted the details and resolved conflicts, but it may make mistakes. Check anything marked <span class="dd-ai-tag inline"><i data-lucide="sparkles"></i> AI resolved</span> against its source. Hover any field to see where it came from.</p></div>
+      <div class="dd-review-grid" id="ddReviewGrid">
+        <aside class="dd-checklist" aria-label="To review">
+          <div class="dd-checklist-head" id="ddChecklistHead"></div>
+          <div class="dd-todos" id="ddTodos"></div>
+          <nav class="dd-section-nav" aria-label="Sections"><span class="dd-group-title">Sections</span><div id="ddSectionNav"></div></nav>
+        </aside>
+        <div class="dd-sections-wrap">
+          <section class="dd-ready" id="ddReady" hidden><span class="dd-ready-ico"><i data-lucide="check"></i></span><div><strong>Ready to complete</strong><p id="ddReadyText"></p></div></section>
+          <div id="ddSections"></div>
+        </div>
+        <aside class="dd-source" id="ddSource" aria-label="Source documents">
+          <div class="dd-lens-resize" id="ddLensResize" role="separator" aria-orientation="vertical" aria-label="Resize documents" title="Drag to resize · double-click to reset"></div>
+          <header class="dd-lens-head">
+            <div class="dd-doc-picker"><button class="dd-doc-trigger" id="ddDocTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose document to preview"><i data-lucide="file-text"></i><span id="ddDocName">Referral.pdf</span><i data-lucide="chevron-down" class="dd-chev"></i></button><div class="dd-doc-menu" id="ddDocMenu" role="listbox" aria-label="Documents" hidden></div></div>
+            <small id="ddDocMeta">Page 1</small>
+            <button class="dd-icon-btn" data-act="toggle-source" aria-label="Hide documents" title="Hide documents"><i data-lucide="panel-right-close"></i></button>
+          </header>
+          <div class="dd-matches" id="ddMatches" hidden></div>
+          <div class="dd-lens" id="ddLens"><div class="dd-preview" id="ddPreview"><div class="dd-canvas"><img id="ddDocImg" src="assets/referral.svg" alt="Document preview"><div class="dd-marks" id="ddMarks" aria-hidden="true"></div></div></div></div>
+          <div class="dd-files-head"><strong>Files</strong><span class="dd-count" id="ddFileCount">0</span><span class="dd-spacer"></span><div class="dd-mini-seg" role="group" aria-label="File view"><button data-act="list-mode" data-list-mode="list" aria-pressed="true" title="List" aria-label="List view"><i data-lucide="list"></i></button><button data-act="list-mode" data-list-mode="strip" aria-pressed="false" title="Thumbnails" aria-label="Thumbnail view"><i data-lucide="layout-grid"></i></button></div></div>
+          <div class="dd-files list" id="ddFiles"></div>
+          <button class="dd-add-docs" data-act="add-docs"><i data-lucide="upload-cloud"></i><span><strong>Add documents</strong><small>Drop files or browse · up to 20 MB</small></span></button>
+        </aside>
+        <button class="dd-source-rail" id="ddSourceRail" data-act="toggle-source" aria-label="Show documents" hidden><i data-lucide="panel-right-open"></i><span>Documents</span><b id="ddRailCount">0</b></button>
+      </div>
+      <datalist id="ddHcpcs"></datalist><datalist id="ddIcd"></datalist>
+    </section>
+
+    <!-- 5. Complete -->
+    <section class="dd-view dd-complete" data-stage="complete" hidden>
+      <div class="dd-done-hero">
+        <span class="dd-done-badge"><i data-lucide="check"></i></span>
+        <span class="dd-kicker light"><i data-lucide="party-popper"></i> Intake complete</span>
+        <h2 id="ddDoneName">Ashlynn Botosh</h2>
+        <p id="ddDoneContext"></p>
+        <button class="dd-btn glass sm" data-act="go" data-stage="review"><i data-lucide="arrow-left"></i> Return to intake review</button>
+      </div>
+      <div class="dd-done-grid">
+        <article class="dd-next-card">
+          <span class="dd-kicker"><i data-lucide="sparkles"></i> AI recommended next action</span>
+          <h3>Start pre-check</h3>
+          <p id="ddNextReason"></p>
+          <button class="dd-btn ai lg" data-act="start-precheck"><i data-lucide="shield-check"></i> Start pre-check</button>
+          <div class="dd-other"><span>Other actions</span><button class="dd-link" data-act="order-direct">Create order without pre-check <i data-lucide="arrow-right"></i></button></div>
+        </article>
+        <article class="dd-summary-card">
+          <span class="dd-kicker"><i data-lucide="sparkles"></i> AI intake summary</span>
+          <h3 id="ddSummaryTitle"></h3>
+          <p id="ddSummaryText"></p>
+          <span class="dd-group-title">Keep an eye on</span>
+          <ul class="dd-watch" id="ddWatch"></ul>
+          <small class="dd-based"><i data-lucide="shield-check"></i> Based on reviewed intake data</small>
+        </article>
+      </div>
+      <section class="dd-recos" aria-labelledby="ddRecoTitle">
+        <header><span class="dd-kicker"><i data-lucide="sparkles"></i> AI recommendations</span><h3 id="ddRecoTitle">Recommended for this intake</h3><p>Based on the reviewed prescription, diagnosis, coverage and uploaded documents.</p></header>
+        <div class="dd-reco-cols">
+          <div><span class="dd-reco-head"><i data-lucide="stethoscope"></i> Recommended services</span><ul id="ddRecoServices"></ul></div>
+          <div><span class="dd-reco-head"><i data-lucide="package-check"></i> Recommended DME items</span><ul id="ddRecoDme"></ul></div>
+        </div>
+      </section>
+      <p class="dd-done-note" id="ddDoneNote"></p>
+    </section>
+
+    <!-- 6. Pre-check -->
+    <section class="dd-view dd-precheck" data-stage="precheck" hidden>
+      <header class="dd-pc-head">
+        <div><span class="dd-kicker"><i data-lucide="sparkles"></i> Checked by AI · just now</span><h2>Coverage Pre-check</h2><p id="ddPcPatient"></p></div>
+        <span class="dd-pc-from"><i data-lucide="file-input"></i> From Patient Intake <b>#INT-0023</b></span>
+      </header>
+      <div class="dd-pc-ai">
+        <span class="dd-ai-orb"><i data-lucide="sparkles"></i></span>
+        <div><strong>This pre-check was done by AI</strong><p>AI checked each item against Medicare coverage policies (LCDs), payer rules, and the reviewed intake and documents. AI can make mistakes, so review flagged items before you create the order.</p><small><i data-lucide="info"></i> Decision support only. It doesn’t guarantee coverage, payment or reimbursement. The provider makes the final determination before dispensing.</small></div>
+      </div>
+      <div class="dd-stats" id="ddPcStats" role="group" aria-label="Filter items by result"></div>
+      <div class="dd-pc-grid">
+        <div class="dd-board" id="ddBoard"></div>
+        <aside class="dd-pc-detail" id="ddPcDetail" tabindex="-1" aria-label="Item details"></aside>
+      </div>
+    </section>
+  </div>
+  <div class="dd-dock" id="ddDock" hidden></div>
+  </div>
+
+  <dialog class="dd-dialog" id="ddCancelDialog" aria-labelledby="ddCancelTitle">
+    <form method="dialog">
+      <span class="dd-dialog-ico bad"><i data-lucide="trash-2"></i></span>
+      <h2 id="ddCancelTitle">Cancel this intake?</h2>
+      <p>All extracted information and any changes you made will be discarded. A cancelled intake can’t be resumed later. To try again, you’ll need to start a new intake.</p>
+      <div class="dd-dialog-actions"><button class="dd-btn ghost" value="keep" autofocus>Keep working</button><button class="dd-btn danger" value="cancel">Cancel intake</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="dd-dialog wide" id="ddRespDialog" aria-labelledby="ddRespTitle">
+    <form method="dialog">
+      <header class="dd-dialog-head"><div><span class="dd-kicker">Eligibility response</span><h2 id="ddRespTitle"></h2><p id="ddRespMeta"></p></div><button class="dd-icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div id="ddRespBody"></div>
+      <div class="dd-dialog-actions"><button class="dd-btn ghost" value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="dd-dialog wide" id="ddPlanDialog" aria-labelledby="ddPlanTitle">
+    <form id="ddPlanForm" novalidate>
+      <header class="dd-dialog-head"><div><span class="dd-kicker">Insurance</span><h2 id="ddPlanTitle">Add another plan</h2><p>Enter the details from the patient’s insurance card. You can check eligibility after saving.</p></div><button class="dd-icon-btn" type="button" data-close aria-label="Close"><i data-lucide="x"></i></button></header>
+      <button type="button" class="dd-scan-card" id="ddScan"></button>
+      <div class="dd-form-grid">
+        <label class="wide"><span>Health insurance company <em>*</em></span><input class="dd-input" name="company" required placeholder="e.g. Blue Cross Blue Shield" autocomplete="off"></label>
+        <label class="wide"><span>Plan name <em>*</em></span><input class="dd-input" name="plan" required placeholder="e.g. Premera Blue Cross PPO"></label>
+        <label><span>Insurance type <em>*</em></span><select class="dd-input" name="type" required><option value="">Select</option><option>Commercial PPO</option><option>Commercial HMO</option><option>Medicare</option><option>Medicare Advantage</option><option>Medicaid</option><option>Medicare Supplement</option><option>TRICARE</option><option>Workers’ compensation</option><option>Other</option></select></label>
+        <label><span>Relationship to insured <em>*</em></span><select class="dd-input" name="relationship" required><option>Self</option><option>Spouse</option><option>Child</option><option>Other</option></select></label>
+        <div class="wide dd-member" role="group" aria-labelledby="ddMemberLabel"><span id="ddMemberLabel">Member ID <em>*</em></span><div><input class="dd-input" name="prefix" placeholder="Prefix" aria-label="Member ID prefix"><input class="dd-input" name="member" required placeholder="Member ID" aria-label="Member ID"><input class="dd-input" name="suffix" placeholder="Suffix" aria-label="Member ID suffix"></div></div>
+        <label><span>Group number</span><input class="dd-input" name="group" placeholder="Optional"></label>
+        <label><span>Coverage order</span><select class="dd-input" name="position" id="ddPlanPosition"></select></label>
+        <label><span>Effective from <em>*</em></span><input class="dd-input" type="date" name="from" required></label>
+        <label><span>Effective to</span><input class="dd-input" type="date" name="to"></label>
+      </div>
+      <p class="dd-form-error" id="ddPlanError" hidden>Fill in the required fields marked with *.</p>
+      <label class="dd-check-row"><input type="checkbox" name="checkNow" checked> Check eligibility after adding</label>
+      <div class="dd-dialog-actions"><button class="dd-btn ghost" type="button" data-close>Cancel</button><button class="dd-btn primary" type="submit">Add plan</button></div>
+    </form>
+  </dialog>
+
+  <dialog class="dd-dialog wide" id="ddDocsDialog" aria-labelledby="ddDocsTitle">
+    <form method="dialog">
+      <header class="dd-dialog-head"><div><span class="dd-kicker">Required documents</span><h2 id="ddDocsTitle"></h2><p id="ddDocsMeta"></p></div><button class="dd-icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="dd-fyi-list" id="ddDocsList"></div>
+      <div class="dd-dialog-actions"><button class="dd-btn ghost" value="close">Close</button></div>
+    </form>
+  </dialog>
+
+  <div class="dd-confetti" id="ddConfetti" aria-hidden="true"></div>
+  <div class="dd-toast" id="ddToast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="direction.js"></script>
+</body>
+</html>

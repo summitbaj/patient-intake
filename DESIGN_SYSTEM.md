@@ -26,6 +26,7 @@ Use these shared foundations throughout the application. Keep semantic status co
 
 Every page sits inside the Signetic Manager Portal shell:
 
+- **Exploration bar** (`.explore-bar`): prototype-only 36px white tab bar (`--explore-h`) above the ribbon for switching design directions — "Generic Flow" (`index.html` and its linked pages) and "Different direction" (`different-direction.html`). It is included in `--shell-top`.
 - **Ribbon** (`.shell-ribbon`): fixed black bar, 42px — app launcher, SIGNETIC wordmark, "Manager Portal", environment label (SANDBOX), and global actions (search, create, filter, settings, help, account).
 - **Left navigation** (`.shell-nav`): fixed, 180px wide, collapsible to a 44px icon rail with the menu button (collapsed by default at 900px and below). The current page is marked `.active` with `aria-current="page"`.
 - **Command bar** (`.shell-commands`): 36px bar under the ribbon with back, refresh, and page actions.
