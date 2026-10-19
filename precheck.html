@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Coverage Pre-check | Signetic</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="order.css">
+  <link rel="stylesheet" href="precheck.css">
+</head>
+<body class="order-page precheck-page">
+  <header class="shell-ribbon" aria-label="Signetic">
+    <div class="ribbon-start"><button class="ribbon-btn" aria-label="App launcher" title="App launcher"><i data-lucide="grip"></i></button><span class="ribbon-logo">SIGNETIC</span><span class="ribbon-portal">Manager Portal</span></div>
+    <div class="ribbon-env">SANDBOX</div>
+    <div class="ribbon-end"><button class="ribbon-btn" aria-label="Search" title="Search"><i data-lucide="search"></i></button><button class="ribbon-btn" aria-label="Create new" title="Create new"><i data-lucide="plus"></i></button><button class="ribbon-btn" aria-label="Filter" title="Filter"><i data-lucide="filter"></i></button><button class="ribbon-btn" aria-label="Settings" title="Settings"><i data-lucide="settings"></i></button><button class="ribbon-btn" aria-label="Help" title="Help"><span aria-hidden="true">?</span></button><button class="ribbon-avatar" aria-label="Account" title="Account">PS</button></div>
+  </header>
+
+  <nav class="shell-nav" id="shellNav" aria-label="Main navigation">
+    <button class="nav-toggle" id="navToggle" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation"><i data-lucide="menu"></i></button>
+    <div class="nav-scroll">
+      <a class="nav-item" href="index.html" title="Home"><i data-lucide="house"></i><span>Home</span></a>
+      <button class="nav-item" title="Recent"><i data-lucide="clock"></i><span>Recent</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <button class="nav-item" title="Pinned"><i data-lucide="pin"></i><span>Pinned</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Practice Management</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children"><a class="nav-item" href="index.html" title="Patients"><i data-lucide="users"></i><span>Patients</span></a></div>
+      </div>
+      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>DME</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children">
+          <a class="nav-item active" href="#" aria-current="page" title="DME Orders"><i data-lucide="list-checks"></i><span>DME Orders</span></a>
+          <a class="nav-item" href="#" title="Delivery Management"><i data-lucide="truck"></i><span>Delivery Management</span></a>
+          <a class="nav-item" href="#" title="Rental Management"><i data-lucide="file-clock"></i><span>Rental Management</span></a>
+        </div>
+      </div>
+      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>Payment</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children"><a class="nav-item" href="#" title="Payment"><i data-lucide="credit-card"></i><span>Payment</span></a></div>
+      </div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Claims Processing</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>NCPDP</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Logs</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Tools</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Settings</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+    </div>
+  </nav>
+
+  <div class="shell-commands" aria-label="Page commands"><button class="command-btn" id="shellBack" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></button><button class="command-btn" id="shellRefresh" aria-label="Refresh" title="Refresh"><i data-lucide="rotate-ccw"></i></button><button class="command-btn" aria-label="Page details" title="Page details"><i data-lucide="file"></i></button></div>
+
+  <div class="app-body">
+    <div class="order-shell pc-shell">
+      <header class="order-header">
+        <div class="order-title"><a class="icon-btn" href="index.html" id="pcBackLink" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></a><div><h1>Coverage Pre-check</h1><p class="pc-sub" id="pcPatient"></p></div></div>
+        <div class="order-header-actions"><span class="pc-from"><i data-lucide="file-input"></i> From Patient Intake: <b id="pcIntakeId"></b></span></div>
+      </header>
+
+      <section class="pc-summary-bar" aria-label="Pre-check summary">
+        <div class="pc-stats" id="pcStats" role="group" aria-label="Filter items by result"></div>
+        <div class="pc-progress"><span id="pcProgressText"></span><span class="pc-progress-track"><span id="pcProgressBar"></span></span></div>
+      </section>
+      <p class="pc-disclaimer"><i data-lucide="info"></i> Decision support only. It doesn’t guarantee coverage, payment or reimbursement. The provider makes the final determination before dispensing.</p>
+
+      <div class="pc-body">
+        <aside class="pc-items" id="pcList" aria-label="Items"></aside>
+        <main class="pc-detail" id="pcDetail" tabindex="-1"></main>
+      </div>
+
+      <footer class="order-footer">
+        <a class="footer-btn" id="pcBack" href="index.html"><i data-lucide="arrow-left"></i> Back</a>
+        <div class="order-footer-actions"><span class="pc-footer-status" id="pcFooterStatus"></span><button class="footer-btn primary" id="pcCreateOrder">Create order</button></div>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="precheck.js"></script>
+</body>
+</html>

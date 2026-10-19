@@ -93,6 +93,9 @@ Keep behavior driven by application state and DOM APIs. Do not create visual-onl
 - Do not begin extraction until the user explicitly selects **Extract**.
 - Keep the empty state focused; do not show review controls or sidebars.
 - Use a clear drop zone, a compact queue, **Add sample documents**, and **Extract**.
+- Offer a second, equal path beside the drop zone: **Pull from a patient's record**. On desktop place the two side by side with a vertical "or" divider so both are visible without scrolling; stack them below ~900px.
+- Keep the hero compact: a small animated sparkle badge (soft pulsing rings, slow twinkle, disabled under `prefers-reduced-motion`), the title, and one line of description. Do not add eyebrows or large icons that push a path below the fold.
+- The record card holds a search field and an "In the intake queue" list. Each patient is one row (initials, name, `PT-ID · DOB`, docs-count pill, chevron). Expanding a row shows its documents inline with Select all/Clear all and an Add button. The list scrolls inside the card (max-height); never grow the page.
 
 ## Extraction Phase
 
@@ -102,11 +105,15 @@ Keep behavior driven by application state and DOM APIs. Do not create visual-onl
 - Stack progress and issues on mobile.
 - Show staged progress through reading, extracting, patient matching, duplicate checking, and conflict resolution.
 - Let users resolve issues while extraction continues when possible.
-- Resolve issues sequentially:
-  1. Select an existing patient or create a new patient.
-  2. Decide how same or similar documents should be handled.
-- Show enough patient detail to make a safe match: name, DOB, patient ID, address, phone, match reason, and confidence.
-- Keep document choices specific and understandable, such as use existing, keep upload, replace existing, or add as new.
+- Do not title the panel with a count or a scenario-specific sentence ("Confirm two matches", "Similar patient and documents found"). Conflicts are independent and any combination can occur: similar patient only, similar documents only, both, or neither. The panel has no heading copy; it starts directly with the step titles so no per-scenario message has to be written.
+- Resolve steps one after another, each self-titled:
+  1. **Which patient is this?** "Choose one record, or create a new one."
+  2. **What should we do with similar documents?**
+- Only render the steps that apply. A lone step shows no number. When both apply, show step 2 up front but locked ("Unlocks after you choose a patient"), then unlock it and ring its number when step 1 resolves, so the next action is obvious. If neither applies, skip straight to review ("No conflicts found").
+- If the patient is already known (documents pulled from a patient's record, from the queue or search), never ask the similar-patient question.
+- Collapse a resolved step to one quiet line (check, name, Change). No green boxes, no Required/Resolved pills; the number turning into a check is the status.
+- Patient candidates: name, DOB, patient ID, a Best match tag on the top one, and a Select button (filled for the best match, quiet outline for the rest). Do not show confidence scores or "why it matched" sentences. Put "View details" under the DOB; it reveals full address, phone, email, primary insurance payer and member ID, and omits the patient ID (already shown).
+- Document rows show the file name, a one-line reason, and "On file: …". Use plain choices such as Replace existing / Keep both, or Use existing / Keep new copy. After a choice, replace the buttons with a one-line confirmation.
 - Transition to review only after extraction completes and all required issues are resolved.
 
 ## Existing Patient Behavior
@@ -120,6 +127,16 @@ Keep behavior driven by application state and DOM APIs. Do not create visual-onl
 - Include uploaded plus existing files in the header count for a linked patient.
 - Choosing a new patient hides the existing-document section and removes existing files from the count and viewer availability.
 - Keep all patient-selection paths synchronized. Extraction-phase selection and review-phase linking must produce the same sidebar state.
+
+## Design Learnings (from review feedback)
+
+- **Fewer containers.** Prefer flat lists with hairline dividers over bordered cards inside bordered cards; avoid pills, dashed boxes and tinted status boxes unless they carry information nothing else does.
+- **Design for every scenario, not the demo.** When content is conditional, define the UI for each combination and keep the prototype able to show them (`?conflicts=patient|documents|none` on the page URL).
+- **Make the next step obvious.** Show upcoming steps locked rather than hiding them, and let the heading and active step change the moment the previous one resolves.
+- **Respect gutters.** Content must never touch a panel border; keep at least 20-28px side padding at every width.
+- **Above the fold.** Primary paths on a start screen must be visible without scrolling on a ~600px-tall viewport; fix by layout (side by side, compact hero), not by shrinking type.
+- **Beware legacy CSS.** The stylesheet has old generic rules such as `.extract-patient>div{display:grid;…}`. Do not put `div` children inside those components, and verify rendering after markup changes instead of assuming.
+- **Confirm layout-level changes first.** Ask before moving or re-architecting a section; apply small, reversible tweaks directly.
 
 ## Left Document Sidebar
 
@@ -308,6 +325,8 @@ Before finishing a related change, confirm:
 - The upload state remains centered across the full viewport.
 - Extraction content recenters beside the right issue panel.
 - Existing-patient files appear only when a patient is linked.
+- Extraction issues render only the steps that apply, with no scenario-specific heading, and never ask for a patient that is already known.
+- The upload screen shows both start paths without scrolling at ~600px viewport height, and no content touches a panel edge.
 - The top-left drawer control opens and closes the sidebar and reports its state accessibly.
 - The floating drawer tab has not been reintroduced.
 - Review guidance remains one concise section.
