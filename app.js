@@ -87,10 +87,35 @@ function icons(){ if(window.lucide) window.lucide.createIcons(); }
 function toast(message){ const element=$('#toast'); element.textContent=message; element.classList.add('show'); clearTimeout(toast.timer); toast.timer=setTimeout(()=>element.classList.remove('show'),2200); }
 
 function renderDocuments(){
-  $('#documentList').innerHTML=documents.length?documents.map(document=>`<button class="document-item new-doc ${document.id===state.selected?'active':''}" data-document="${document.id}"><span class="doc-icon"><i data-lucide="${document.icon}"></i></span><span class="doc-info"><strong>${document.name}</strong><span>${document.meta}</span></span><span class="doc-state">${document.processing?'<span class="spinner"></span>':'<i data-lucide="circle-check"></i>'}</span></button>`).join(''):'<div class="empty-documents">No documents uploaded yet</div>';
-  $('#fileCount').textContent=documents.length;
-  $('#drawerCount').textContent=documents.length;
+  renderFileList();
   renderViewerGallery();
+  icons();
+}
+
+// One list for every file in the pane: uploaded files plus the linked patient's existing files.
+function renderFileList(){
+  const list=$('#fileList');if(!list)return;
+  const filter=state.fileFilter||'all',view=state.fileView||'list';
+  const uploaded=documents,existing=state.patientLinked?existingFiles:[];
+  $('#cntAll').textContent=uploaded.length+existing.length;
+  $('#cntUploaded').textContent=uploaded.length;
+  $('#cntExisting').textContent=existing.length;
+  $$('[data-file-filter]').forEach(button=>button.setAttribute('aria-pressed',button.dataset.fileFilter===filter));
+  $$('[data-file-view]').forEach(button=>button.setAttribute('aria-pressed',button.dataset.fileView===view));
+  const items=[...(filter==='existing'?[]:uploaded.map(file=>({file,src:'uploaded'}))),...(filter==='uploaded'?[]:existing.map(file=>({file,src:'existing'})))];
+  list.className=`file-list ${view}`;
+  if(!items.length){list.innerHTML=`<p class="file-empty">${filter==='existing'&&!state.patientLinked?'No existing files. They appear once a patient is linked.':'No files yet'}</p>`;return;}
+  list.innerHTML=items.map(({file,src})=>{
+    const key=src==='existing'?`data-existing="${file.id}"`:`data-document="${file.id}"`;
+    const trailing=src==='existing'
+      ?`<button class="use-existing ${file.used?'on':''}" data-use-existing="${file.id}" aria-pressed="${file.used}" title="${file.used?'Remove from this intake':'Use in this intake'}">${file.used?'<i data-lucide="check"></i> In intake':'<i data-lucide="plus"></i> Add'}</button>`
+      :`<span class="file-state">${file.processing?'<span class="spinner"></span>':'<i data-lucide="circle-check"></i>'}</span>`;
+    const tag=src==='existing'?'<em class="file-tag">Existing</em>':'';
+    const body=view==='grid'
+      ?`<button class="file-main" ${key}><span class="gallery-thumb"><img src="${imageForDocument(file)}" alt=""></span><span class="file-name"><strong>${file.name}</strong>${tag}</span><small>${file.meta}</small></button>`
+      :`<button class="file-main" ${key}><span class="doc-icon"><i data-lucide="${file.icon}"></i></span><span class="doc-info"><strong>${file.name}</strong><span>${file.meta}${tag?' · Existing':''}</span></span></button>`;
+    return `<div class="file-item ${file.id===state.selected?'active':''} ${src}">${body}${trailing}</div>`;
+  }).join('');
   icons();
 }
 
@@ -161,8 +186,8 @@ function renderExtractionIssues(){
 }
 
 function syncFooter(){
-  const phase=state.completed?'':state.phase;
-  $('#pageFooter').hidden=phase!=='upload'&&phase!=='review';
+  const phase=state.phase;
+  $('#pageFooter').hidden=phase!=='upload';
   $$('[data-footer-phase]').forEach(group=>{group.hidden=group.dataset.footerPhase!==phase;});
 }
 
@@ -187,28 +212,24 @@ function setPhase(phase){
   $('#extractionView').hidden=phase!=='extraction';
   $('#extractionIssues').hidden=phase!=='extraction';
   $('#documentViewer').hidden=phase!=='review';
-  $('#expandSources').hidden=phase!=='review';
-  $('#reviewTrigger').disabled=phase!=='review';
   if(phase==='review'){
     syncExistingPatientFiles();
     setSourceDrawer(false,true);
     openDocument(state.selected||'referral');
+    setViewerTab('files');
     updateProgress();
   }
 }
 
 function renderExistingFiles(){
-  $('#existingCount').textContent=existingFiles.length;
-  $('#existingList').innerHTML=existingFiles.map(file=>`<article class="existing-file-row ${file.used?'in-use':''}"><button class="document-item existing-file" data-existing="${file.id}"><span class="doc-icon"><i data-lucide="${file.icon}"></i></span><span class="doc-info"><strong>${file.name}</strong><span>${file.meta}</span></span><span class="doc-state ${file.extracted?'':'pending-state'}">${file.extracted?'<i data-lucide="circle-check"></i>':'<i data-lucide="sparkles"></i>'}</span></button><button class="use-existing" data-use-existing="${file.id}" aria-pressed="${file.used}">${file.used?'<i data-lucide="check"></i> In this intake':'Use in intake'}</button></article>`).join('');
-  $('#drawerCount').textContent=documents.length+existingFiles.length;
+  renderFileList();
   renderViewerGallery();
   icons();
 }
 
 function syncExistingPatientFiles(){
-  $('#existingSection').hidden=!state.patientLinked;
-  if(state.patientLinked)renderExistingFiles();
-  else $('#drawerCount').textContent=documents.length;
+  renderFileList();
+  renderViewerGallery();
 }
 
 function renderPostIntake(){
@@ -227,29 +248,38 @@ function renderPostIntake(){
   $('#recommendedServices').innerHTML=recommendationItems(recommendation.services);
   $('#recommendedDme').innerHTML=recommendationItems(recommendation.dme);
   $('#handoffNote').textContent=recommendation.note;
+  syncNextLock();
   icons();
+}
+
+function syncNextLock(){
+  const left=requiredReviewsLeft(),lock=$('#nextLock'),button=$('#recommendedAction');
+  if(!lock||!button)return;
+  lock.hidden=!left;button.classList.toggle('is-locked',left>0);
+  $('#nextLockText').textContent=`Finish ${left} required ${left===1?'review':'reviews'} to continue.`;
+}
+
+function setSideTab(tab){
+  state.sideTab=tab;
+  $('#reviewList').hidden=tab!=='review';
+  $('#nextPanel').hidden=tab!=='next';
+  $$('[data-side-tab]').forEach(button=>button.setAttribute('aria-selected',button.dataset.sideTab===tab));
+  if(tab==='next')renderPostIntake();
 }
 
 function showPostIntake(){
   state.completed=true;
-  $('.review-area').classList.add('show-post-intake');
-  $('#postIntake').hidden=false;
-  $('#completeIntake').innerHTML='<i data-lucide="check"></i> Intake completed';
-  $('#completeIntake').disabled=true;
-  $('#reviewTrigger').disabled=true;
+  setSourceDrawer(true,true);
+  setSideTab('next');
   syncFooter();
-  renderPostIntake();
-  $('#postIntake').scrollIntoView({block:'start'});
+  icons();
 }
 
-function returnToIntakeReview(){
-  state.completed=false;
-  $('.review-area').classList.remove('show-post-intake');
-  $('#postIntake').hidden=true;
-  $('#reviewTrigger').disabled=false;
-  syncFooter();
-  updateProgress();
-  $('.review-intro').scrollIntoView({block:'start'});
+// Next actions that move the intake forward need every mandatory review done first.
+function requiredReviewsLeft(){return reviewItems().filter(item=>item.severity==='missing').length;}
+function openReviewGate(count){
+  $('#gateBody').textContent=`You can only do this once you finish all the mandatory reviews. ${count} required ${count===1?'item is':'items are'} still open.`;
+  $('#gateDialog').showModal();
 }
 
 function viewerFiles(){
@@ -265,18 +295,18 @@ function imageForDocument(document){
 }
 
 function renderViewerGallery(){
-  const gallery=$('#documentGallery');if(!gallery)return;
-  gallery.innerHTML=viewerFiles().map(file=>`<button class="gallery-item ${file.id===state.selected?'active':''}" data-gallery-doc="${file.id}"><span class="gallery-thumb"><img src="${imageForDocument(file)}" alt="${file.name} thumbnail"></span><span><strong>${file.name}</strong><small>${file.meta}</small></span>${file.id===state.selected?'<i data-lucide="check-circle"></i>':''}</button>`).join('');
-  icons();
+  // The Files tab lists every file; this keeps its count in sync.
+  const count=documents.length+(state.patientLinked?existingFiles.length:0);
+  const badge=$('#fileTabCount');if(badge)badge.textContent=count;
 }
 
-function setViewerMode(mode){
-  state.viewerMode=mode;
-  $('#paperPreview').hidden=mode!=='preview';
-  $('#documentGallery').hidden=mode!=='gallery';
-  $$('[data-view-mode]').forEach(button=>button.setAttribute('aria-pressed',button.dataset.viewMode===mode));
-  if(mode==='gallery')renderViewerGallery();
+function setViewerTab(tab){
+  state.viewerTab=tab;
+  $('#viewerFiles').hidden=tab!=='files';
+  $('#viewerPreview').hidden=tab!=='preview';
+  $$('[data-viewer-tab]').forEach(button=>button.setAttribute('aria-selected',button.dataset.viewerTab===tab));
 }
+function setViewerMode(mode){setViewerTab(mode==='preview'?'preview':'files');}
 
 function renderDuplicateFindings(){
   $('#duplicateFindings').innerHTML=duplicateFindings.map(item=>`<article class="match-finding ${item.kind} resolved-finding" id="finding-${item.id}"><div class="finding-type"><span>${item.kind==='exact'?'Exact document':'Similar content'}</span><b>${item.score}%</b></div><strong>${item.upload}</strong><p>${item.reason}</p><small>Existing: ${item.existing}</small><div class="system-decision"><i data-lucide="${item.extracting?'sparkles':'circle-check'}"></i><span><b>${item.decision}</b>${item.detail}</span></div></article>`).join('');
@@ -293,10 +323,6 @@ function setSourceDrawer(open,force=false){
   $('#workspace').classList.toggle('sources-collapsed',!open);
   $('#sourceScrim').hidden=!open;
   $('#sourcePanel').classList.toggle('drawer-open',open);
-  $('#expandSources').setAttribute('aria-label',open?'Close document sidebar':'Open document sidebar');
-  $('#expandSources').setAttribute('title',open?'Close document sidebar':'Open document sidebar');
-  $('#expandSources').setAttribute('aria-expanded',open);
-  $('#expandSources').querySelector('i')?.setAttribute('data-lucide',open?'panel-left-close':'panel-left-open');
   icons();
 }
 
@@ -395,6 +421,7 @@ function openDocument(id){
   const document=documents.find(item=>item.id===id) || existingFiles.find(item=>item.id===id) || retained || documents[0];
   if(!document)return;
   state.selected=document.id;
+  $('#workspace').classList.remove('viewer-collapsed');
   $('#previewName').textContent=document.name;
   $('#previewMeta').textContent=document.meta.includes('page')?document.meta.split(' · ')[0]:'Page 1';
   const image=$('#documentImage');
@@ -476,9 +503,8 @@ function renderInsurance(index=state.currentPlan){
   note.hidden=plan.systemRank===plan.aiRank;
   note.innerHTML=note.hidden?'':`<i data-lucide="sparkles"></i><span><b>AI set this as ${plan.aiRank.toLowerCase()}</b>${plan.systemRank?` (system: ${plan.systemRank.toLowerCase()})`:' (not in system yet)'}. ${plan.aiReason}</span><button class="source-link" data-doc="${plan.docId}"><i data-lucide="scan-text"></i> ${plan.source}</button>`;
   const hasResponse=plan.check?.service===state.serviceType&&!state.checkingPlan;
-  $('#planActions').innerHTML=state.editingPlan?'<button class="small-btn" data-plan-cancel>Cancel</button><button class="small-btn primary" data-plan-save>Save</button>':`<button class="small-btn" data-plan-edit><i data-lucide="pencil"></i> Edit</button>${hasResponse?`<button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View response</button>`:''}<button class="small-btn" data-plan-check ${state.checkingPlan?'disabled':''}>${state.checkingPlan?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check eligibility'}</button>`;
-  $('#insuranceFields').classList.toggle('editing',state.editingPlan);
-  $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>state.editingPlan?`<label><span>${label}</span><input class="input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value}" placeholder="Not provided"></label>`:`<div><span>${label}</span><strong>${value}</strong></div>`).join('');
+  $('#planActions').innerHTML=`${hasResponse?`<button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View response</button>`:''}<button class="small-btn" data-plan-check ${state.checkingPlan?'disabled':''}>${state.checkingPlan?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check eligibility'}</button>`;
+  $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>`<label class="ins-field"><span>${label}</span><input class="ins-input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value.replace(/"/g,'&quot;')}" placeholder="Not provided" aria-label="${label}" autocomplete="off"></label>`).join('');
   renderEligibility();
 }
 
@@ -535,22 +561,18 @@ function renderReviewMenu(){
   const items=reviewItems(),reviewed=42-issueCount();
   const required=items.filter(item=>item.severity==='missing');
   const warnings=items.filter(item=>item.severity!=='missing');
-  const aiItems=aiResolvedFields.filter(item=>!state.aiEdited.has(item.key)&&!state.aiReviewed.has(item.key));
+  const aiItems=aiResolvedFields.filter(item=>!state.aiEdited.has(item.key)&&!state.aiReviewed.has(item.key)&&!items.some(open=>open.id===item.id));
   const count=required.length,optional=warnings.length+aiItems.length,total=count+optional;
-  $('#reviewTrigger').classList.toggle('all-clear',!total);
-  $('#reviewTrigger').classList.toggle('optional-only',!count&&total>0);
-  $('#reviewCount').textContent=total||'';
-  $('#reviewTriggerText').textContent=total?'to review':'All reviewed';
-  $('#reviewRequired').textContent=total?(count?`(${count} required)`:'(none required)'):'';
-  $('#reviewTrigger').setAttribute('aria-label',total?`${total} to review, ${count} required`:'All reviewed');
-  $('#reviewPopoverTitle').textContent=count?`${count} missing ${count===1?'field is':'fields are'} required`:total?'All required information is complete':'Everything is reviewed';
-  const row=item=>`<button class="review-item ${item.severity}" data-review-target="${item.id}"><span class="review-icon"><i data-lucide="${item.icon||(item.severity==='missing'?'circle-alert':item.severity==='ai'?'sparkles':'triangle-alert')}"></i></span><span class="review-copy"><b>${item.label}</b><small>${item.section} · ${item.detail}</small></span><span class="review-tag">${item.tag||(item.severity==='missing'?'Missing':'Check')}</span><i class="review-go" data-lucide="chevron-right"></i></button>`;
+  $('#reviewTabCount').textContent=total;$('#reviewTabCount').classList.toggle('has-required',count>0);
+  const rail=$('#railCount');rail.textContent=total;rail.hidden=!total;rail.classList.toggle('has-required',count>0);
+  $('#reviewPopoverTitle').textContent=count?`${count} required ${count===1?'item':'items'} to fill in`:total?'All required information is complete':'Everything is reviewed';
+  const row=item=>`<button class="review-item ${item.severity}" data-review-target="${item.id}"><span class="ri-dot" aria-hidden="true"></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span><i class="review-go" data-lucide="chevron-right"></i></button>`;
   const optionalRows=[...warnings,...aiItems.map(item=>({...item,severity:'ai',tag:'AI resolved'}))];
-  $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required · missing information</span>${required.map(row).join('')}</div>`:'<div class="review-empty"><i data-lucide="circle-check"></i><span>All required information is filled in. Select Looks good to finish.</span></div>')
-    +(optionalRows.length?`<div class="review-group"><span class="review-group-title">Optional · review if needed</span>${optionalRows.map(row).join('')}</div>`:'');
-  $('#reviewPopoverFoot').innerHTML=`<span>${reviewed} of 42 fields reviewed</span><span class="review-progress"><span style="width:${Math.round(reviewed/42*100)}%"></span></span>`;
-  $('#footerReviewStatus').textContent=count?`${count} required ${count===1?'item':'items'} left`:'All required fields complete';
+  const done=`<div class="review-done"><i data-lucide="circle-check"></i><span><b>Required review complete</b><small>${optionalRows.length?'Optional items below are still worth a look.':'Nothing else needs your attention.'}</small></span><button class="small-btn primary" data-side-tab="next">Next action <i data-lucide="arrow-right"></i></button></div>`;
+  $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required</span>${required.map(row).join('')}</div>`:done)
+    +(optionalRows.length?`<div class="review-group"><span class="review-group-title">Optional</span>${optionalRows.map(row).join('')}</div>`:'');
   icons();
+  syncNextLock();
 }
 
 function setSectionStatus(section,done,kind,label){
@@ -570,7 +592,6 @@ function updateProgress(){
   const reviewed=42-remaining;
   const patientRemaining=state.mobile?0:1;
   const prescriptionRemaining=[state.provider,state.product,state.physicianName].filter(value=>!value).length;
-  $('#reviewedCount').textContent=reviewed;
   const patientStatus=$('#contact-section .section-status');
   $('#contact-section .card-header p').textContent=`${8-patientRemaining} of 8 fields complete`;
   patientStatus.className=`section-status ${patientRemaining?'warning':'success'}`;
@@ -580,14 +601,12 @@ function updateProgress(){
   prescriptionStatus.innerHTML=prescriptionRemaining?`<i data-lucide="circle-x"></i> ${prescriptionRemaining} to resolve`:'<i data-lucide="circle-check"></i> Reviewed';
   setSectionStatus('#prior-auth-section',state.authAck,'warning','1 needs review');
   const requiredRemaining=reviewItems().filter(item=>item.severity==='missing').length;
-  $('#completeIntake').disabled=requiredRemaining>0;
   $('#completionCard').hidden=requiredRemaining>0;
   if(!requiredRemaining){
     const patientResult=state.patientLinked?'Existing patient linked':'Patient record ready';
     $('#completionCard p').textContent=`${patientResult}, insurance verified, prescription attached, and documents stored.`;
     $('#completionCard .completion-list span:first-child').innerHTML=`<i data-lucide="check"></i> ${patientResult}`;
   }
-  $('#completeIntake').innerHTML=remaining?'<i data-lucide="check"></i> Looks good':'<i data-lucide="check"></i> Looks good';
   renderReviewMenu();
   icons();
 }
@@ -616,7 +635,7 @@ function updateRequired(){
   state.provider=/^\d{10}$/.test(npi);
   state.product=Boolean(prescriptions[0]?.items[0]?.policy);
   $('#providerField').classList.toggle('done',state.provider);
-  $('#providerHint').textContent=state.provider?'NPI added':npi?'Enter all 10 digits':'Not found in uploaded documents';
+  $('#providerHint').textContent=state.provider?'Added':npi?'Enter 10 digits':'Not found';
   $('#physicianMeta').textContent=state.provider?'6 of 6 fields':'5 of 6 fields';
   updateProgress();
 }
@@ -634,6 +653,10 @@ function addFiles(fileList){
 document.addEventListener('click',event=>{
   const target=event.target.closest('button,[data-doc]');
   if(!target)return;
+  if(target.dataset.fileFilter){state.fileFilter=target.dataset.fileFilter;renderFileList();return;}
+  if(target.dataset.fileView){state.fileView=target.dataset.fileView;renderFileList();return;}
+  if(target.dataset.sideTab){setSideTab(target.dataset.sideTab);return;}
+  if(target.dataset.viewerTab){setViewerTab(target.dataset.viewerTab);return;}
   if(target.dataset.document){openDocument(target.dataset.document);return;}
   if(target.dataset.doc){openDocument(target.dataset.doc);return;}
   if(target.dataset.galleryDoc){openDocument(target.dataset.galleryDoc);return;}
@@ -661,7 +684,7 @@ document.addEventListener('click',event=>{
   if(target.dataset.existing){
     const file=existingFiles.find(item=>item.id===target.dataset.existing);
     if(!file)return;
-    toast(file.extracted?`${file.name} was extracted previously.`:`${file.name} has not been extracted. Add it to this intake to extract it.`);
+    openDocument(file.id);
     return;
   }
   if(target.dataset.useExisting){
@@ -701,13 +724,14 @@ document.addEventListener('click',event=>{
     const destination=$(`#${target.dataset.reviewTarget}`),group=destination?.closest('details');if(group)group.open=true;
     const aiItem=aiResolvedFields.find(item=>item.id===target.dataset.reviewTarget);
     if(aiItem){state.aiReviewed.add(aiItem.key);renderReviewMenu();}
-    $('#reviewPopover').hidden=true;$('#reviewTrigger').setAttribute('aria-expanded','false');
+    if(innerWidth<=1180)setSourceDrawer(false,true);
     setTimeout(()=>{destination?.scrollIntoView({behavior:'smooth',block:'center'});destination?.querySelector('input,select')?.focus({preventScroll:true});},30);return;
   }
-  if(target.dataset.match){setSourceDrawer(true);$('#matchCard').hidden=false;setTimeout(()=>$('#matchCard').scrollIntoView({block:'nearest',behavior:'smooth'}),50);return;}
+  if(target.dataset.match){$('#workspace').classList.remove('viewer-collapsed');setViewerTab('files');$('#matchCard').hidden=false;setTimeout(()=>$('#matchCard').scrollIntoView({block:'nearest',behavior:'smooth'}),50);return;}
 });
 
 $('#collapseSources').addEventListener('click',()=>setSourceDrawer(false));
+$('#expandReview').addEventListener('click',()=>setSourceDrawer(true));
 $('#checkEligibility').addEventListener('click',checkEligibility);
 const setServiceMenu=open=>{$('#serviceMenu').hidden=!open;$('#serviceTrigger').setAttribute('aria-expanded',open);if(open){renderServiceMenu();$('#serviceMenu .selected')?.focus();}};
 $('#serviceTrigger').addEventListener('click',()=>setServiceMenu($('#serviceMenu').hidden));
@@ -734,10 +758,9 @@ $('#cancelUpload').addEventListener('click',()=>{
   renderDocuments();renderUploadQueue();
   toast('Upload cancelled. Documents removed.');
 });
-$('#expandSources').addEventListener('click',()=>setSourceDrawer(!$('#sourcePanel').classList.contains('drawer-open')));
 $('#sourceScrim').addEventListener('click',()=>setSourceDrawer(false));
-$('#reviewTrigger').addEventListener('click',()=>{const popover=$('#reviewPopover'),open=popover.hidden;popover.hidden=!open;$('#reviewTrigger').setAttribute('aria-expanded',open);});
-document.addEventListener('click',event=>{if(!event.composedPath().some(node=>node.classList?.contains('review-menu'))){$('#reviewPopover').hidden=true;$('#reviewTrigger').setAttribute('aria-expanded','false');}});
+$('#backToFiles').addEventListener('click',()=>setViewerTab('files'));
+$('#gateDialog').addEventListener('close',()=>{if($('#gateDialog').returnValue==='review'){setSourceDrawer(true,true);setSideTab('review');}});
 $('#collapseViewer').addEventListener('click',()=>{$('#workspace').classList.add('viewer-collapsed');});
 $('#expandViewer').addEventListener('click',()=>{$('#workspace').classList.remove('viewer-collapsed');});
 let viewerDrag=null;
@@ -769,11 +792,6 @@ function addDemoUploads(){
 $$('label[for="fileInput"]').forEach(label=>label.addEventListener('click',event=>{event.preventDefault();addDemoUploads();}));
 if($('#dropZone'))['dragenter','dragover'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.add('over');}));
 if($('#dropZone'))['dragleave','drop'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.remove('over');if(type==='drop')addFiles(event.dataTransfer.files);}));
-if($('#completeIntake'))$('#completeIntake').addEventListener('click',()=>{
-  showPostIntake();
-  toast('Intake completed successfully');
-});
-if($('#returnToReview'))$('#returnToReview').addEventListener('click',returnToIntakeReview);
 // Cancel intake: secondary action, always confirmed. A cancelled intake is discarded and starts fresh.
 $('#cancelIntake').addEventListener('click',()=>$('#cancelIntakeDialog').showModal());
 $('#cancelIntakeDialog').addEventListener('close',()=>{
@@ -834,10 +852,10 @@ const prescriptions=[
     physician:{first:'Sarah',last:'Kim',npi:'',specialty:'Sleep medicine',enrollment:['DME','PMD','Part B']},
     icd:[{code:'G47.33',description:icdCatalog['G47.33'],primary:true},{code:'E66.9',description:icdCatalog['E66.9']},{code:'I10',description:icdCatalog['I10']}],
     items:[
-      {id:'item-1',name:'CPAP auto 5–15 cm H2O with heated humidifier, full face mask and supplies',bundle:true,policy:'L33718',policyAi:true,
+      {id:'item-1',name:'CPAP auto 5–15 cm H2O with heated humidifier, full face mask and supplies',bundle:true,usage:'Nightly during sleep',policy:'L33718',policyAi:true,
         dispense:{type:'Rental',length:'99 months (lifetime)',start:'10/15/2026'},
         lines:[line('E0601',1,'Monthly rental × 13',true),line('E0562',1,'Monthly rental × 13',true),line('A7030',1,'1 per 3 months',true),line('A7031',1,'1 per month',true),line('A7037',1,'1 per 3 months',true),line('A7038',2,'2 per month',true)]},
-      {id:'item-2',name:'A7035',bundle:false,policy:'L33718',policyAi:true,
+      {id:'item-2',name:'PAP headgear',bundle:false,policy:'L33718',policyAi:true,
         dispense:{type:'Purchase',length:'99 months (lifetime)',start:'10/15/2026'},
         lines:[line('A7035',1,'1 per 6 months')]}
     ]},
@@ -861,9 +879,10 @@ const chips=list=>list.map(e=>`<span class="enrollment-chip"><i data-lucide="cir
 function physicianHtml(rx){
   const p=rx.physician;
   if(rx.main) return `<details class="data-group" open><summary><span>Physician information</span><small id="physicianMeta">${state.provider?'6 of 6 fields':'5 of 6 fields'}</small><i data-lucide="chevron-down"></i></summary>
-    <div class="compact-fields"><div><span>First name</span><strong>${p.first}</strong></div><div><span>Specialty</span><strong>${p.specialty}</strong></div></div>
-    <div class="field-grid"><div class="field-row ai-resolved" id="physicianConflict"><div class="field-label"><span class="confidence ai-confidence">AI resolved</span><span class="field-name">Last name</span></div><div class="field-value"><strong id="physicianLastValue">${p.last}</strong><button class="source-link" data-doc="${rx.docId}"><i data-lucide="scan-text"></i> ${rx.source} · p1</button></div><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Conflict resolved automatically</b> ${rx.source} says “Kim” and Face-to-Face Notes.pdf says “Kimm”. The NPI registry lists Dr. Sarah Kim.</span><button class="text-btn" data-ai-change="physician">Change</button></div></div></div>
-    <label class="resolve-row ${state.provider?'done':''}" id="providerField" for="providerInput"><span><b>NPI</b><small id="providerHint">${state.provider?'NPI added':'Not found in uploaded documents'}</small></span><input class="input" id="providerInput" inputmode="numeric" maxlength="10" placeholder="10-digit NPI"></label>
+    <div class="compact-fields"><div><span>First name<i class="req" title="Required" aria-label="required">*</i></span><strong>${p.first}</strong></div>
+      <div class="ai-cell" id="physicianConflict"><span class="cell-label">Last name<i class="req" title="Required" aria-label="required">*</i><em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved last name" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="physicianLastValue">${p.last}</strong><div class="ai-pop" role="dialog" aria-label="How AI resolved last name" hidden><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Conflict resolved automatically</b> ${rx.source} says “Kim” and Face-to-Face Notes.pdf says “Kimm”. The NPI registry lists Dr. Sarah Kim.</span><button class="text-btn" data-ai-change="physician">Change</button></div><div class="ai-source"><span>Source</span><button class="source-link" data-doc="${rx.docId}"><i data-lucide="scan-text"></i> ${rx.source} · p1</button></div></div></div>
+      <div class="missing-cell ${state.provider?'done':''}" id="providerField"><label class="cell-label" for="providerInput">NPI<i class="req" title="Required" aria-label="required">*</i><em class="miss-chip" id="providerHint">${state.provider?'Added':'Not found'}</em></label><input class="input inline-input" id="providerInput" inputmode="numeric" maxlength="10" placeholder="Enter 10-digit NPI" aria-label="Physician NPI"></div>
+      <div><span>Specialty</span><strong>${p.specialty}</strong></div></div>
     <div class="enrollment-row"><span class="enrollment-label">Enrollment</span>${chips(p.enrollment)}<button class="source-link" data-doc="${rx.docId}"><i data-lucide="scan-text"></i> ${rx.source} · p1</button></div>
   </details>`;
   if(rx.manual) return `<details class="data-group" open><summary><span>Physician information</span><small>Enter from the prescription</small><i data-lucide="chevron-down"></i></summary>
@@ -883,20 +902,27 @@ function itemHtml(rx,item){
   const rows=item.editing
     ?item.lines.map((l,i)=>`<div class="hcpcs-row editing"><input class="input code-input" list="hcpcsOptions" value="${l.code}" placeholder="Code" maxlength="5" aria-label="HCPCS code" data-line="${ref}|${i}" data-line-field="code"><span class="hcpcs-desc">${l.code?(hcpcsCatalog[l.code]||'Code not in catalog · verify'):'Enter a HCPCS code'}</span><input class="input qty-input" type="number" min="1" value="${l.qty}" aria-label="Quantity" data-line="${ref}|${i}" data-line-field="qty"><input class="input freq-input" value="${l.frequency}" aria-label="Dispensing frequency" data-line="${ref}|${i}" data-line-field="frequency">${item.lines.length>1?`<button type="button" class="icon-btn" data-remove-line="${ref}|${i}" aria-label="Remove line" title="Remove"><i data-lucide="x"></i></button>`:'<span></span>'}</div>`).join('')
     :item.lines.map(l=>`<div class="hcpcs-row ${l.code?'':'unmapped'}"><span class="hcpcs-badge">${l.code||'—'}</span><span class="hcpcs-desc">${l.code?(hcpcsCatalog[l.code]||'Code not in catalog · verify'):'No HCPCS match. Select Edit to enter a code.'}${l.ai?'<i data-lucide="sparkles" class="ai-dot" aria-label="AI mapped" title="AI mapped"></i>':''}</span><span class="hcpcs-qty">Qty ${l.qty}</span><span class="hcpcs-freq">${l.frequency}</span></div>`).join('');
-  return `<article class="rx-item" id="rx-${rx.id}-${item.id}">
+  const open=item.editing||item.expanded,qty=item.bundle?(item.qty||1):(item.lines[0]?.qty||1);
+  const usage=item.usage||(item.bundle?'':item.lines[0]?.frequency||'');
+  const count=item.lines.length,codesLabel=`${mapped?'AI selected ':''}${count} HCPCS ${count===1?'code':'codes'}`;
+  return `<article class="rx-item ${open?'open':''}" id="rx-${rx.id}-${item.id}">
     <header class="rx-item-head">
-      <div class="rx-item-title"><strong>${item.bundle?item.name:(mapped||!/^[A-Z]\d{4}$/.test(item.name)?item.name:hcpcsCatalog[item.name]||item.name)}</strong><span class="rx-item-tags">${item.bundle?`<span class="pill neutral"><i data-lucide="boxes"></i> Bundle · ${item.lines.length} items</span>`:''}${mapped?'<span class="pill info"><i data-lucide="sparkles"></i> AI mapped</span>':''}</span></div>
+      <div class="rx-item-main">
+        <div class="rx-item-title"><strong>${item.bundle?item.name:(mapped||!/^[A-Z]\d{4}$/.test(item.name)?item.name:hcpcsCatalog[item.name]||item.name)}</strong>${item.bundle?'<span class="pill neutral"><i data-lucide="boxes"></i> Bundle</span>':''}</div>
+        <p class="rx-item-meta">Qty <b>${qty}</b>${usage?`<span class="dot-sep"></span>${usage}`:''}</p>
+        <button type="button" class="codes-toggle" data-toggle-codes="${ref}" aria-expanded="${open}" ${item.editing?'disabled':''}><i data-lucide="sparkles"></i><span>${codesLabel}</span><i data-lucide="chevron-down" class="chev"></i></button>
+      </div>
       <button type="button" class="doc-info" data-item-docs="${ref}" title="Required documents" aria-label="Required documents for this item"><i data-lucide="file-text"></i><span>${docs.length} docs</span></button>
       <button type="button" class="text-btn" data-edit-item="${ref}">${item.editing?'Done':'Edit'}</button>
       <button type="button" class="icon-btn" data-remove-item="${ref}" aria-label="Remove item" title="Remove item"><i data-lucide="trash-2"></i></button>
     </header>
-    <div class="hcpcs-rows">${rows}</div>
+    ${open?`<div class="hcpcs-rows">${rows}</div>`:''}
   </article>`;
 }
 function itemsHtml(rx){
   return `<div class="rx-items">${rx.items.map(item=>itemHtml(rx,item)).join('')||'<p class="empty-note">No items yet</p>'}</div>
-    <form class="inline-add" data-add-item="${rx.id}"><input class="input" name="product" list="hcpcsOptions" placeholder="Product name or HCPCS code, e.g. CPAP supplies or A7034" aria-label="Add item" autocomplete="off"><button class="small-btn" type="submit"><i data-lucide="plus"></i> Add item</button></form>
-    <p class="inline-hint"><i data-lucide="sparkles"></i> Enter a product name and AI maps it to HCPCS. Kits such as “CPAP supplies” are added as a bundle.</p>`;
+    <form class="inline-add" data-add-item="${rx.id}"><i data-lucide="sparkles" class="add-spark"></i><input class="input" name="product" list="hcpcsOptions" placeholder="Product name or HCPCS code, e.g. CPAP supplies or A7034" aria-label="Add item" autocomplete="off"><button class="small-btn add-item-btn" type="submit"><i data-lucide="plus"></i> Add item</button></form>
+    <p class="inline-hint">Type a product name and AI maps it to HCPCS. Kits such as “CPAP supplies” are added as a bundle.</p>`;
 }
 function rxSectionHtml(rx,index){
   const sectionId=rx.main?'prescription-section':`rx-section-${rx.id}`;
@@ -995,6 +1021,7 @@ $('#prescriptions').addEventListener('click',event=>{
   const button=event.target.closest('button');if(!button)return;
   if(button.dataset.removeIcd){const rx=rxById(button.dataset.removeIcd),[removed]=rx.icd.splice(+button.dataset.index,1);if(removed.primary&&rx.icd[0])rx.icd[0].primary=true;refreshIcd(rx);toast(`${removed.code} removed`);return;}
   if(button.dataset.editItem){const [rxId,itemId]=button.dataset.editItem.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);item.editing=!item.editing;refreshItems(rx);if(item.editing)$(`#rx-${rxId}-${itemId} input`)?.focus();return;}
+  if(button.dataset.toggleCodes){const [rxId,itemId]=button.dataset.toggleCodes.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);item.expanded=!item.expanded;refreshItems(rx);return;}
   if(button.dataset.itemDocs){const [rxId,itemId]=button.dataset.itemDocs.split('|');openItemDocs(rxId,itemId);return;}
   if(button.dataset.removeItem){const [rxId,itemId]=button.dataset.removeItem.split('|'),rx=rxById(rxId);rx.items=rx.items.filter(x=>x.id!==itemId);refreshItems(rx);toast('Item removed');return;}
   if(button.dataset.removeLine){const [rxId,itemId,i]=button.dataset.removeLine.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);item.lines.splice(+i,1);if(item.lines.length===1)item.bundle=false;refreshItems(rx);}
@@ -1100,6 +1127,8 @@ function createOrder(){
   location.href='dme-order.html';
 }
 function handlePostAction(action,button){
+  const left=requiredReviewsLeft();
+  if(left){openReviewGate(left);return;}
   if(action==='Start pre-check'||action==='Run pre-check again'){try{sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(intakeSnapshot()));}catch(error){}location.href='precheck.html';return;}
   if(action==='Create order'||action==='Create order without pre-check'){createOrder();return;}
   toast(`${action} selected`);
@@ -1150,6 +1179,11 @@ $('#shellRefresh').addEventListener('click',()=>location.reload());
 
 // Drag and drop to reorder coverage. Keyboard: Alt + Arrow Up/Down on a plan.
 let dragPlan=null;
+$('#insuranceFields').addEventListener('input',event=>{
+  const input=event.target.closest('[data-plan-field]');if(!input)return;
+  insurancePlans[state.currentPlan].fields[+input.dataset.planField][1]=input.value.trim()||'Not provided';
+});
+$('#insuranceFields').addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('[data-plan-field]'))event.target.blur();});
 $('#planList').addEventListener('dragstart',event=>{const row=event.target.closest('[data-drag-plan]');if(!row)return;dragPlan=+row.dataset.dragPlan;row.classList.add('dragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',String(dragPlan));}catch(error){}});
 $('#planList').addEventListener('dragover',event=>{if(dragPlan===null)return;event.preventDefault();const row=event.target.closest('[data-drag-plan]');$$('.plan-row.drop-above,.plan-row.drop-below').forEach(item=>item.classList.remove('drop-above','drop-below'));if(!row||+row.dataset.dragPlan===dragPlan)return;const box=row.getBoundingClientRect();row.classList.add(event.clientY<box.top+box.height/2?'drop-above':'drop-below');});
 $('#planList').addEventListener('drop',event=>{
@@ -1214,3 +1248,41 @@ $('#addPlanForm').addEventListener('submit',event=>{
   toast(`${plan.name} added as ${planRank(position).toLowerCase()} coverage`);
   if(form.checkNow.checked)checkPlanEligibility();
 });
+
+// Prototype navigator (proto-nav.js) deep links: ?screen=extract-both|extract-docs|review|complete
+(function(){
+  const screen=new URLSearchParams(location.search).get('screen');
+  if(!screen)return;
+  const load=()=>{demoUploadFiles.forEach(file=>{if(!documents.some(item=>item.id===file.id))documents.push({...file,meta:'Extracted',processing:false});});if(!state.selected)state.selected=documents[0].id;renderDocuments();renderUploadQueue();};
+  if(screen==='extract-both'||screen==='extract-docs'){
+    load();documents.forEach(file=>{file.meta='Ready to extract';});
+    if(screen==='extract-docs')state.knownPatient='ashlynn';
+    renderUploadQueue();startExtraction();
+  }else if(screen==='review'||screen==='complete'){
+    load();state.extractionComplete=true;state.patientResolved=true;state.patientLinked=true;state.knownPatient='ashlynn';
+    setPhase('review');
+    if(screen==='complete')showPostIntake();
+    if(new URLSearchParams(location.search).get('side')==='review'){setSourceDrawer(true,true);setSideTab('review');}
+  }
+})();
+
+// "AI resolved" info popover: explains how a value was resolved, on demand.
+(function(){
+  let openBtn=null;
+  const close=()=>{if(!openBtn)return;const pop=openBtn.closest('.ai-cell').querySelector('.ai-pop');pop.hidden=true;openBtn.setAttribute('aria-expanded','false');openBtn=null;};
+  const place=btn=>{
+    const pop=btn.closest('.ai-cell').querySelector('.ai-pop'),r=btn.getBoundingClientRect();
+    pop.hidden=false;pop.style.visibility='hidden';
+    const w=pop.offsetWidth,h=pop.offsetHeight;
+    let left=Math.min(Math.max(12,r.left-12),innerWidth-w-12);
+    let top=r.bottom+8;if(top+h>innerHeight-12&&r.top-h-8>12)top=r.top-h-8;
+    pop.style.left=left+'px';pop.style.top=top+'px';pop.style.visibility='visible';
+  };
+  document.addEventListener('click',event=>{
+    const btn=event.target.closest('[data-ai-info]');
+    if(btn){const same=openBtn===btn;close();if(!same){openBtn=btn;btn.setAttribute('aria-expanded','true');place(btn);}return;}
+    if(openBtn&&!event.target.closest('.ai-pop'))close();
+  });
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&openBtn){const b=openBtn;close();b.focus();}});
+  addEventListener('scroll',close,true);addEventListener('resize',close);
+})();
