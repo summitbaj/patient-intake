@@ -173,10 +173,11 @@ function setPhase(phase){
   $('#expandSources').hidden=true;
   if(phase==='review'){
     syncExistingPatientFiles();
-    setSourceDrawer(window.innerWidth>=1024,true);
+    setSourceDrawer(false,true);
     setReviewPanel(window.innerWidth>=1280);
     setViewerMode('list');
     openDocument(state.selected||documents[0]?.id||'referral',false);
+    applyDocLayout();
     tagSourceFields();
     updateProgress();
   }
@@ -188,6 +189,7 @@ function renderExistingFiles(){
   $('#drawerCount').textContent=documents.length+existingFiles.length;
   updateSourceCount();
   renderViewerGallery();
+  renderRecordBar();
   icons();
 }
 
@@ -269,6 +271,32 @@ function setViewerMode(mode){
   if(mode==='gallery')renderViewerGallery();
 }
 
+// ---------- Documents panel: drill-in ----------
+// The panel opens on the file list; choosing a file opens its preview with a back arrow to the list.
+state.docView='files';
+function applyDocLayout(){
+  const panel=$('#sourcePanel');
+  panel.dataset.docLayout='drill';panel.dataset.docView=state.docView;
+  setViewerMode(state.listMode||'list');
+  icons();
+}
+function renderDocPager(){
+  const files=viewerFiles(),index=Math.max(0,files.findIndex(file=>file.id===state.selected));
+  $('#previewPosition').textContent=`${index+1} of ${files.length}`;
+  $('#previewPrev').disabled=index<=0;$('#previewNext').disabled=index>=files.length-1;
+}
+function stepDocument(offset){
+  const files=viewerFiles(),index=files.findIndex(file=>file.id===state.selected),next=files[index+offset];
+  if(next)openDocument(next.id,false);
+}
+// A file from the patient's record can be added to the intake right from the preview.
+function renderRecordBar(){
+  const bar=$('#previewRecordBar'),file=state.patientLinked&&existingFiles.find(item=>item.id===state.selected);
+  bar.hidden=!file;
+  bar.innerHTML=file?`<i data-lucide="archive"></i><span><b>From the patient’s record</b>${file.meta}</span><button class="small-btn ${file.used?'':'primary'}" data-use-existing="${file.id}" aria-pressed="${file.used}">${file.used?'<i data-lucide="check"></i> In this intake':'Use in intake'}</button>`:'';
+  if(file)icons();
+}
+
 function renderPreviewMenu(){
   const files=viewerFiles(),uploaded=files.filter(file=>!existingFiles.includes(file)),existing=files.filter(file=>existingFiles.includes(file));
   const option=file=>`<button class="preview-option ${file.id===state.selected?'selected':''}" role="option" aria-selected="${file.id===state.selected}" data-preview-doc="${file.id}"><i data-lucide="${file.icon||'file-text'}"></i><span><strong>${file.name}</strong><small>${file.meta}</small></span>${file.id===state.selected?'<i class="preview-check" data-lucide="check"></i>':''}</button>`;
@@ -324,6 +352,8 @@ function showFieldSource(field){
   clearTimeout(sourceHover.timer);clearTimeout(sourceHover.clearTimer);
   if(state.phase!=='review'||$('#workspace').classList.contains('sources-collapsed'))field=null;
   sourceHover.field=field;
+  // Hovering a field always brings the preview forward so the highlight is visible.
+  if(field&&state.docView!=='preview'){state.docView='preview';applyDocLayout();}
   renderSourceMatches();drawSourceHighlights();
   if(!field)return;
   const files=sourceLocations(field);
@@ -428,8 +458,42 @@ function checkExtractionReady(){
   const ready=state.extractionComplete&&state.patientResolved&&docsDone&&!extracting;
   const remaining=[!state.patientResolved&&'select the patient',state.patientResolved&&!docsDone&&'choose document handling'].filter(Boolean);
   $('#continueToReview').disabled=!ready;
+  syncConfirmSteps();
   $('#extractionWaiting').innerHTML=extracting?'<span class="spinner"></span><span>Extracting record documents…</span>':ready?`<i data-lucide="circle-check"></i><span>${recordPending?`Ready. ${recordPending} record ${recordPending===1?'document':'documents'} will be skipped.`:'All set. Continue to the extracted details.'}</span>`:`<i data-lucide="info"></i><span>To continue, ${remaining.join(' and ')}.</span>`;
   icons();
+}
+
+// ---------- Confirm before review: step overview ----------
+// Every step stays visible (upcoming ones as "Up next" placeholders) so it's clear what comes after selecting the patient.
+const confirmSectionId={patient:'patientIssue',documents:'documentIssue',record:'recordIssue'};
+function confirmStepStates(){
+  const docsDone=state.documentResolutions.size===state.docDecisionsNeeded;
+  const files=state.patientLinked?pendingRecordFiles():[],decided=files.filter(file=>state.recordDecisions.has(file.id)).length;
+  const patientName=$('#patientIssue .issue-resolved strong')?.textContent||'Patient selected';
+  return [
+    {id:'patient',label:'Select the patient',required:true,status:state.patientResolved?'done':'todo',meta:state.patientResolved?patientName:`${patientMatches.length} possible matches`},
+    {id:'documents',label:'Document handling',required:true,status:!state.patientResolved?'locked':docsDone?'done':'todo',meta:!state.patientResolved?'After the patient is selected':docsDone?'All decisions saved':`${state.documentResolutions.size} of ${state.docDecisionsNeeded} decided`,hint:'Unlocks after you select the patient. AI found uploaded documents that match ones already on file.'},
+    {id:'record',label:'Record documents',required:false,status:!state.patientResolved?'locked':!files.length?'skipped':decided===files.length?'done':'todo',meta:!state.patientResolved?'Checked after the patient is selected':!files.length?(state.patientLinked?'None found in the record':'Not needed for a new patient'):`${decided} of ${files.length} decided`,hint:'After you select the patient, AI checks their record for documents that weren’t uploaded.'}
+  ];
+}
+function syncConfirmSteps(){
+  if(!state.extractionComplete)return;
+  const steps=confirmStepStates();
+  steps.forEach((step,index)=>{
+    const section=$(`#${confirmSectionId[step.id]}`);
+    section.hidden=false;
+    section.dataset.stepState=step.status;
+    section.querySelector('.issue-number').innerHTML=step.status==='done'?'<i data-lucide="check"></i>':index+1;
+    let hint=section.querySelector('.step-hint');
+    if(!hint){hint=document.createElement('p');hint.className='step-hint';section.querySelector('.issue-title').after(hint);}
+    const waiting=step.status==='locked'||step.status==='skipped';
+    hint.hidden=!waiting;
+    hint.innerHTML=waiting?`<i data-lucide="${step.status==='locked'?'lock':'circle-minus'}"></i><span>${step.status==='locked'?step.hint:step.meta}</span>`:'';
+    section.querySelector('.issue-title>b').textContent=step.status==='locked'?'Up next':step.status==='skipped'?'Not needed':step.status==='done'?(step.required?'Resolved':'Done'):step.required?'Required':'Optional';
+  });
+  const left=steps.filter(step=>step.required&&step.status!=='done').length,badge=$('#extractionIssues .action-badge');
+  badge.classList.toggle('ready',!left);
+  badge.innerHTML=left?`<span class="action-dot"></span>${left} required ${left===1?'step':'steps'} left`:'<i data-lucide="circle-check"></i> Ready for review';
 }
 
 function openIssuesModal(){
@@ -496,6 +560,8 @@ function openDocument(id,reveal=true){
   image.src=imageForDocument(document);
   image.alt=`${document.name} document preview`;
   if(reveal)setSourceDrawer(true,true);
+  if(reveal&&state.docView!=='preview'){state.docView='preview';applyDocLayout();}
+  renderDocPager();renderRecordBar();
   renderViewerGallery();
   if(sourceHover?.field){renderSourceMatches();drawSourceHighlights();}
   renderDocuments();
@@ -735,6 +801,7 @@ function addFiles(fileList){
 document.addEventListener('click',event=>{
   const target=event.target.closest('button,[data-doc]');
   if(!target)return;
+  if(target.dataset.docView){state.docView=target.dataset.docView;applyDocLayout();return;}
   if(target.dataset.document){openDocument(target.dataset.document);return;}
   if(target.dataset.doc){openDocument(target.dataset.doc);return;}
   if(target.dataset.galleryDoc){openDocument(target.dataset.galleryDoc);return;}
@@ -761,7 +828,10 @@ document.addEventListener('click',event=>{
   }
   if(target.dataset.extractDocument){
     const id=target.dataset.extractDocument;state.documentResolutions.add(id);const card=$(`#extract-${id}`);card.classList.add('resolved');card.querySelector('.extract-document-actions').innerHTML=`<div class="issue-resolved"><i data-lucide="check"></i><span><strong>Decision saved</strong><small>${target.dataset.decision==='existing'?'Existing document will be used.':target.dataset.decision==='replace'?'Existing document will be replaced.':'Uploaded document will be stored.'}</small></span></div>`;
-    if(state.documentResolutions.size===state.docDecisionsNeeded){$('#documentIssue .issue-title>b').textContent='Resolved';$('#documentIssue').classList.add('is-resolved');}icons();checkExtractionReady();return;
+    if(state.documentResolutions.size===state.docDecisionsNeeded){$('#documentIssue .issue-title>b').textContent='Resolved';$('#documentIssue').classList.add('is-resolved');
+      // Point to the optional record documents next, if the linked patient has any.
+      if(state.patientLinked&&pendingRecordFiles().some(file=>!state.recordDecisions.has(file.id))){setTimeout(()=>$('#recordIssue').scrollIntoView({behavior:'smooth',block:'start'}),50);}}
+    icons();checkExtractionReady();return;
   }
   if(target.dataset.plan!==undefined){renderInsurance(+target.dataset.plan);return;}
   if(target.dataset.planEdit!==undefined){state.editingPlan=true;renderInsurance();$('[data-plan-field]')?.focus();return;}
@@ -857,6 +927,8 @@ $('#expandSourcesRail').addEventListener('click',()=>setSourceDrawer(true));
 $('#collapseReview').addEventListener('click',()=>setReviewPanel(false));
 $('#expandReviewRail').addEventListener('click',()=>setReviewPanel(true));
 $('#sourceScrim').addEventListener('click',()=>setSourceDrawer(false));
+$('#previewPrev').addEventListener('click',()=>stepDocument(-1));
+$('#previewNext').addEventListener('click',()=>stepDocument(1));
 $('#previewTrigger').addEventListener('click',()=>setPreviewMenu($('#previewMenu').hidden));
 $('#previewMenu').addEventListener('click',event=>{const option=event.target.closest('[data-preview-doc]');if(!option)return;setPreviewMenu(false);openDocument(option.dataset.previewDoc);$('#previewTrigger').focus();});
 $('#previewMenu').addEventListener('keydown',event=>{const options=$$('.preview-option'),index=options.indexOf(document.activeElement);if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();options[(index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length]?.focus();}if(event.key==='Escape'){setPreviewMenu(false);$('#previewTrigger').focus();}});

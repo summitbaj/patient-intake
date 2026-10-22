@@ -1062,3 +1062,46 @@ body:not(.phase-review) .file-area-head{display:none}
 .explore-tab.active{color:var(--text);font-weight:600;border-bottom-color:var(--primary)}
 .shell-ribbon{top:var(--explore-h)}
 .shell-nav,.shell-commands{top:calc(var(--explore-h) + var(--ribbon-h))}
+
+/* Confirm before review — step overview (all steps visible from the start) */
+.action-badge.ready{background:var(--green-soft);border-color:var(--green-soft);color:var(--green)}
+.action-badge .lucide{width:14px;height:14px}
+/* Locked and not-needed steps show as a short placeholder instead of disappearing */
+.extraction-issues .extraction-issue[data-step-state="locked"],.extraction-issues .extraction-issue[data-step-state="skipped"]{background:var(--fluent-neutral-lighter-alt);border-style:dashed;border-color:var(--fluent-neutral-tertiary-alt);animation:none}
+.extraction-issue[data-step-state="locked"]>:not(.issue-title):not(.step-hint),.extraction-issue[data-step-state="skipped"]>:not(.issue-title):not(.step-hint){display:none!important}
+.extraction-issue[data-step-state="locked"] .issue-title,.extraction-issue[data-step-state="skipped"] .issue-title{margin-bottom:var(--space-3)}
+.extraction-issue[data-step-state="locked"] .issue-number,.extraction-issue[data-step-state="skipped"] .issue-number{background:var(--white);border:1px solid var(--fluent-neutral-tertiary-alt);color:var(--fluent-neutral-tertiary)}
+.extraction-issue[data-step-state="locked"] .issue-title>b,.extraction-issue[data-step-state="skipped"] .issue-title>b{background:var(--fluent-neutral-lighter);color:var(--muted)}
+.extraction-issue[data-step-state="done"] .issue-number{background:var(--green);color:var(--white)}
+.extraction-issue[data-step-state="done"] .issue-number .lucide{width:14px;height:14px}
+.step-hint{display:flex;align-items:center;gap:var(--space-4);margin:0 0 0 34px;font-size:14px;color:var(--muted)}
+.step-hint .lucide{width:16px;height:16px;flex:none;color:var(--fluent-neutral-tertiary)}
+
+/* Review · Documents panel (drill-in: file list first, then a single preview) */
+.doc-back,.doc-pager,.preview-record-bar{display:none}
+.workspace.phase-review .source-panel .preview-divider{display:none}
+.workspace.phase-review .source-panel .source-preview{flex:1 1 auto;min-height:0}
+.workspace.phase-review .source-panel .preview-toolbar{display:flex;align-items:center}
+.workspace.phase-review .source-panel .preview-picker{min-width:0;flex:1}
+.workspace.phase-review .source-panel .doc-pager{display:flex;align-items:center;flex:none;gap:0;font-size:12px;color:var(--muted);white-space:nowrap}
+.workspace.phase-review .source-panel .doc-pager .icon-btn{width:28px;height:28px}
+.workspace.phase-review .source-panel .doc-pager .icon-btn:disabled{color:var(--fluent-neutral-tertiary-alt);background:transparent;cursor:default}
+.workspace.phase-review .source-panel .preview-toolbar>small{display:none}
+.workspace.phase-review .source-panel .preview-record-bar:not([hidden]){display:flex;align-items:center;gap:var(--space-4);flex:none;padding:var(--space-4) var(--space-6);border-bottom:1px solid var(--line);background:var(--fluent-neutral-lighter-alt);font-size:12px;color:var(--muted)}
+.preview-record-bar>.lucide{width:16px;height:16px;flex:none;color:var(--muted)}
+.preview-record-bar>span{flex:1;min-width:0;display:grid}
+.preview-record-bar>span b{font-weight:600;color:var(--text)}
+.preview-record-bar .small-btn{flex:none}
+/* Drill-in: one view at a time */
+.source-panel[data-doc-view="preview"] .file-area,.source-panel[data-doc-view="files"] .source-preview{display:none!important}
+/* Drill-in: file list first, open a file to preview with a back link */
+.source-panel[data-doc-layout="drill"][data-doc-view="preview"] .doc-back{display:inline-flex;align-items:center;gap:var(--space-2);flex:none;padding:0 var(--space-2);font-size:14px}
+.source-panel[data-doc-layout="drill"][data-doc-view="preview"] .doc-back .lucide{width:16px;height:16px}
+.source-panel[data-doc-layout="drill"] .file-area-head .heading-copy{display:none}
+.source-panel[data-doc-layout="drill"] .file-area-head{justify-content:space-between}
+.source-panel[data-doc-layout="drill"] .file-area-head:before{content:"Choose a document to preview";font-size:12px;color:var(--muted)}
+/* Collapsing the documents panel must not hide the To review panel's heading */
+.workspace.phase-review.sources-collapsed .review-panel .panel-heading{display:flex}
+.workspace.phase-review.sources-collapsed .review-panel .heading-copy{display:flex}
+.source-panel[data-doc-layout="drill"][data-doc-view="preview"] .doc-back{font-size:0;gap:0;width:32px;height:32px;justify-content:center}
+.source-panel[data-doc-layout="drill"][data-doc-view="preview"] .doc-back .lucide{width:18px;height:18px}
