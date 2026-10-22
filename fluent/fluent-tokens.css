@@ -1,0 +1,152 @@
+/*
+ * Fluent UI design tokens (web) as CSS custom properties.
+ * Values come from @fluentui/theme v2 (Fluent UI React v8): DefaultPalette, FluentColors,
+ * makeSemanticColors, FluentFonts, FluentDepths, DefaultEffects, DefaultSpacing and AnimationStyles.
+ * Reference: https://developer.microsoft.com/en-us/fluentui#/styles/web
+ */
+:root{
+  /* ---------- Theme (communication blue) ---------- */
+  --fluent-theme-darker:#004578;
+  --fluent-theme-dark:#005a9e;
+  --fluent-theme-dark-alt:#106ebe;
+  --fluent-theme-primary:#0078d4;
+  --fluent-theme-secondary:#2b88d8;
+  --fluent-theme-tertiary:#71afe5;
+  --fluent-theme-light:#c7e0f4;
+  --fluent-theme-lighter:#deecf9;
+  --fluent-theme-lighter-alt:#eff6fc;
+
+  /* ---------- Neutrals ---------- */
+  --fluent-black:#000000;
+  --fluent-neutral-dark:#201f1e;          /* gray190 */
+  --fluent-neutral-primary:#323130;       /* gray160 */
+  --fluent-neutral-primary-alt:#3b3a39;   /* gray150 */
+  --fluent-neutral-secondary:#605e5c;     /* gray130 */
+  --fluent-neutral-secondary-alt:#8a8886; /* gray110 */
+  --fluent-neutral-tertiary:#a19f9d;      /* gray90 */
+  --fluent-neutral-tertiary-alt:#c8c6c4;  /* gray60 */
+  --fluent-neutral-quaternary:#d2d0ce;    /* gray50 */
+  --fluent-neutral-quaternary-alt:#e1dfdd;/* gray40 */
+  --fluent-neutral-light:#edebe9;         /* gray30 */
+  --fluent-neutral-lighter:#f3f2f1;       /* gray20 */
+  --fluent-neutral-lighter-alt:#faf9f8;   /* gray10 */
+  --fluent-white:#ffffff;
+  --fluent-gray120:#797775;
+  --fluent-black-translucent-40:rgba(0,0,0,.4);
+  --fluent-white-translucent-40:rgba(255,255,255,.4);
+
+  /* ---------- Shared colors (subset used for status and accents) ---------- */
+  --fluent-red-20:#a4262c;
+  --fluent-red-10:#d13438;
+  --fluent-red-orange-10:#da3b01;
+  --fluent-orange-30:#8e562e;
+  --fluent-orange-20:#ca5010;
+  --fluent-orange-yellow-20:#986f0b;
+  --fluent-orange-yellow-10:#c19c00;
+  --fluent-green-20:#0b6a0b;
+  --fluent-green:#107c10;
+  --fluent-cyan-20:#038387;
+  --fluent-blue-magenta-20:#8764b8;
+  --fluent-yellow:#ffb900;
+  --fluent-yellow-dark:#d29200;
+
+  /* ---------- Semantic colors ---------- */
+  --fluent-body-background:var(--fluent-white);
+  --fluent-body-standout-background:var(--fluent-neutral-lighter-alt);
+  --fluent-body-text:var(--fluent-neutral-primary);
+  --fluent-body-subtext:var(--fluent-neutral-secondary);
+  --fluent-body-divider:var(--fluent-neutral-light);
+  --fluent-disabled-background:var(--fluent-neutral-lighter);
+  --fluent-disabled-text:var(--fluent-neutral-tertiary);
+  --fluent-disabled-border:var(--fluent-neutral-tertiary-alt);
+  --fluent-focus-border:var(--fluent-neutral-secondary);
+  --fluent-link:var(--fluent-theme-primary);
+  --fluent-link-hovered:var(--fluent-theme-darker);
+  --fluent-input-border:var(--fluent-neutral-secondary);
+  --fluent-input-border-hovered:var(--fluent-neutral-primary);
+  --fluent-input-focus-border:var(--fluent-theme-primary);
+  --fluent-input-placeholder:var(--fluent-neutral-secondary);
+  --fluent-button-border:var(--fluent-neutral-secondary-alt);
+  --fluent-button-background-hovered:var(--fluent-neutral-lighter);
+  --fluent-button-background-pressed:var(--fluent-neutral-light);
+  --fluent-primary-button-background:var(--fluent-theme-primary);
+  --fluent-primary-button-background-hovered:var(--fluent-theme-dark-alt);
+  --fluent-primary-button-background-pressed:var(--fluent-theme-dark);
+  --fluent-menu-item-background-hovered:var(--fluent-neutral-lighter);
+  --fluent-menu-item-background-checked:var(--fluent-neutral-light);
+  --fluent-list-item-background-hovered:var(--fluent-neutral-lighter);
+  --fluent-list-item-background-checked:var(--fluent-neutral-light);
+  /* Message bar */
+  --fluent-message-text:#323130;
+  --fluent-message-link:#005a9e;
+  --fluent-info-icon:#605e5c;
+  --fluent-info-background:#f3f2f1;
+  --fluent-error-text:#a4262c;
+  --fluent-error-icon:#a80000;
+  --fluent-error-background:#fde7e9;
+  --fluent-blocking-background:#fde7e9;
+  --fluent-warning-icon:#797775;
+  --fluent-warning-background:#fff4ce;
+  --fluent-warning-highlight:#ffb900;
+  --fluent-severe-warning-icon:#d83b01;
+  --fluent-severe-warning-background:#fed9cc;
+  --fluent-success-text:#107c10;
+  --fluent-success-icon:#107c10;
+  --fluent-success-background:#dff6dd;
+
+  /* ---------- Typography ---------- */
+  --fluent-font-family:"Segoe UI","Segoe UI Web (West European)",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",sans-serif;
+  --fluent-font-family-monospace:Menlo,Monaco,Consolas,"Courier New",monospace;
+  --fluent-font-size-10:10px;  /* mini / xSmall */
+  --fluent-font-size-12:12px;  /* small / smallPlus */
+  --fluent-font-size-14:14px;  /* medium (body) */
+  --fluent-font-size-16:16px;  /* mediumPlus */
+  --fluent-font-size-18:18px;  /* large */
+  --fluent-font-size-20:20px;  /* xLarge */
+  --fluent-font-size-24:24px;  /* xLargePlus */
+  --fluent-font-size-28:28px;  /* xxLarge */
+  --fluent-font-size-32:32px;  /* xxLargePlus */
+  --fluent-font-size-42:42px;  /* superLarge */
+  --fluent-font-size-68:68px;  /* mega */
+  --fluent-font-weight-light:100;
+  --fluent-font-weight-semilight:300;
+  --fluent-font-weight-regular:400;
+  --fluent-font-weight-semibold:600;
+  --fluent-font-weight-bold:700;
+  --fluent-icon-size-small:12px;
+  --fluent-icon-size-medium:16px;
+  --fluent-icon-size-large:20px;
+
+  /* ---------- Elevation and corners ---------- */
+  --fluent-depth-0:0 0 0 0 transparent;
+  --fluent-depth-4:0 1.6px 3.6px 0 rgba(0,0,0,.132),0 .3px .9px 0 rgba(0,0,0,.108);
+  --fluent-depth-8:0 3.2px 7.2px 0 rgba(0,0,0,.132),0 .6px 1.8px 0 rgba(0,0,0,.108);
+  --fluent-depth-16:0 6.4px 14.4px 0 rgba(0,0,0,.132),0 1.2px 3.6px 0 rgba(0,0,0,.108);
+  --fluent-depth-64:0 25.6px 57.6px 0 rgba(0,0,0,.22),0 4.8px 14.4px 0 rgba(0,0,0,.18);
+  --fluent-corner-2:2px;
+  --fluent-corner-4:4px;
+  --fluent-corner-6:6px;
+  --fluent-corner-circular:9999px;
+
+  /* ---------- Spacing ---------- */
+  --fluent-spacing-s2:4px;
+  --fluent-spacing-s1:8px;
+  --fluent-spacing-m:16px;
+  --fluent-spacing-l1:20px;
+  --fluent-spacing-l2:32px;
+
+  /* ---------- Motion ---------- */
+  --fluent-ease-1:cubic-bezier(.1,.9,.2,1);   /* entrances */
+  --fluent-ease-2:cubic-bezier(.1,.25,.75,.9);/* exits, fades */
+  --fluent-duration-1:.167s;
+  --fluent-duration-2:.267s;
+  --fluent-duration-3:.367s;
+  --fluent-duration-4:.467s;
+
+  /* ---------- Control sizing (Fluent UI React v8 defaults) ---------- */
+  --fluent-control-height:32px;
+  --fluent-control-min-width:80px;
+  --fluent-control-padding-x:16px;
+  --fluent-input-padding-x:8px;
+  --fluent-menu-item-height:36px;
+}
