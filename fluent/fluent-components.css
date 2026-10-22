@@ -1,0 +1,105 @@
+/*
+ * Fluent UI component layer for the Generic Flow.
+ * Load last (after styles.css and page styles). Maps the app's existing classes to
+ * Fluent UI React v8 component specs: Button, IconButton, CommandBar, TextField, Dropdown,
+ * Callout/ContextualMenu, Dialog, Checkbox, Link, Pivot and Nav. Tokens live in fluent-tokens.css.
+ */
+
+/* ---------- Base typography ---------- */
+body{font-family:var(--fluent-font-family);font-size:var(--fluent-font-size-14);line-height:20px;color:var(--fluent-body-text);background:var(--fluent-neutral-lighter);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+button,input,select,textarea{font-family:var(--fluent-font-family)}
+.topbar .brand,.order-title h1{font-size:var(--fluent-font-size-20);font-weight:var(--fluent-font-weight-semibold);color:var(--fluent-neutral-primary)}
+
+/* Fluent labels are sentence case; all-caps micro labels become Fluent "small" labels. */
+.eyebrow,.list-label,.summary-grid div span,.compact-fields span,.insurance-fields span,.insurance-card-files>span,.finding-type span,.patient-details dt,.issue-title>b,.scenario-picker>span,.recommendation-label,.recommendation-heading,.extract-patient-details dt,.enrollment-label,.note-label{text-transform:none;letter-spacing:0}
+.compact-fields span,.insurance-fields span,.summary-grid div span,.patient-details dt,.extract-patient-details dt,.enrollment-label,.note-label{font-size:var(--fluent-font-size-12);font-weight:var(--fluent-font-weight-regular);color:var(--fluent-body-subtext)}
+.eyebrow,.list-label{font-size:var(--fluent-font-size-12);font-weight:var(--fluent-font-weight-semibold);color:var(--fluent-body-subtext)}
+
+/* ---------- Focus (Fluent focus rectangle) ---------- */
+:focus-visible{outline:1px solid var(--fluent-focus-border);outline-offset:1px}
+.footer-btn.primary:focus-visible,.small-btn.primary:focus-visible,.start-action:focus-visible,.primary-action:focus-visible{outline:1px solid var(--fluent-focus-border);outline-offset:1px;box-shadow:inset 0 0 0 1px var(--fluent-white)}
+
+/* ---------- Buttons: DefaultButton / PrimaryButton ---------- */
+.footer-btn,.small-btn,.start-action,.secondary-action,.primary-action,.secondary-action.compact{
+  height:var(--fluent-control-height);min-height:var(--fluent-control-height);min-width:var(--fluent-control-min-width);
+  padding:0 var(--fluent-control-padding-x);border:1px solid var(--fluent-button-border);border-radius:var(--fluent-corner-2);
+  background:var(--fluent-white);color:var(--fluent-neutral-primary);
+  font-size:var(--fluent-font-size-14);font-weight:var(--fluent-font-weight-semibold);line-height:1;
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--fluent-spacing-s1);
+  transition:background var(--fluent-duration-1) var(--fluent-ease-2),border-color var(--fluent-duration-1) var(--fluent-ease-2);text-decoration:none
+}
+.footer-btn:hover:not(:disabled),.small-btn:hover:not(:disabled),.secondary-action:hover:not(:disabled){background:var(--fluent-button-background-hovered);color:var(--fluent-neutral-dark)}
+.footer-btn:active:not(:disabled),.small-btn:active:not(:disabled),.secondary-action:active:not(:disabled){background:var(--fluent-button-background-pressed)}
+.footer-btn.primary,.small-btn.primary,.start-action,.primary-action{background:var(--fluent-primary-button-background);border-color:var(--fluent-primary-button-background);color:var(--fluent-white)}
+.footer-btn.primary:hover:not(:disabled),.small-btn.primary:hover:not(:disabled),.start-action:hover:not(:disabled),.primary-action:hover:not(:disabled){background:var(--fluent-primary-button-background-hovered);border-color:var(--fluent-primary-button-background-hovered);color:var(--fluent-white)}
+.footer-btn.primary:active:not(:disabled),.small-btn.primary:active:not(:disabled),.start-action:active:not(:disabled),.primary-action:active:not(:disabled){background:var(--fluent-primary-button-background-pressed);border-color:var(--fluent-primary-button-background-pressed)}
+.footer-btn.danger{background:var(--fluent-error-text);border-color:var(--fluent-error-text);color:var(--fluent-white)}
+.footer-btn.danger:hover:not(:disabled){background:var(--fluent-red-10);border-color:var(--fluent-red-10)}
+.footer-btn:disabled,.small-btn:disabled,.start-action:disabled,.secondary-action:disabled,.primary-action:disabled{opacity:1;background:var(--fluent-disabled-background);border-color:var(--fluent-disabled-background);color:var(--fluent-disabled-text);cursor:default}
+.footer-btn .lucide,.small-btn .lucide,.start-action .lucide,.secondary-action .lucide,.primary-action .lucide{width:var(--fluent-icon-size-medium);height:var(--fluent-icon-size-medium)}
+.small-btn{min-width:0;padding:0 12px}
+.secondary-action{width:auto}
+
+/* Link / ActionButton */
+.text-btn,.link-btn{color:var(--fluent-link);font-size:var(--fluent-font-size-14);font-weight:var(--fluent-font-weight-regular);border-radius:var(--fluent-corner-2)}
+.text-btn:hover,.link-btn:hover{color:var(--fluent-link-hovered);text-decoration:underline}
+
+/* IconButton and CommandBar buttons: theme-colored glyphs */
+.icon-btn{width:var(--fluent-control-height);height:var(--fluent-control-height);border-radius:var(--fluent-corner-2);color:var(--fluent-theme-primary)}
+.icon-btn:hover{background:var(--fluent-button-background-hovered);color:var(--fluent-theme-dark-alt)}
+.icon-btn:active{background:var(--fluent-button-background-pressed);color:var(--fluent-theme-dark)}
+.command-btn{width:var(--fluent-control-height);height:var(--fluent-control-height);color:var(--fluent-theme-primary)}
+.command-btn:hover{background:var(--fluent-button-background-hovered);color:var(--fluent-theme-dark-alt)}
+.shell-commands{background:var(--fluent-white)}
+
+/* ---------- TextField / Dropdown ---------- */
+.input,.page-footer input,.order-shell input:not([type=checkbox]):not([type=radio]),.order-shell select,.order-shell textarea{
+  min-height:var(--fluent-control-height);border:1px solid var(--fluent-input-border);border-radius:var(--fluent-corner-2);
+  background:var(--fluent-white);color:var(--fluent-neutral-primary);font-size:var(--fluent-font-size-14);padding:0 var(--fluent-input-padding-x)
+}
+textarea.input,.order-shell textarea{padding:6px var(--fluent-input-padding-x);line-height:20px}
+.input:hover{border-color:var(--fluent-input-border-hovered)}
+.input:focus,.order-shell input:focus,.order-shell select:focus,.order-shell textarea:focus{border-color:var(--fluent-input-focus-border);outline:0;box-shadow:inset 0 0 0 1px var(--fluent-input-focus-border)}
+.input::placeholder{color:var(--fluent-input-placeholder)}
+.input.invalid{border-color:var(--fluent-error-text);box-shadow:inset 0 0 0 1px var(--fluent-error-text)}
+.form-error{color:var(--fluent-error-text);font-size:var(--fluent-font-size-12)}
+.service-trigger,.preview-trigger{min-height:var(--fluent-control-height);border:1px solid var(--fluent-input-border);border-radius:var(--fluent-corner-2);background:var(--fluent-white);color:var(--fluent-neutral-primary);font-size:var(--fluent-font-size-14)}
+.service-trigger:hover,.preview-trigger:hover{border-color:var(--fluent-input-border-hovered)}
+.service-trigger[aria-expanded="true"],.preview-trigger[aria-expanded="true"]{border-color:var(--fluent-input-focus-border);box-shadow:inset 0 0 0 1px var(--fluent-input-focus-border)}
+input[type=checkbox],input[type=radio]{accent-color:var(--fluent-theme-primary)}
+
+/* ---------- Callout / ContextualMenu ---------- */
+.service-menu,.preview-menu,.review-popover{border:0;border-radius:var(--fluent-corner-2);background:var(--fluent-white);box-shadow:var(--fluent-depth-8);animation:fluent-callout var(--fluent-duration-3) var(--fluent-ease-1)}
+.service-option,.preview-option{min-height:var(--fluent-menu-item-height);border-radius:0;color:var(--fluent-neutral-primary)}
+.service-option:hover,.preview-option:hover,.service-option:focus-visible,.preview-option:focus-visible{background:var(--fluent-menu-item-background-hovered)}
+.service-option.selected,.preview-option.selected{background:var(--fluent-menu-item-background-checked)}
+.service-option>.lucide:first-child,.preview-option>.lucide:first-child,.service-check,.preview-check{color:var(--fluent-theme-primary)}
+
+/* ---------- Dialog / Modal ---------- */
+.confirm-dialog{border:0;border-radius:var(--fluent-corner-2);box-shadow:var(--fluent-depth-64)}
+.confirm-dialog::backdrop{background:var(--fluent-black-translucent-40)}
+.confirm-dialog h2,.intake-modal h2{font-size:var(--fluent-font-size-20);font-weight:var(--fluent-font-weight-semibold);color:var(--fluent-neutral-primary)}
+.confirm-dialog p{color:var(--fluent-body-text);font-size:var(--fluent-font-size-14);line-height:20px}
+.confirm-actions,.intake-modal-foot{gap:var(--fluent-spacing-s1)}
+.intake-modal-backdrop{background:var(--fluent-black-translucent-40)}
+.phase-extraction .intake-modal.extraction-issues{border-radius:var(--fluent-corner-2);box-shadow:var(--fluent-depth-64)}
+.confirm-dialog[open]{animation:fluent-dialog var(--fluent-duration-3) var(--fluent-ease-1)}
+
+/* ---------- Surfaces ---------- */
+.review-card,.completion-card,.handoff-summary,.next-action,.other-actions,.intake-recommendations,.precheck-result{border-radius:var(--fluent-corner-2)}
+.toast{background:var(--fluent-neutral-dark);color:var(--fluent-white);border-radius:var(--fluent-corner-2);box-shadow:var(--fluent-depth-16);font-size:var(--fluent-font-size-14)}
+.page-footer{background:var(--fluent-white);border-top:1px solid var(--fluent-body-divider)}
+
+/* ---------- Nav (left) and Pivot (exploration tabs) ---------- */
+.shell-nav{background:var(--fluent-neutral-lighter)}
+.nav-item:hover,.nav-section:hover{background:var(--fluent-neutral-light)}
+.nav-item.active{background:var(--fluent-white);font-weight:var(--fluent-font-weight-semibold)}
+.nav-item.active:before{background:var(--fluent-theme-primary)}
+.explore-tab{font-size:var(--fluent-font-size-14)}
+.explore-tab.active{font-weight:var(--fluent-font-weight-semibold);border-bottom-color:var(--fluent-theme-primary)}
+.explore-tab:hover{background:var(--fluent-neutral-lighter);color:var(--fluent-neutral-primary)}
+
+/* ---------- Motion (Fluent entrance curves) ---------- */
+@keyframes fluent-callout{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
+@keyframes fluent-dialog{from{opacity:0;transform:scale3d(.98,.98,1)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.service-menu,.preview-menu,.review-popover,.confirm-dialog[open]{animation:none}}
