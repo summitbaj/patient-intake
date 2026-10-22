@@ -223,3 +223,11 @@
 .open-precheck:hover{text-decoration:underline}
 .open-precheck .lucide{width:13px;height:13px}
 .pc-list li.fail .lucide{color:var(--red)}
+
+/* Banner when the order was opened from Order actions */
+.order-from-intake{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:10px 14px;border-radius:10px;background:var(--ai-grad-soft,#eef4ff);box-shadow:inset 0 0 0 1px var(--ai-line,#ddd5ff);font-size:13px;color:var(--text)}
+.order-from-intake[hidden]{display:none}
+.order-from-intake>.lucide{width:16px;height:16px;flex:none;color:var(--ai,#6d4aff)}
+.order-from-intake>span{flex:1;min-width:0;display:grid}
+.order-from-intake b{color:var(--ink);font-weight:600}
+.order-from-intake .footer-btn{flex:none;text-decoration:none;height:32px;font-size:13px}

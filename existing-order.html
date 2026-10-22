@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Order | Signetic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme-modern.css">
+  <link rel="stylesheet" href="precheck.css">
+  <link rel="stylesheet" href="prepare-orders.css">
+</head>
+<body class="intake-page precheck-page prepare-page existing-order-page">
+  <header class="shell-ribbon" aria-label="Signetic">
+    <div class="ribbon-start"><button class="ribbon-btn" aria-label="App launcher" title="App launcher"><i data-lucide="grip"></i></button><span class="ribbon-logo">SIGNETIC</span><span class="ribbon-portal">Manager Portal</span></div>
+    <div class="ribbon-env">SANDBOX</div>
+    <div class="ribbon-end"><button class="ribbon-btn" aria-label="Search" title="Search"><i data-lucide="search"></i></button><button class="ribbon-btn" aria-label="Create new" title="Create new"><i data-lucide="plus"></i></button><button class="ribbon-btn" aria-label="Filter" title="Filter"><i data-lucide="filter"></i></button><button class="ribbon-btn" aria-label="Settings" title="Settings"><i data-lucide="settings"></i></button><button class="ribbon-btn" aria-label="Help" title="Help"><span aria-hidden="true">?</span></button><button class="ribbon-avatar" aria-label="Account" title="Account">PS</button></div>
+  </header>
+
+  <nav class="shell-nav" id="shellNav" aria-label="Main navigation">
+    <button class="nav-toggle" id="navToggle" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation"><i data-lucide="menu"></i></button>
+    <div class="nav-scroll">
+      <a class="nav-item" href="index.html" title="Home"><i data-lucide="house"></i><span>Home</span></a>
+      <button class="nav-item" title="Recent"><i data-lucide="clock"></i><span>Recent</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <button class="nav-item" title="Pinned"><i data-lucide="pin"></i><span>Pinned</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Practice Management</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children"><a class="nav-item" href="index.html" title="Patients"><i data-lucide="users"></i><span>Patients</span></a></div>
+      </div>
+      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>DME</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children">
+          <a class="nav-item active" href="#" aria-current="page" title="DME Orders"><i data-lucide="list-checks"></i><span>DME Orders</span></a>
+          <a class="nav-item" href="#" title="Delivery Management"><i data-lucide="truck"></i><span>Delivery Management</span></a>
+          <a class="nav-item" href="#" title="Rental Management"><i data-lucide="file-clock"></i><span>Rental Management</span></a>
+        </div>
+      </div>
+      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>Payment</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children"><a class="nav-item" href="#" title="Payment"><i data-lucide="credit-card"></i><span>Payment</span></a></div>
+      </div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Claims Processing</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>NCPDP</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Logs</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Tools</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Settings</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+    </div>
+  </nav>
+
+  <header class="shell-commands page-header"><h1 class="page-title" id="eoTitle">Order</h1><div class="header-notice" aria-hidden="true"></div><div class="header-actions"><a class="cancel-intake-btn" id="eoBack" href="prepare-orders.html"><i data-lucide="arrow-left"></i> Back to order actions</a></div></header>
+
+  <div class="app-body">
+    <main class="po-layout">
+      <div class="po-scroll">
+        <div class="eo-banner" id="eoBanner"></div>
+        <div class="po-body" id="eoBody"></div>
+      </div>
+      <footer class="pr-footer po-footer">
+        <div class="pk-footer-status" id="eoStatus" aria-live="polite"></div>
+        <div class="pk-footer-actions" id="eoActions"></div>
+      </footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="scenario.js"></script>
+  <script src="intake-demo.js"></script>
+  <script src="orders-data.js"></script>
+  <script src="existing-order.js"></script>
+  <script src="proto-nav.js"></script>
+</body>
+</html>

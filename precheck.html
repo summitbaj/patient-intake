@@ -4,11 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coverage Pre-check | Signetic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="order.css">
+  <link rel="stylesheet" href="theme-modern.css">
   <link rel="stylesheet" href="precheck.css">
 </head>
-<body class="order-page precheck-page">
+<body class="intake-page precheck-page">
   <header class="shell-ribbon" aria-label="Signetic">
     <div class="ribbon-start"><button class="ribbon-btn" aria-label="App launcher" title="App launcher"><i data-lucide="grip"></i></button><span class="ribbon-logo">SIGNETIC</span><span class="ribbon-portal">Manager Portal</span></div>
     <div class="ribbon-env">SANDBOX</div>
@@ -42,35 +45,37 @@
     </div>
   </nav>
 
-  <div class="shell-commands" aria-label="Page commands"><button class="command-btn" id="shellBack" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></button><button class="command-btn" id="shellRefresh" aria-label="Refresh" title="Refresh"><i data-lucide="rotate-ccw"></i></button><button class="command-btn" aria-label="Page details" title="Page details"><i data-lucide="file"></i></button></div>
+  <header class="shell-commands page-header"><h1 class="page-title" id="pkTitle">Pre-check</h1><div class="header-notice" aria-hidden="true"></div><div class="header-actions"><a class="cancel-intake-btn" id="pcBack" href="index.html"><i data-lucide="arrow-left"></i> Back to intake</a></div></header>
 
   <div class="app-body">
-    <div class="order-shell pc-shell">
-      <header class="order-header">
-        <div class="order-title"><a class="icon-btn" href="index.html" id="pcBackLink" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></a><div><h1>Coverage Pre-check</h1><p class="pc-sub" id="pcPatient"></p></div></div>
-        <div class="order-header-actions"><span class="pc-from"><i data-lucide="file-input"></i> From Patient Intake: <b id="pcIntakeId"></b></span></div>
-      </header>
-
-      <section class="pc-summary-bar" aria-label="Pre-check summary">
-        <div class="pc-stats" id="pcStats" role="group" aria-label="Filter items by result"></div>
-        <div class="pc-progress"><span id="pcProgressText"></span><span class="pc-progress-track"><span id="pcProgressBar"></span></span></div>
-      </section>
-      <p class="pc-disclaimer"><i data-lucide="info"></i> Decision support only. It doesn’t guarantee coverage, payment or reimbursement. The provider makes the final determination before dispensing.</p>
-
-      <div class="pc-body">
-        <aside class="pc-items" id="pcList" aria-label="Items"></aside>
-        <main class="pc-detail" id="pcDetail" tabindex="-1"></main>
+    <main class="pq-page pq-layout" id="pqLayout">
+      <div class="pr-main">
+        <header class="pr-top">
+          <div class="pr-title"><span class="ai-label"><i data-lucide="sparkles"></i> AI coverage pre-check</span><p class="pk-sub" id="pkPatient"></p></div>
+          <p class="pk-disclaimer"><i data-lucide="info"></i> Decision support only. It doesn’t guarantee coverage, payment or reimbursement. The provider makes the final determination before dispensing.</p>
+        </header>
+        <div class="pr-body">
+          <nav class="pr-list-col" aria-label="Prescriptions and HCPCS codes"><div class="pr-list" id="prList"></div></nav>
+          <section class="pr-right">
+            <div class="pr-detail" id="prDetail" aria-live="polite" tabindex="-1"></div>
+            <footer class="pr-footer">
+              <div class="pk-footer-status" id="pkFooterStatus" aria-live="polite"></div>
+              <div class="pk-footer-actions">
+                                <button class="footer-btn primary" id="pcCreateOrder">Create order <i data-lucide="arrow-right"></i></button>
+              </div>
+            </footer>
+          </section>
+        </div>
       </div>
+    </main>
 
-      <footer class="order-footer">
-        <a class="footer-btn" id="pcBack" href="index.html"><i data-lucide="arrow-left"></i> Back</a>
-        <div class="order-footer-actions"><span class="pc-footer-status" id="pcFooterStatus"></span><button class="footer-btn primary" id="pcCreateOrder">Create order</button></div>
-      </footer>
-    </div>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="scenario.js"></script>
+  <script src="orders-data.js"></script>
+  <script src="intake-demo.js"></script>
   <script src="precheck.js"></script>
   <script src="proto-nav.js"></script>
 </body>

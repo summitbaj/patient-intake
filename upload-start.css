@@ -1,0 +1,104 @@
+/* Upload start screen: upload files, or pull them from a patient's record and add more. */
+.upload-start{display:none}
+.workspace.phase-upload .upload-start{display:flex;flex-direction:column;height:100%;background:var(--white,#fff);border-radius:inherit}
+.workspace.phase-upload .action-panel{display:none!important}
+body.phase-upload #cancelUpload{display:none!important}
+.us-scroll{flex:1;min-height:0;overflow-y:auto;padding:32px clamp(16px,4vw,56px)}
+.us-hero{text-align:center;max-width:680px;margin:0 auto 32px}
+.us-hero-icon{width:52px;height:52px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--ai-grad,var(--blue));box-shadow:0 0 0 8px var(--blue-soft),0 8px 22px -6px rgba(109,74,255,.45)}
+.us-hero-icon .lucide{width:24px;height:24px}
+.us-hero h2{margin:0 0 8px;font-size:28px;line-height:1.2;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.us-hero p{margin:0;font-size:15px;line-height:1.6;color:var(--muted)}
+.us-grid{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:28px;align-items:start;max-width:1100px;margin:0 auto}
+.us-col{min-width:0}
+.us-or{align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--muted);font-size:13px}
+.us-or::before,.us-or::after{content:"";flex:1;width:1px;background:var(--line)}
+
+.us-drop{min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:32px 24px;text-align:center;border:1.5px dashed var(--blue-line);border-radius:var(--radius,12px);background:var(--sunken);color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
+.us-drop:hover,.us-drop.over{border-color:var(--blue);background:var(--blue-soft)}
+.us-drop-icon{width:72px;height:72px;margin-bottom:18px;border-radius:50%;display:grid;place-items:center;background:var(--white,#fff);color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-line)}
+.us-drop-icon .lucide{width:28px;height:28px}
+.us-drop strong{font-size:16px;font-weight:600;color:var(--ink)}
+.us-drop>span:not(.us-drop-icon):not(.us-browse){font-size:14px}
+.us-drop b{font-weight:700;color:var(--ink)}
+.us-browse{margin-top:18px;display:inline-flex;align-items:center;min-height:42px;padding:0 22px;border-radius:var(--radius-sm,8px);background:var(--blue);color:#fff;font-size:15px;font-weight:600;box-shadow:0 1px 2px rgba(15,31,61,.12)}
+.us-drop:hover .us-browse{background:var(--blue-hover)}
+
+.us-uploads{margin-top:24px}
+.us-uploads[hidden]{display:none}
+.us-uploads>header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.us-uploads>header strong{font-size:14px;font-weight:600;color:var(--ink)}
+.us-uploads>header span{font-size:13px;color:var(--muted)}
+.us-upload-list{display:grid;gap:8px}
+.us-upload{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;min-height:56px;padding:8px 8px 8px 12px;border:1px solid var(--line);border-radius:var(--radius-sm,8px);background:var(--white,#fff)}
+.us-upload.is-uploading{background:var(--sunken)}
+.us-upload-info{display:grid;min-width:0}
+.us-upload-info strong,.us-upload-info small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-upload-info strong{font-size:14px;font-weight:600;color:var(--ink)}
+.us-upload-info small{font-size:12px;color:var(--muted)}
+.us-upload .spinner{margin-right:10px}
+.us-upload .format-badge,.us-doc .format-badge{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:6px;font-size:9px;font-weight:700;letter-spacing:.04em}
+.us-doc .format-badge{width:28px;height:28px;font-size:8.5px}
+
+.us-record{padding:24px;border:1px solid var(--line);border-radius:var(--radius,12px);background:var(--white,#fff);box-shadow:var(--shadow)}
+.us-record-head{display:flex;gap:14px;align-items:flex-start}
+.us-record-icon{width:44px;height:44px;flex:none;border-radius:var(--radius-sm,8px);display:grid;place-items:center;background:var(--blue-soft);color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-line)}
+.us-record-icon .lucide{width:20px;height:20px}
+.us-record-head h3{margin:0;font-size:17px;font-weight:600;color:var(--ink)}
+.us-record-head p{margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--muted)}
+.us-search{display:flex;align-items:center;gap:10px;height:44px;margin:20px 0 18px;padding:0 14px;border-radius:var(--radius-sm,8px);background:var(--sunken);color:var(--muted)}
+.us-search[hidden]{display:none}
+.us-search:focus-within{box-shadow:var(--ring)}
+.us-search .lucide{width:17px;height:17px;flex:none}
+.us-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--text)}
+.us-label{display:block;margin:0 0 10px;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.us-label[hidden]{display:none}
+.us-patients{display:grid;gap:10px}
+.us-patients[hidden]{display:none}
+.us-patient{border:1px solid var(--line);border-radius:var(--radius-sm,8px);background:var(--white,#fff);transition:border-color .15s}
+.us-patient:hover,.us-patient.open{border-color:var(--blue-line)}
+.us-patient-row{width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) auto 18px;align-items:center;gap:12px;padding:12px 16px 12px 14px;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--text);font:inherit}
+.us-patient-row>.lucide{width:18px;height:18px;color:var(--muted);transition:transform .15s}
+.us-patient.open .us-patient-row>.lucide{transform:rotate(180deg)}
+.us-avatar{width:40px;height:40px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--blue-soft);color:var(--ink);font-size:13px;font-weight:600}
+.us-who{display:grid;min-width:0}
+.us-who strong{font-size:15px;font-weight:600;color:var(--ink)}
+.us-who small{font-size:13px;color:var(--muted)}
+.us-count{padding:3px 10px;border-radius:999px;background:var(--sunken);font-size:13px;color:var(--muted)}
+.us-empty{margin:8px 0;font-size:13px;color:var(--muted);text-align:center}
+
+.us-docs{padding:6px 10px 12px;border-top:1px solid var(--line)}
+.us-linked .us-docs{padding:0;border-top:0}
+.us-doc{display:grid;grid-template-columns:16px auto minmax(0,1fr);align-items:center;gap:12px;padding:8px 6px;border-radius:6px;cursor:pointer}
+.us-doc:hover{background:var(--sunken)}
+.us-doc.added{cursor:default;opacity:.6}
+.us-doc input{margin:0;accent-color:var(--primary)}
+.us-doc span:not(.format-badge){display:grid;min-width:0}
+.us-doc strong{font-size:13.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-doc small{font-size:12px;color:var(--muted)}
+.us-docs-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:8px;padding:0 6px}
+.us-docs-foot>span{font-size:12.5px;color:var(--muted)}
+.us-docs-foot .footer-btn{min-height:34px;padding:0 14px;font-size:13px}
+
+.us-linked{margin-top:20px}
+.us-linked[hidden]{display:none}
+.us-linked-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;align-items:center;gap:12px;margin-bottom:18px;padding:12px 14px;border:1px solid var(--blue-line);border-radius:var(--radius-sm,8px);background:var(--blue-soft)}
+.us-linked-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:12px;font-style:normal;font-weight:600}
+.us-linked-tag .lucide{width:13px;height:13px}
+.us-linked-row .us-avatar{background:var(--white,#fff)}
+
+.us-footer{flex:none;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px clamp(16px,3vw,28px);border-top:1px solid var(--line);background:var(--white,#fff)}
+.us-footer-note{margin-right:auto;display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.us-footer-note b{color:var(--ink);font-weight:600}
+.us-footer-note .lucide{width:16px;height:16px;color:var(--blue)}
+.us-footer .footer-btn{min-width:104px;justify-content:center;gap:6px}
+.us-footer .footer-btn .lucide{width:16px;height:16px}
+
+@media(max-width:900px){
+  .us-grid{grid-template-columns:minmax(0,1fr);gap:20px}
+  .us-or{flex-direction:row;align-self:auto}
+  .us-or::before,.us-or::after{height:1px;width:auto}
+  .us-drop{min-height:240px}
+  .us-hero h2{font-size:23px}
+  .us-footer-note{display:none}
+}

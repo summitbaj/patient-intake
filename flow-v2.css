@@ -1,0 +1,65 @@
+/* Flow v2: review footer + completion dialog. Loaded only by index-v2.html. */
+
+/* The side panel has Review and Next action tabs (no completion modal). */
+
+/* Review workspace stops above the footer */
+.flow-v2 .workspace.phase-review{height:calc(100vh - var(--shell-top) - var(--body-pad-y)*2 - var(--footer-h));border-bottom-left-radius:0;border-bottom-right-radius:0}
+.flow-v2.phase-review .page-footer{border-top:1px solid var(--line);box-shadow:0 -6px 16px -10px rgba(15,31,61,.18)}
+
+/* Footer layout */
+.v2-review-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%}
+.v2-review-footer[hidden]{display:none}
+.v2-actions{display:flex;align-items:center;gap:8px;flex:none}
+.v2-actions .footer-btn .lucide{width:16px;height:16px}
+.v2-status{display:flex;align-items:center;gap:10px;min-width:0;font-size:13px;color:var(--muted)}
+.v2-status>.lucide{width:20px;height:20px;flex:none}
+.v2-status.todo>.lucide{color:var(--amber)}
+.v2-status.done>.lucide{color:var(--green)}
+.v2-status>span{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.v2-status b{color:var(--ink);font-weight:600}
+.v2-next{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2-status .text-btn{display:inline-flex;align-items:center;gap:4px;font-size:13px;white-space:nowrap}
+.v2-status .text-btn .lucide{width:14px;height:14px}
+.page-footer .v2-review-footer{padding:0}
+
+/* Flash the item the user is sent to */
+@keyframes v2-flash{0%,100%{box-shadow:none}25%,70%{box-shadow:0 0 0 3px rgba(37,99,235,.35)}}
+.v2-flash{animation:v2-flash 1.6s ease-in-out;border-radius:10px}
+
+/* Completion card button */
+.completion-card .v2-card-complete{margin-top:12px;display:inline-flex}
+
+/* Completion dialog */
+.v2-complete-dialog{width:min(520px,calc(100vw - 32px))}
+.v2-complete-dialog form{display:grid;gap:14px}
+.v2-complete-head{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center}
+.v2-complete-head h2{margin:0!important}
+.v2-complete-head p{margin:2px 0 0!important;font-size:13px!important}
+.v2-check{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green);box-shadow:inset 0 0 0 1px #a7f3d0}
+.v2-check .lucide{width:20px;height:20px}
+.confirm-dialog p.v2-summary{margin:0;font-size:13.5px;line-height:1.6;color:var(--text)}
+.v2-recommend{border-radius:12px;padding:14px 16px;background:var(--ai-grad-soft,#f3f0ff);box-shadow:inset 0 0 0 1px var(--ai-line,#ddd5ff);display:grid;gap:6px}
+.v2-rec-label{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ai,#6d4aff)}
+.v2-rec-label .lucide{width:13px;height:13px}
+.v2-recommend h3{margin:0;font-size:16px;color:var(--ink)}
+.confirm-dialog .v2-recommend p{margin:0 0 6px;font-size:13px;color:var(--muted)}
+.v2-rec-btn{width:100%;gap:6px}
+.v2-rec-btn .lucide{width:16px;height:16px}
+.v2-alt{display:flex;flex-wrap:wrap;gap:12px}
+.v2-alt .text-btn{font-size:13px}
+.v2-more{border-top:1px solid var(--line);padding-top:10px}
+.v2-more summary{list-style:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink)}
+.v2-more summary::-webkit-details-marker{display:none}
+.v2-more summary .lucide{width:15px;height:15px;color:var(--muted);transition:transform .15s}
+.v2-more[open] summary .lucide{transform:rotate(180deg)}
+.v2-more ul{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:8px}
+.v2-more li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;font-size:12.5px}
+.v2-more li .lucide{width:14px;height:14px;color:var(--ai,#6d4aff);margin-top:2px}
+.v2-more li b{display:block;color:var(--ink);font-weight:600}
+.v2-more li small{color:var(--muted)}
+.confirm-dialog p.v2-note{margin:0;font-size:11.5px;color:var(--muted)}
+.v2-complete-dialog .icon-btn{align-self:start}
+
+@media(max-width:760px){.v2-next{display:none}.v2-actions #v2SaveExit{display:none}}
+@media(max-width:760px){.flow-v2.phase-review .action-panel{bottom:calc(var(--footer-h) + var(--body-pad-y))}}
+.v2-more h3{margin:0;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}

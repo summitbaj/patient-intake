@@ -12,7 +12,6 @@ const defaultPrecheck=[
   {status:'pass',title:'Standard written orders',detail:'2 prescriptions with HCPCS, quantity and frequency'},
   {status:'pass',title:'Medicare coverage criteria · L33718 (PAP)',detail:'AHI 18.4 on home sleep test and face-to-face visit on 10/12/2026'},
   {status:'warn',title:'Medicare coverage criteria · L33797 (oxygen)',detail:'Oxygen qualifying test results not found in uploaded documents'},
-  {status:'warn',title:'Face-to-face note unsigned',detail:'Physician signature not found on Face-to-Face Notes.pdf'},
   {status:'warn',title:'Prior authorization period',detail:'PA-26-0418873 ends 04/15/2027, before the 13-month CPAP rental ends'}
 ];
 const fallbackIntake={
@@ -23,14 +22,14 @@ const fallbackIntake={
       icd:[{code:'G47.33',description:'Obstructive sleep apnea (adult)',primary:true},{code:'E66.9',description:'Obesity, unspecified'},{code:'I10',description:'Essential (primary) hypertension'}],
       items:[{name:'CPAP auto 5–15 cm H2O with heated humidifier, full face mask and supplies',bundle:true,lines:[{code:'E0601',description:'Continuous positive airway pressure (CPAP) device',qty:1,frequency:'Monthly rental × 13'},{code:'E0562',description:'Humidifier, heated, used with PAP device',qty:1,frequency:'Monthly rental × 13'},{code:'A7030',description:'Full face mask used with PAP device',qty:1,frequency:'1 per 3 months'},{code:'A7031',description:'Face mask cushion, replacement for full face mask',qty:1,frequency:'1 per month'},{code:'A7037',description:'Tubing used with PAP device',qty:1,frequency:'1 per 3 months'},{code:'A7038',description:'Filter, disposable, used with PAP device',qty:2,frequency:'2 per month'}]},
              {name:'Headgear used with PAP device',bundle:false,lines:[{code:'A7035',description:'Headgear used with PAP device',qty:1,frequency:'1 per 6 months'}]}]},
-    {title:'Prescription 2',source:'Oxygen Prescription.pdf',date:'10/13/2026',physician:'Michael Reyes',npi:'1487265930',specialty:'Pulmonology',
+    {title:'Prescription 2',source:'Oxygen Prescription.jpg',date:'10/13/2026',physician:'Michael Reyes',npi:'1487265930',specialty:'Pulmonology',
       icd:[{code:'R09.02',description:'Hypoxemia',primary:true},{code:'G47.33',description:'Obstructive sleep apnea (adult)'}],
       items:[{name:'Home oxygen concentrator, 2 L/min nocturnal',bundle:false,lines:[{code:'E1390',description:'Oxygen concentrator, single delivery port',qty:1,frequency:'Monthly rental × 36'}]},
              {name:'Oxygen supplies',bundle:true,lines:[{code:'A4615',description:'Cannula, nasal',qty:2,frequency:'2 per month'},{code:'A4616',description:'Tubing (oxygen), per foot',qty:7,frequency:'7 ft per month'}]}]}
   ],
   insurance:[{rank:'Primary',name:'Medicare Part B',memberId:'X BCB731045298 03',group:'Not provided',status:'Active through 12/30/2027'},{rank:'Secondary',name:'Aetna Choice POS II',memberId:'Z AET529187463 07',group:'GRP-258914',status:'Active through 03/14/2027'},{rank:'Tertiary',name:'Washington Apple Health',memberId:'200458812WA',group:'Not provided',status:'Active through 06/30/2027'}],
   priorAuths:[{code:'E0601',number:'PA-26-0418873',payer:'Aetna Choice POS II',from:'10/15/2026',to:'04/15/2027',qty:'1 unit',frequency:'Monthly rental · 13 months'},{code:'E1390',number:'PA-26-0522190',payer:'Aetna Choice POS II',from:'10/15/2026',to:'10/14/2027',qty:'1 unit',frequency:'Monthly rental · 12 months'}],
-  documents:['Referral.pdf','Insurance Card.pdf','Prescription.pdf','Oxygen Prescription.pdf','Consent Form.pdf','Face-to-Face Notes.pdf'],
+  documents:['Referral.pdf','Insurance Card.jpg','Prescription.pdf','Oxygen Prescription.jpg','Consent Form.pdf','Face-to-Face Notes.pdf'],
   note:'Patient seen 10/12/2026 for loud snoring, witnessed apneas, and daytime sleepiness (Epworth score 14). Home sleep test on 10/08/2026 shows AHI 18.4 events/hr, consistent with moderate obstructive sleep apnea.',
   precheck:null
 };
@@ -232,7 +231,8 @@ $('#cancelOrderDialog').addEventListener('close',()=>{if($('#cancelOrderDialog')
 
 // Shell
 const setNavCollapsed=collapsed=>{document.body.classList.toggle('nav-collapsed',collapsed);const toggle=$('#navToggle');toggle.setAttribute('aria-expanded',String(!collapsed));toggle.setAttribute('aria-label',collapsed?'Expand navigation':'Collapse navigation');toggle.title=toggle.getAttribute('aria-label');};
-setNavCollapsed(window.matchMedia('(max-width:900px)').matches);
+// The main navigation stays collapsed until the user opens it.
+setNavCollapsed(true);
 $('#navToggle').addEventListener('click',()=>setNavCollapsed(!document.body.classList.contains('nav-collapsed')));
 $$('[data-nav-section]').forEach(section=>section.addEventListener('click',()=>{const open=section.parentElement.classList.toggle('open');section.setAttribute('aria-expanded',String(open));}));
 $$('.shell-nav a[href="#"]').forEach(link=>link.addEventListener('click',event=>event.preventDefault()));
@@ -242,3 +242,12 @@ $('#shellRefresh').addEventListener('click',()=>location.reload());
 const startStep=new URLSearchParams(location.search).get('step');
 syncHeader();
 goStep(steps.some(([id])=>id===startStep)?startStep:'patient');
+
+// Opened from Order actions (prepare-orders.html): show where the order came from and a way back.
+(function(){
+  let action=null;try{action=JSON.parse(sessionStorage.getItem('signeticOrderAction'));}catch(error){}
+  if(!action||action.route!=='new'||intake.fromAction!==action.id)return;
+  const box=$('#orderFromIntake'),items=(intake.prescriptions[0]?.items||[]).map(it=>esc(it.name)).join(' · ');
+  box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From intake #${esc(intake.id)} · New order for ${esc(action.rxTitle)}</b>${items}</span><a class="footer-btn" href="prepare-orders.html?done=${encodeURIComponent(action.id)}">Done, back to order actions</a>`;
+  box.hidden=false;icons();
+})();

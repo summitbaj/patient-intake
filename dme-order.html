@@ -1,117 +1,368 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>DME Order | Signetic</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="order.css">
-</head>
-<body class="order-page">
-  <header class="shell-ribbon" aria-label="Signetic">
-    <div class="ribbon-start"><button class="ribbon-btn" aria-label="App launcher" title="App launcher"><i data-lucide="grip"></i></button><span class="ribbon-logo">SIGNETIC</span><span class="ribbon-portal">Manager Portal</span></div>
-    <div class="ribbon-env">SANDBOX</div>
-    <div class="ribbon-end"><button class="ribbon-btn" aria-label="Search" title="Search"><i data-lucide="search"></i></button><button class="ribbon-btn" aria-label="Create new" title="Create new"><i data-lucide="plus"></i></button><button class="ribbon-btn" aria-label="Filter" title="Filter"><i data-lucide="filter"></i></button><button class="ribbon-btn" aria-label="Settings" title="Settings"><i data-lucide="settings"></i></button><button class="ribbon-btn" aria-label="Help" title="Help"><span aria-hidden="true">?</span></button><button class="ribbon-avatar" aria-label="Account" title="Account">PS</button></div>
-  </header>
-
-  <nav class="shell-nav" id="shellNav" aria-label="Main navigation">
-    <button class="nav-toggle" id="navToggle" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation"><i data-lucide="menu"></i></button>
-    <div class="nav-scroll">
-      <a class="nav-item" href="index.html" title="Home"><i data-lucide="house"></i><span>Home</span></a>
-      <button class="nav-item" title="Recent"><i data-lucide="clock"></i><span>Recent</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
-      <button class="nav-item" title="Pinned"><i data-lucide="pin"></i><span>Pinned</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
-      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Practice Management</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
-        <div class="nav-children"><a class="nav-item" href="index.html" title="Patients"><i data-lucide="users"></i><span>Patients</span></a></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>DME Order | Signetic</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="order.css" />
+  </head>
+  <body class="order-page">
+    <header class="shell-ribbon" aria-label="Signetic">
+      <div class="ribbon-start">
+        <button
+          class="ribbon-btn"
+          aria-label="App launcher"
+          title="App launcher"
+        >
+          <i data-lucide="grip"></i></button
+        ><span class="ribbon-logo">SIGNETIC</span
+        ><span class="ribbon-portal">Manager Portal</span>
       </div>
-      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>DME</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
-        <div class="nav-children">
-          <a class="nav-item active" href="#" aria-current="page" title="DME Orders"><i data-lucide="list-checks"></i><span>DME Orders</span></a>
-          <a class="nav-item" href="#" title="Delivery Management"><i data-lucide="truck"></i><span>Delivery Management</span></a>
-          <a class="nav-item" href="#" title="Rental Management"><i data-lucide="file-clock"></i><span>Rental Management</span></a>
-        </div>
+      <div class="ribbon-env">SANDBOX</div>
+      <div class="ribbon-end">
+        <button class="ribbon-btn" aria-label="Search" title="Search">
+          <i data-lucide="search"></i></button
+        ><button class="ribbon-btn" aria-label="Create new" title="Create new">
+          <i data-lucide="plus"></i></button
+        ><button class="ribbon-btn" aria-label="Filter" title="Filter">
+          <i data-lucide="filter"></i></button
+        ><button class="ribbon-btn" aria-label="Settings" title="Settings">
+          <i data-lucide="settings"></i></button
+        ><button class="ribbon-btn" aria-label="Help" title="Help">
+          <span aria-hidden="true">?</span></button
+        ><button class="ribbon-avatar" aria-label="Account" title="Account">
+          PS
+        </button>
       </div>
-      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>Payment</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
-        <div class="nav-children"><a class="nav-item" href="#" title="Payment"><i data-lucide="credit-card"></i><span>Payment</span></a></div>
-      </div>
-      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Claims Processing</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
-      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>NCPDP</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
-      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Logs</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
-      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Tools</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
-      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Settings</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
-    </div>
-  </nav>
-
-  <div class="shell-commands" aria-label="Page commands"><button class="command-btn" id="shellBack" aria-label="Back" title="Back"><i data-lucide="arrow-left"></i></button><button class="command-btn" id="shellRefresh" aria-label="Refresh" title="Refresh"><i data-lucide="rotate-ccw"></i></button><button class="command-btn" aria-label="Page details" title="Page details"><i data-lucide="file"></i></button></div>
-
-  <div class="app-body">
-    <div class="order-shell">
-      <header class="order-header">
-        <div class="order-title"><a class="icon-btn" href="index.html" aria-label="Back to patient intake" title="Back"><i data-lucide="arrow-left"></i></a><h1>DME Order</h1></div>
-        <div class="order-header-actions">
-          <button class="intake-link" id="intakeLink" data-open-intake="details"><i data-lucide="file-input"></i> From Patient Intake: <span id="intakeIdLink">#INT-0023</span></button>
-          <button class="precheck-chip none" id="headerPrecheck" data-open-intake="precheck"></button>
-          <span class="order-status"><span class="dot"></span> Order Processing</span>
-          <button class="footer-btn notes-btn">Notes (0)</button>
-        </div>
-      </header>
-
-      <ol class="order-stepper" id="orderStepper"></ol>
-
-      <div class="order-for">
-        <div><b>Order for:</b> <span id="orderForName"></span> <span id="orderForDob"></span></div>
-        <div class="order-for-meta"><span>Provider: <b>M Rogers St. Joseph</b> <i data-lucide="info"></i></span><span class="divider"></span><span>Clinic: <b>Signetic Pharmacy</b></span></div>
-      </div>
-
-      <main class="order-content" id="orderContent"></main>
-
-      <footer class="order-footer">
-        <button class="cancel-order" id="cancelOrder">Cancel Order</button>
-        <div class="order-footer-actions"><button class="footer-btn" id="orderBack"><i data-lucide="arrow-left"></i> Back</button><button class="footer-btn primary" id="orderContinue">Save &amp; Continue</button></div>
-      </footer>
-    </div>
-  </div>
-
-  <aside class="intake-drawer" id="intakeDrawer" aria-labelledby="intakeDrawerTitle" hidden>
-    <header class="drawer-head">
-      <div><span class="eyebrow">Patient intake</span><h2 id="intakeDrawerTitle">#INT-0023</h2><p id="intakeDrawerMeta"></p></div>
-      <button class="icon-btn" id="closeIntakeDrawer" aria-label="Close intake details" title="Close"><i data-lucide="x"></i></button>
     </header>
-    <div class="drawer-tabs" role="tablist">
-      <button role="tab" id="tab-details" data-drawer-tab="details" aria-selected="true">Intake details</button>
-      <button role="tab" id="tab-precheck" data-drawer-tab="precheck" aria-selected="false">Pre-check <span class="tab-badge" id="precheckTabBadge"></span></button>
-    </div>
-    <div class="drawer-body" id="intakeDrawerBody"></div>
-  </aside>
-  <button class="drawer-scrim" id="drawerScrim" aria-label="Close panel" hidden></button>
 
-  <aside class="search-panel" id="searchPanel" aria-labelledby="searchPanelTitle" hidden>
-    <header class="search-panel-head"><h2 id="searchPanelTitle">Search for DME Products</h2><button class="icon-btn" id="closeSearch" aria-label="Close search" title="Close"><i data-lucide="x"></i></button></header>
-    <div class="search-panel-body">
-      <p class="search-intro">Please enter in <b>at least one</b> of the following fields.</p>
-      <section class="rx-chips" id="rxChips" aria-label="HCPCS codes from prescription"></section>
-      <form class="search-form" id="searchForm">
-        <label class="sf wide"><span>HCPCS Code</span><input class="input" name="code" autocomplete="off"></label>
-        <label class="sf"><span>Product Name</span><input class="input" name="name" autocomplete="off"></label>
-        <label class="sf"><span>Product Model</span><input class="input" name="model" autocomplete="off"></label>
-        <label class="sf"><span>Manufacturer/Distributor</span><select class="input" name="maker" id="makerSelect"></select></label>
-        <label class="sf"><span>Classification(s)</span><select class="input" name="cls" id="clsSelect"></select></label>
-        <div class="sf-actions wide"><button class="footer-btn primary" type="submit" id="searchBtn" disabled>Search</button><button class="footer-btn" type="button" id="clearSearch">Clear</button></div>
+    <nav class="shell-nav" id="shellNav" aria-label="Main navigation">
+      <button
+        class="nav-toggle"
+        id="navToggle"
+        aria-label="Collapse navigation"
+        aria-expanded="true"
+        title="Collapse navigation"
+      >
+        <i data-lucide="menu"></i>
+      </button>
+      <div class="nav-scroll">
+        <a class="nav-item" href="index.html" title="Home"
+          ><i data-lucide="house"></i><span>Home</span></a
+        >
+        <button class="nav-item" title="Recent">
+          <i data-lucide="clock"></i><span>Recent</span
+          ><i class="nav-chevron" data-lucide="chevron-down"></i>
+        </button>
+        <button class="nav-item" title="Pinned">
+          <i data-lucide="pin"></i><span>Pinned</span
+          ><i class="nav-chevron" data-lucide="chevron-down"></i>
+        </button>
+        <div class="nav-group">
+          <button class="nav-section" aria-expanded="false" data-nav-section>
+            <span>Practice Management</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+          <div class="nav-children">
+            <a class="nav-item" href="index.html" title="Patients"
+              ><i data-lucide="users"></i><span>Patients</span></a
+            >
+          </div>
+        </div>
+        <div class="nav-group open">
+          <button class="nav-section" aria-expanded="true" data-nav-section>
+            <span>DME</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+          <div class="nav-children">
+            <a
+              class="nav-item active"
+              href="#"
+              aria-current="page"
+              title="DME Orders"
+              ><i data-lucide="list-checks"></i><span>DME Orders</span></a
+            >
+            <a class="nav-item" href="#" title="Delivery Management"
+              ><i data-lucide="truck"></i><span>Delivery Management</span></a
+            >
+            <a class="nav-item" href="#" title="Rental Management"
+              ><i data-lucide="file-clock"></i><span>Rental Management</span></a
+            >
+          </div>
+        </div>
+        <div class="nav-group open">
+          <button class="nav-section" aria-expanded="true" data-nav-section>
+            <span>Payment</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+          <div class="nav-children">
+            <a class="nav-item" href="#" title="Payment"
+              ><i data-lucide="credit-card"></i><span>Payment</span></a
+            >
+          </div>
+        </div>
+        <div class="nav-group">
+          <button class="nav-section" aria-expanded="false" data-nav-section>
+            <span>Claims Processing</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+        </div>
+        <div class="nav-group">
+          <button class="nav-section" aria-expanded="false" data-nav-section>
+            <span>NCPDP</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+        </div>
+        <div class="nav-group">
+          <button class="nav-section" aria-expanded="false" data-nav-section>
+            <span>Logs</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+        </div>
+        <div class="nav-group">
+          <button class="nav-section" aria-expanded="false" data-nav-section>
+            <span>Tools</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+        </div>
+        <div class="nav-group">
+          <button class="nav-section" aria-expanded="false" data-nav-section>
+            <span>Settings</span
+            ><i class="nav-chevron" data-lucide="chevron-down"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="shell-commands" aria-label="Page commands">
+      <button class="command-btn" id="shellBack" aria-label="Back" title="Back">
+        <i data-lucide="arrow-left"></i></button
+      ><button
+        class="command-btn"
+        id="shellRefresh"
+        aria-label="Refresh"
+        title="Refresh"
+      >
+        <i data-lucide="rotate-ccw"></i></button
+      ><button
+        class="command-btn"
+        aria-label="Page details"
+        title="Page details"
+      >
+        <i data-lucide="file"></i>
+      </button>
+    </div>
+
+    <div class="app-body">
+      <div class="order-shell">
+        <header class="order-header">
+          <div class="order-title">
+            <a
+              class="icon-btn"
+              href="index.html"
+              aria-label="Back to patient intake"
+              title="Back"
+              ><i data-lucide="arrow-left"></i
+            ></a>
+            <h1>DME Order</h1>
+          </div>
+          <div class="order-header-actions">
+            <button
+              class="intake-link"
+              id="intakeLink"
+              data-open-intake="details"
+            >
+              <i data-lucide="file-input"></i> From Patient Intake:
+              <span id="intakeIdLink">#INT-0023</span>
+            </button>
+            <button
+              class="precheck-chip none"
+              id="headerPrecheck"
+              data-open-intake="precheck"
+            ></button>
+            <span class="order-status"
+              ><span class="dot"></span> Order Processing</span
+            >
+            <button class="footer-btn notes-btn">Notes (0)</button>
+          </div>
+        </header>
+
+        <ol class="order-stepper" id="orderStepper"></ol>
+
+        <div class="order-for">
+          <div>
+            <b>Order for:</b> <span id="orderForName"></span>
+            <span id="orderForDob"></span>
+          </div>
+          <div class="order-for-meta">
+            <span
+              >Provider: <b>M Rogers St. Joseph</b>
+              <i data-lucide="info"></i></span
+            ><span class="divider"></span
+            ><span>Clinic: <b>Signetic Pharmacy</b></span>
+          </div>
+        </div>
+
+        <div class="order-from-intake" id="orderFromIntake" hidden></div>
+        <main class="order-content" id="orderContent"></main>
+
+        <footer class="order-footer">
+          <div class="order-footer-actions">
+            <button class="cancel-order" id="cancelOrder">Cancel Order</button
+            ><button class="footer-btn" id="orderBack">
+              <i data-lucide="arrow-left"></i> Back</button
+            ><button class="footer-btn primary" id="orderContinue">
+              Save &amp; Continue
+            </button>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <aside
+      class="intake-drawer"
+      id="intakeDrawer"
+      aria-labelledby="intakeDrawerTitle"
+      hidden
+    >
+      <header class="drawer-head">
+        <div>
+          <span class="eyebrow">Patient intake</span>
+          <h2 id="intakeDrawerTitle">#INT-0023</h2>
+          <p id="intakeDrawerMeta"></p>
+        </div>
+        <button
+          class="icon-btn"
+          id="closeIntakeDrawer"
+          aria-label="Close intake details"
+          title="Close"
+        >
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="drawer-tabs" role="tablist">
+        <button
+          role="tab"
+          id="tab-details"
+          data-drawer-tab="details"
+          aria-selected="true"
+        >
+          Intake details
+        </button>
+        <button
+          role="tab"
+          id="tab-precheck"
+          data-drawer-tab="precheck"
+          aria-selected="false"
+        >
+          Pre-check <span class="tab-badge" id="precheckTabBadge"></span>
+        </button>
+      </div>
+      <div class="drawer-body" id="intakeDrawerBody"></div>
+    </aside>
+    <button
+      class="drawer-scrim"
+      id="drawerScrim"
+      aria-label="Close panel"
+      hidden
+    ></button>
+
+    <aside
+      class="search-panel"
+      id="searchPanel"
+      aria-labelledby="searchPanelTitle"
+      hidden
+    >
+      <header class="search-panel-head">
+        <h2 id="searchPanelTitle">Search for DME Products</h2>
+        <button
+          class="icon-btn"
+          id="closeSearch"
+          aria-label="Close search"
+          title="Close"
+        >
+          <i data-lucide="x"></i>
+        </button>
+      </header>
+      <div class="search-panel-body">
+        <p class="search-intro">
+          Please enter in <b>at least one</b> of the following fields.
+        </p>
+        <section
+          class="rx-chips"
+          id="rxChips"
+          aria-label="HCPCS codes from prescription"
+        ></section>
+        <form class="search-form" id="searchForm">
+          <label class="sf wide"
+            ><span>HCPCS Code</span
+            ><input class="input" name="code" autocomplete="off"
+          /></label>
+          <label class="sf"
+            ><span>Product Name</span
+            ><input class="input" name="name" autocomplete="off"
+          /></label>
+          <label class="sf"
+            ><span>Product Model</span
+            ><input class="input" name="model" autocomplete="off"
+          /></label>
+          <label class="sf"
+            ><span>Manufacturer/Distributor</span
+            ><select class="input" name="maker" id="makerSelect"></select
+          ></label>
+          <label class="sf"
+            ><span>Classification(s)</span
+            ><select class="input" name="cls" id="clsSelect"></select
+          ></label>
+          <div class="sf-actions wide">
+            <button
+              class="footer-btn primary"
+              type="submit"
+              id="searchBtn"
+              disabled
+            >
+              Search</button
+            ><button class="footer-btn" type="button" id="clearSearch">
+              Clear
+            </button>
+          </div>
+        </form>
+        <section
+          class="search-results"
+          id="searchResults"
+          aria-live="polite"
+        ></section>
+      </div>
+    </aside>
+
+    <dialog
+      class="confirm-dialog"
+      id="cancelOrderDialog"
+      aria-labelledby="cancelOrderTitle"
+    >
+      <form method="dialog">
+        <h2 id="cancelOrderTitle">Cancel this order?</h2>
+        <p>
+          The order will be cancelled. The completed patient intake stays as it
+          is.
+        </p>
+        <div class="confirm-actions">
+          <button class="footer-btn" value="keep" autofocus>Keep order</button
+          ><button class="footer-btn danger" value="cancel">
+            Cancel order
+          </button>
+        </div>
       </form>
-      <section class="search-results" id="searchResults" aria-live="polite"></section>
-    </div>
-  </aside>
+    </dialog>
 
-  <dialog class="confirm-dialog" id="cancelOrderDialog" aria-labelledby="cancelOrderTitle">
-    <form method="dialog">
-      <h2 id="cancelOrderTitle">Cancel this order?</h2>
-      <p>The order will be cancelled. The completed patient intake stays as it is.</p>
-      <div class="confirm-actions"><button class="footer-btn" value="keep" autofocus>Keep order</button><button class="footer-btn danger" value="cancel">Cancel order</button></div>
-    </form>
-  </dialog>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script src="order.js"></script>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+    <script src="order.js"></script>
+    <script src="scenario.js"></script>
   <script src="proto-nav.js"></script>
-</body>
+  </body>
 </html>
