@@ -45,7 +45,7 @@
     </div>
   </nav>
 
-  <header class="shell-commands page-header"><h1 class="page-title" id="pageTitle">New patient intake</h1><div class="header-notice" id="reviewGuidance" aria-live="polite"></div><div class="header-actions"><button class="cancel-intake-btn upload-cancel" id="cancelUpload"><i data-lucide="x"></i> Cancel</button><button class="cancel-intake-btn" id="cancelIntake"><i data-lucide="x"></i> Cancel intake</button></div></header>
+  <header class="shell-commands page-header"><h1 class="page-title" id="pageTitle">New patient intake</h1><div class="header-notice" id="reviewGuidance" aria-live="polite"></div><div class="header-actions"></div></header>
 
   <div class="app-body">
 
@@ -84,7 +84,6 @@
       </div>
       <footer class="us-footer">
         <span class="us-footer-note" id="startFooterNote"></span>
-        <button class="footer-btn" id="startCancel" disabled>Cancel</button>
         <button class="footer-btn primary" id="startExtract" disabled><i data-lucide="sparkles"></i> Extract</button>
       </footer>
     </section>
@@ -246,6 +245,10 @@
         </section>
       </div>
     </aside>
+    <footer class="us-footer review-footer" id="reviewFooter" aria-label="Intake actions">
+      <button class="footer-btn upload-cancel" id="cancelUpload"><i data-lucide="x"></i> Cancel</button>
+      <button class="footer-btn" id="cancelIntake"><i data-lucide="x"></i> Cancel intake</button>
+    </footer>
   </main>
   </div>
 

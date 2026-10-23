@@ -1633,3 +1633,9 @@ body[data-radius] :is(.confirm-dialog){border-radius:var(--r-dialog)!important}
 body[data-radius] :is(.header-notice,.notice-btn,.section-status,.pill,.file-tag,.best-tag,.ai-chip,.enrollment-chip,.review-tag,.viewer-tabs [role=tab] b,.progress-track,.progress-track span){border-radius:var(--r-pill)!important}
 /* Rounded cards: the first header follows the card's top corners */
 body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius:var(--r-container);border-top-right-radius:var(--r-container)}
+
+/* Intake footer — same bar as the upload footer. Extraction shows Cancel, review shows Cancel intake. */
+.review-footer{display:none}
+.workspace.phase-extraction,.workspace.phase-review{grid-template-rows:minmax(0,1fr) auto}
+.workspace.phase-extraction .review-footer,.workspace.phase-review .review-footer{display:flex;grid-column:1/-1;grid-row:2}
+.review-footer .footer-btn:disabled{opacity:1}

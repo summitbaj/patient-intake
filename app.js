@@ -169,7 +169,6 @@ function renderStartScreen(){
   $('#dropTitle').textContent=patient?`Add more documents for ${patient.name.split(' ')[0]}`:'Drag and drop documents here';
   $('#startLead').textContent=patient?`Documents you add go to ${patient.name}’s intake. Nothing is processed until you select Extract.`:'Add prescriptions, insurance cards, referrals, and clinical records. Nothing is processed until you select Extract.';
   $('#startExtract').disabled=!count||busy||state.extracting;
-  $('#startCancel').disabled=(!count&&!patient)||state.extracting;
   $('#startFooterNote').innerHTML=!count?'':patient?`<i data-lucide="user-round-check"></i> ${count} ${count===1?'document':'documents'} for <b>${patient.name}</b>`:`<i data-lucide="sparkles"></i> ${count} ${count===1?'document':'documents'} · AI matches the patient after extraction`;
   renderQueuePatients();
 }
@@ -902,7 +901,6 @@ const cancelUpload=()=>{
   toast('Upload cancelled. Documents removed.');
 };
 $('#cancelUpload').addEventListener('click',cancelUpload);
-$('#startCancel').addEventListener('click',cancelUpload);
 $('#startExtract').addEventListener('click',startExtraction);
 $('#patientSearchInput').addEventListener('input',()=>{state.pickerPatient='';renderQueuePatients();});
 $('#recordCard').addEventListener('click',event=>{
