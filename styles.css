@@ -1639,3 +1639,42 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .workspace.phase-extraction,.workspace.phase-review{grid-template-rows:minmax(0,1fr) auto}
 .workspace.phase-extraction .review-footer,.workspace.phase-review .review-footer{display:flex;grid-column:1/-1;grid-row:2}
 .review-footer .footer-btn:disabled{opacity:1}
+
+/* Confirm screen: files only, no preview pane */
+.phase-extraction{--split-cols:minmax(0,1fr)}
+.phase-extraction .viewer-preview,.phase-extraction #tabPreview{display:none!important}
+/* Only flag sections that need attention; reviewed sections stay quiet */
+.section-status.success{display:none}
+/* Field source picker and document highlight */
+.doc-frame{position:relative;width:100%}
+.document-image-stage .doc-frame img{min-height:0}
+.doc-highlight{position:absolute;border:2px solid var(--primary);border-radius:3px;background:rgba(15,108,189,.16);pointer-events:none;box-shadow:0 0 0 3px rgba(15,108,189,.15)}
+.doc-highlight[hidden]{display:none}
+.doc-highlight.pulse{animation:docPulse .9s ease-out}
+@keyframes docPulse{0%{box-shadow:0 0 0 0 rgba(15,108,189,.5)}100%{box-shadow:0 0 0 3px rgba(15,108,189,.15)}}
+.src-pop{padding:8px;width:min(360px,calc(100vw - 24px))}
+.src-head{padding:4px 8px 6px;font-size:10px;font-weight:600;text-transform:uppercase;color:var(--muted)}
+.src-list{display:grid;gap:2px}
+.src-option{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px;align-items:start;text-align:left;padding:8px;border:0;border-radius:var(--fluent-corner-2);background:transparent;cursor:pointer;color:var(--text)}
+.src-option:hover{background:var(--blue-wash)}
+.src-option.selected{background:var(--blue-soft)}
+.src-option .lucide{width:14px;height:14px;margin-top:2px;color:var(--primary)}
+.src-option span{display:grid;gap:2px}
+.src-option b{font-size:13px;color:var(--ink)}
+.src-option small{font-size:11px;color:var(--muted)}
+.src-option em{font-size:11px;font-style:normal;color:var(--text)}
+.src-empty{margin:0;padding:4px 8px 8px;font-size:12px;color:var(--muted)}
+.src-custom{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:8px;padding:8px 8px 2px;border-top:1px solid var(--line)}
+.src-custom label{display:grid;gap:4px;font-size:11px;color:var(--muted)}
+
+/* One quiet cancel action on the left of the footer */
+.review-footer,.workspace .review-footer{justify-content:flex-start!important}
+.phase-review #cancelUpload{display:none!important}
+.review-footer .footer-btn#cancelIntake,.review-footer .footer-btn.upload-cancel{border:0;background:transparent;box-shadow:none;color:var(--red);font-weight:600;padding-left:4px;padding-right:8px}
+.review-footer .footer-btn#cancelIntake:hover,.review-footer .footer-btn.upload-cancel:hover{background:transparent;text-decoration:underline}
+/* Card headers show the title only */
+.review-card:not(.rx-card) .card-header p{display:none}
+
+/* Prescription title: the source file name sits to the right of the title */
+.rx-card .card-header h3{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rx-card .card-header h3 .rx-source{font-size:12px;font-weight:400;padding:0}

@@ -117,10 +117,11 @@ function renderFileList(){
     const trailing=src==='existing'
       ?`<button class="use-existing ${file.used?'on':''}" data-use-existing="${file.id}" aria-pressed="${file.used}" title="${file.used?'Remove from this intake':'Use in this intake'}">${file.used?'<i data-lucide="check"></i> In intake':'<i data-lucide="plus"></i> Add'}</button>`
       :file.uploading||file.processing?'<span class="file-state"><span class="spinner"></span></span>'
+      :file.needsDecision?`<button class="use-existing extract-one" data-resolve-dup="${file.id}" title="Decide how to store this document"><i data-lucide="copy-check"></i> Resolve</button>`
       :file.pendingExtract?`<button class="use-existing extract-one" data-extract-one="${file.id}" title="Extract this document"><i data-lucide="sparkles"></i> Extract</button>`
       :state.phase==='upload'?`<button type="button" class="queue-remove" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove"><i data-lucide="x"></i></button>`
       :`<span class="file-state">${file.processing?'<span class="spinner"></span>':'<i data-lucide="circle-check"></i>'}</span>`;
-    const tag=src==='existing'?'<em class="file-tag">Existing</em>':file.pendingExtract?'<em class="file-tag is-new">New</em>':'';
+    const tag=src==='existing'?'<em class="file-tag">Existing</em>':file.needsDecision?'<em class="file-tag is-new">Needs decision</em>':file.pendingExtract?'<em class="file-tag is-new">New</em>':'';
     const body=view==='grid'
       ?`<button class="file-main" ${key}><span class="gallery-thumb"><img src="${imageForDocument(file)}" alt=""></span><span class="file-name"><strong>${file.name}</strong>${tag}</span><small>${file.meta}</small></button>`
       :`<button class="file-main" ${key}>${formatBadge(file.name)}<span class="doc-info"><strong>${file.name}</strong><span>${file.pendingExtract?'<em class="file-tag is-new">New</em> ':''}${file.meta}${src==='existing'?' · Existing':''}</span></span></button>`;
@@ -478,6 +479,7 @@ function openDocument(id){
   const document=documents.find(item=>item.id===id) || existingFiles.find(item=>item.id===id) || retained || documents[0];
   if(!document)return;
   state.selected=document.id;
+  setDocHighlight(null);
   $('#workspace').classList.remove('viewer-collapsed');
   $('#previewName').textContent=document.name;
   const pages=(document.size||document.meta||'').split(' · ')[0];
@@ -583,7 +585,7 @@ function renderEligibility(){
   button.disabled=allChecked||state.checkingEligibility;
   button.classList.toggle('primary',!allChecked&&!state.checkingEligibility);
   button.innerHTML=state.checkingEligibility?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check eligibility';
-  $('#eligibilityMeta').textContent=state.checkingEligibility?`Checking ${type.id} eligibility for all plans…`:allChecked?`All plans checked for ${type.id}`:`Not checked for ${type.id} on every plan · check all plans here or one plan at a time`;
+  $('#eligibilityMeta').textContent=state.checkingEligibility?`Checking ${type.id} eligibility for all plans…`:allChecked?'':`Not checked for ${type.id} on every plan · check all plans here or one plan at a time`;
   icons();
 }
 
@@ -979,12 +981,12 @@ const demoUploadFiles=[
   {id:'face-to-face',name:'Face-to-Face Notes.pdf',type:'Clinical notes',icon:'stethoscope',size:'2 pages · 527 KB'}
 ];
 const extraUploadBatches=[
-  [{id:'sleep-test',name:'Home Sleep Test Report.pdf',type:'Sleep study',icon:'file-chart-column',size:'4 pages · 1.2 MB'},
+  [{id:'sleep-test',name:'Home Sleep Test Report.pdf',type:'Sleep study',icon:'file-chart-column',size:'4 pages · 1.2 MB',dup:{kind:'similar',existing:'Sleep Study · Aug 2022.pdf',reason:'Same study type for this patient; the new report has a more recent test date',score:91}},
    {id:'photo-id',name:'Photo ID.jpg',type:'Identification',icon:'id-card',size:'1 image · 640 KB'}],
   [{id:'oximetry',name:'Overnight Oximetry.pdf',type:'Clinical record',icon:'activity',size:'3 pages · 688 KB'}],
   [{id:'medication-list',name:'Medication List.png',type:'Clinical record',icon:'pill',size:'1 image · 610 KB'},
    {id:'progress-notes',name:'Progress Notes · Oct 2026.pdf',type:'Clinical notes',icon:'clipboard-list',size:'3 pages · 455 KB'},
-   {id:'secondary-insurance',name:'Secondary Insurance Card.jpg',type:'Insurance card',icon:'badge-check',size:'1 image · 1.1 MB'}]
+   {id:'secondary-insurance',name:'Secondary Insurance Card.jpg',type:'Insurance card',icon:'badge-check',size:'1 image · 1.1 MB',dup:{kind:'exact',existing:'Insurance Card · Sep 2025.pdf',reason:'Exact file fingerprint match',score:100}}]
 ];
 function nextDemoBatch(){
   const fresh=demoUploadFiles.filter(file=>!documents.some(item=>item.id===file.id||item.name===file.name));
@@ -1020,16 +1022,22 @@ async function reextractDocuments(onlyId){
   state.reextracting=true;
   pending.forEach(file=>{file.processing=true;file.meta='Extracting…';});renderDocuments();
   await wait(1800);
-  pending.forEach(file=>{file.processing=false;file.pendingExtract=false;file.meta='Extracted · Added to this intake';});
+  // With issues, a new file can look like one already on record. Hold it until the user decides.
+  const held=window.protoScenario==='issues'?pending.filter(file=>file.dup):[];
+  held.forEach(file=>{file.processing=false;file.pendingExtract=false;file.needsDecision=true;file.meta=`${file.dup.kind==='exact'?'Exact copy of':'Similar to'} ${file.dup.existing}`;});
+  const done=pending.filter(file=>!held.includes(file));
+  done.forEach(file=>{file.processing=false;file.pendingExtract=false;file.meta='Extracted · Added to this intake';});
   state.reextracting=false;
-  const source=pending[0].name,wasClear=!requiredReviewsLeft();let filled='';
+  if(held.length){renderDocuments();openDupDialog();}
+  if(!done.length){renderDocuments();return;}
+  const source=done[0].name,wasClear=!requiredReviewsLeft();let filled='';
   if(!state.provider&&typeof pickPhysician==='function'){pickPhysician(prescriptions[0].id,'1629384756');filled='Ordering physician';}
   else{const gender=$('#genderInput'),mobile=$('#mobileInput');if(gender&&!gender.value){gender.value='Female';gender.dispatchEvent(new Event('change',{bubbles:true}));filled='Gender';}
     else if(mobile&&!mobile.value.trim()){mobile.value='(415) 220-8841';filled='Mobile number';}}
   updateProgress();
   if(wasClear)state.nextStale=true;
   renderDocuments();renderReviewMenu();
-  toast(filled?`${filled} filled in from ${source}.`:`${pending.length} ${pending.length===1?'document':'documents'} extracted. No required fields changed.`);
+  toast(filled?`${filled} filled in from ${source}.`:`${done.length} ${done.length===1?'document':'documents'} extracted. No required fields changed.`);
 }
 $$('label[for="fileInput"]').forEach(label=>label.addEventListener('click',event=>{event.preventDefault();addDemoUploads();}));
 if($('#dropZone'))['dragenter','dragover'].forEach(type=>$('#dropZone').addEventListener(type,event=>{event.preventDefault();$('#dropZone').classList.add('over');}));
@@ -1156,7 +1164,7 @@ function physicianHtml(rx){
   const p=rx.physician,found=Boolean(p.npi),searching=!found||rx.changingPhysician;
   const fromRx=p.extracted?.length?`<dl class="phys-extracted">${p.extracted.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>`:'';
   const card=found?`<div class="phys-card">
-      <div class="phys-card-head"><strong>Physician information</strong><span class="phys-card-tags">${p.picked?'<span class="pill neutral">Selected by you</span>':'<span class="pill success"><i data-lucide="badge-check"></i> Matched in NPI registry</span>'}${searching?'':`<button type="button" class="text-btn" data-change-physician="${rx.id}">Change</button>`}</span></div>
+      <div class="phys-card-head"><strong>Physician information</strong><span class="phys-card-tags">${p.picked?'<span class="pill neutral">Selected by you</span>':''}${searching?'':`<button type="button" class="text-btn" data-change-physician="${rx.id}">Change</button>`}</span></div>
       <div class="phys-grid"><div><span>First name</span><strong>${p.first}</strong></div><div><span>Last name</span><strong>${p.last}</strong></div><div><span>NPI</span><strong>${p.npi}</strong></div><div class="phys-address"><span>Address</span><strong>${p.address||'—'}</strong></div></div>
       <div class="phys-grid enroll"><div><span>DME</span><strong>${yn(p.dme)}</strong></div><div><span>PMD</span><strong>${yn(p.pmd)}</strong></div><div><span>PARTB</span><strong>${yn(p.partb)}</strong></div></div>
     </div>`:'';
@@ -1172,7 +1180,7 @@ function physicianHtml(rx){
         <button class="small-btn primary" type="submit">Search</button>
         <div class="phys-results" id="phys-results-${rx.id}" role="listbox" hidden></div>
       </form>${found?`<button type="button" class="text-btn" data-cancel-physician="${rx.id}">Cancel</button>`:''}</div>`:'';
-  return `<details class="data-group" open><summary><span>Ordering physician</span><small>${found?(p.picked?'Added from NPI registry':'Matched in NPI registry'):'<span class="phys-status-miss">Not found in NPI registry</span>'}</small><i data-lucide="chevron-down"></i></summary>
+  return `<details class="data-group" open><summary><span>Ordering physician</span><small>${found?(p.picked?'Added from NPI registry':''):'<span class="phys-status-miss">Not found in NPI registry</span>'}</small><i data-lucide="chevron-down"></i></summary>
     <div class="phys-block">${notFound}${search}${card}</div>
   </details>`;
 }
@@ -1258,7 +1266,7 @@ function noteHtml(rx){
 function rxSectionHtml(rx,index){
   const sectionId=rx.main?'prescription-section':`rx-section-${rx.id}`;
   return `<section class="review-card rx-card" id="${sectionId}" data-rx-section="${rx.id}">
-    <div class="card-header"><div><span class="section-icon"><i data-lucide="notebook-tabs"></i></span><div><h3>${rxTitle(index)}</h3><p>${rx.manual?'Added manually':`<button class="source-link" data-doc="${rx.docId}"><i data-lucide="scan-text"></i> ${rx.source}</button> · signed ${rx.date}`}</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
+    <div class="card-header"><div><span class="section-icon"><i data-lucide="notebook-tabs"></i></span><div><h3>${rxTitle(index)}${rx.manual?'':`<button class="source-link rx-source" data-doc="${rx.docId}"><i data-lucide="scan-text"></i> ${rx.source}</button>`}</h3></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
     ${physicianHtml(rx)}
     <details class="data-group" open><summary><span>ICD-10 codes</span><small data-icd-meta="${rx.id}">${rx.icd.length} ${rx.icd.length===1?'code':'codes'}</small><i data-lucide="chevron-down"></i></summary><div data-icd="${rx.id}">${icdHtml(rx)}</div></details>
     <details class="data-group" open><summary><span>Items prescribed</span><small data-items-meta="${rx.id}">${rx.items.length} ${rx.items.length===1?'item':'items'}</small><i data-lucide="chevron-down"></i></summary><div data-items="${rx.id}">${itemsHtml(rx)}</div></details>
@@ -1766,22 +1774,130 @@ $('#addPlanForm').addEventListener('submit',event=>{
 })();
 
 // "AI resolved" info popover: explains how a value was resolved, on demand.
+
+// Field sources: click a demographics or contact value to see where it was read from,
+// pick another candidate, or type a different value.
+const docLabels={referral:'Referral.pdf',consent:'Consent Form.pdf',insurance:'Insurance Card.jpg'};
+// Boxes are [x,y,w,h] in the 760x980 document images.
+const nameBoxes={referral:[270,238,150,26],consent:[270,206,150,26],insurance:[78,354,210,28]};
+const nameSources=['referral','consent','insurance'].map(doc=>({doc,page:1,box:nameBoxes[doc]}));
+const fieldSources={
+  'First name':[{value:'Ashlynn',sources:nameSources}],
+  'Last name':[{value:'Botosh',sources:nameSources}],
+  'Date of birth':[
+    {value:'03/15/1978',sources:[{doc:'referral',page:1,box:[270,278,145,30]}],note:'Matches the prior patient history. AI kept this value.'},
+    {value:'03/16/1978',sources:[{doc:'insurance',page:1,box:[422,356,190,32]}],note:'Likely a scan error.'}],
+  'Email':[{value:'ashlynn.botosh@email.com',sources:[{doc:'consent',page:1,box:[270,298,260,26]}]}],
+  'Mobile number':[
+    {value:'(415) 220-8841',sources:[{doc:'consent',page:1,box:[270,242,210,38]}],note:'Last digits were blurry. AI matched them to the patient record.'},
+    {value:'(415) 220-8847',sources:[{label:'Patient record'}]}],
+  'Home phone number':[{value:'(206) 555-0142',sources:[{label:'Patient record'}]}],
+  'Street address':[{value:'1234 Healthways Blvd, Suite 200',sources:[{doc:'referral',page:1,box:[270,326,200,24]}]}],
+  'City':[{value:'Seattle',sources:[{doc:'referral',page:1,box:[270,350,170,24]}]}],
+  'State/Province':[{value:'WA',sources:[{doc:'referral',page:1,box:[270,350,170,24]}]}],
+  'ZIP code':[{value:'98101',sources:[{doc:'referral',page:1,box:[270,350,170,24]}]}]
+};
+function setDocHighlight(box){
+  const mark=$('#docHighlight');if(!mark)return;
+  mark.hidden=!box;if(!box)return;
+  const [x,y,w,h]=box;
+  Object.assign(mark.style,{left:`${x/7.6}%`,top:`${y/9.8}%`,width:`${w/7.6}%`,height:`${h/9.8}%`});
+  mark.classList.remove('pulse');void mark.offsetWidth;mark.classList.add('pulse');
+  requestAnimationFrame(()=>mark.scrollIntoView({block:'center',behavior:'smooth'}));
+}
+function showFieldSource(source){
+  if(!source?.doc)return;
+  openDocument(source.doc);
+  setDocHighlight(source.box);
+}
+const fieldResolution={
+  'Date of birth':['Conflict resolved automatically','Referral and prior patient history agree. The insurance card value was treated as a likely scan error.'],
+  'Mobile number':['Unclear digits resolved','The last four digits were blurry on the consent form. AI matched them to the number on the patient’s existing record.']
+};
 (function(){
-  let openBtn=null;
-  const close=()=>{if(!openBtn)return;const pop=openBtn.closest('.ai-cell').querySelector('.ai-pop');pop.hidden=true;openBtn.setAttribute('aria-expanded','false');openBtn=null;};
-  const place=btn=>{
-    const pop=btn.closest('.ai-cell').querySelector('.ai-pop'),r=btn.getBoundingClientRect();
-    pop.hidden=false;pop.style.visibility='hidden';
-    const w=pop.offsetWidth,h=pop.offsetHeight;
-    let left=Math.min(Math.max(12,r.left-12),innerWidth-w-12);
+  let pop=null,cell=null,btn=null,openedAt=0;
+  const sourceText=source=>source.doc?`${docLabels[source.doc]} · p${source.page}`:source.label;
+  const labelOf=el=>el.querySelector('span').childNodes[0].textContent.trim();
+  const close=()=>{pop?.remove();pop=null;btn?.setAttribute('aria-expanded','false');btn=null;cell=null;};
+  const firstDoc=option=>option?.sources.find(source=>source.doc);
+  function apply(value){
+    const strong=cell.querySelector('strong'),label=labelOf(cell);
+    strong.textContent=value;
+    const key={'Date of birth':'dob','Mobile number':'mobile'}[label];
+    if(key){
+      const keep=value===fieldSources[label][0].value;
+      state[keep?'aiReviewed':'aiEdited'].add(key);if(keep)state.aiEdited.delete(key);
+      const chip=cell.querySelector('.confidence');if(chip)chip.textContent=keep?'AI resolved':'Edited';
+      updateProgress();
+    }
+    toast(`${label} updated`);close();
+  }
+  function open(button){
+    const target=button.closest('.ai-cell'),label=labelOf(target),options=fieldSources[label],[title,message]=fieldResolution[label]||['Resolved automatically',''];
+    close();openedAt=Date.now();cell=target;btn=button;button.setAttribute('aria-expanded','true');
+    const current=target.querySelector('strong').textContent.trim();
+    const aiValue=options[0].value;
+    let heading=title,body=message;
+    if(current!==aiValue){
+      heading='Resolved manually';
+      body=options.some(option=>option.value===current)?`You selected ${current} instead of ${aiValue}, the value AI chose.`:`You entered ${current || 'a blank value'} yourself instead of ${aiValue}, the value AI chose.`;
+    }
+    const rows=options.map((option,index)=>`<button class="src-option ${option.value===current?'selected':''}" data-src-option="${index}"><i data-lucide="${option.value===current?'check':'file-text'}"></i><span><b>${option.value}</b><small>${option.sources.map(sourceText).join(' · ')}</small>${option.note&&option.value!==current?`<em>${option.note}</em>`:''}</span></button>`).join('');
+    pop=document.createElement('div');pop.className='ai-pop src-pop';pop.setAttribute('role','dialog');pop.setAttribute('aria-label',`How AI resolved ${label.toLowerCase()}`);
+    pop.innerHTML=`<div class="ai-decision"><i data-lucide="sparkles"></i><span><b>${heading}</b>${body}</span></div><div class="src-head">Choose a different value</div><div class="src-list">${rows}</div>`;
+    document.body.appendChild(pop);
+    const r=button.getBoundingClientRect(),w=pop.offsetWidth,h=pop.offsetHeight;
     let top=r.bottom+8;if(top+h>innerHeight-12&&r.top-h-8>12)top=r.top-h-8;
-    pop.style.left=left+'px';pop.style.top=top+'px';pop.style.visibility='visible';
-  };
+    pop.style.left=Math.min(Math.max(12,r.left-12),innerWidth-w-12)+'px';pop.style.top=top+'px';
+    icons();
+    showFieldSource(firstDoc(options.find(option=>option.value===current)||options[0]));
+    pop.addEventListener('mouseover',event=>{const row=event.target.closest('[data-src-option]');if(row)showFieldSource(firstDoc(options[row.dataset.srcOption]));});
+    pop.addEventListener('click',event=>{const row=event.target.closest('[data-src-option]');if(row)apply(options[row.dataset.srcOption].value);});
+  }
   document.addEventListener('click',event=>{
-    const btn=event.target.closest('[data-ai-info]');
-    if(btn){const same=openBtn===btn;close();if(!same){openBtn=btn;btn.setAttribute('aria-expanded','true');place(btn);}return;}
-    if(openBtn&&!event.target.closest('.ai-pop'))close();
+    if(event.target.closest('.src-pop'))return;
+    const info=event.target.closest('[data-ai-info]');
+    if(info){const same=btn===info;close();if(!same)open(info);return;}
+    close();
+    // Clicking a field edits it like any form field, and shows where the value was read from.
+    const field=event.target.closest('#demographics-section .compact-fields>div,#contact-section .compact-fields>div');
+    const options=field&&field.querySelector('strong')&&fieldSources[labelOf(field)];
+    if(!options)return;
+    const current=field.querySelector('strong').textContent.trim();
+    showFieldSource(firstDoc(options.find(option=>option.value===current)||options[0]));
   });
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&openBtn){const b=openBtn;close();b.focus();}});
-  addEventListener('scroll',close,true);addEventListener('resize',close);
+  // Typed changes to an AI-resolved field are recorded as edits.
+  document.addEventListener('focusout',event=>{
+    const field=event.target.closest?.('.ai-cell');if(!field||!event.target.matches('strong'))return;
+    const label=labelOf(field),key={'Date of birth':'dob','Mobile number':'mobile'}[label],chip=field.querySelector('.confidence');
+    if(!key||!chip)return;
+    const changed=event.target.textContent.trim()!==fieldSources[label][0].value;
+    if(changed){state.aiEdited.add(key);chip.textContent='Edited';}
+    else{state.aiEdited.delete(key);chip.textContent='AI resolved';}
+    updateProgress();
+  });
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&pop){const b=btn;close();b?.focus();}});
+  addEventListener('scroll',event=>{if(pop&&Date.now()-openedAt>800&&!event.target.closest?.('.src-pop,.paper'))close();},true);
 })();
+
+// Similar or exact documents found among files added during review: the user decides how to store each.
+function openDupDialog(){
+  const held=documents.filter(file=>file.needsDecision);
+  if(!held.length){$('#dupDialog').close();return;}
+  $('#dupTitle').textContent=held.length===1?'Confirm how to store this document':`Confirm how to store these ${held.length} documents`;
+  $('#dupList').innerHTML=held.map(file=>{const d=file.dup;return `<article class="extract-document" id="dup-${file.id}"><i data-lucide="file-text"></i><span class="ed-info"><strong>${file.name}</strong><span class="ed-reason">${d.reason}</span><small>On file: ${d.existing}</small></span><span class="extract-document-actions">${d.kind==='exact'?`<button class="small-btn primary" data-dup-file="${file.id}" data-dup-decision="existing">Use existing</button><button class="small-btn" data-dup-file="${file.id}" data-dup-decision="upload">Keep new copy</button>`:`<button class="small-btn primary" data-dup-file="${file.id}" data-dup-decision="replace">Replace existing</button><button class="small-btn" data-dup-file="${file.id}" data-dup-decision="new">Keep both</button>`}</span></article>`;}).join('');
+  if(!$('#dupDialog').open)$('#dupDialog').showModal();
+  icons();
+}
+document.addEventListener('click',event=>{
+  const open=event.target.closest('[data-resolve-dup]');
+  if(open){openDupDialog();return;}
+  const button=event.target.closest('[data-dup-decision]');if(!button)return;
+  const file=documents.find(item=>item.id===button.dataset.dupFile);if(!file)return;
+  const decision=button.dataset.dupDecision,existing=file.dup.existing;
+  file.needsDecision=false;
+  if(decision==='existing'){documents.splice(documents.indexOf(file),1);if(state.selected===file.id)state.selected=documents[0]?.id||'';toast(`Using ${existing}. The new copy was not added.`);}
+  else{file.meta=decision==='replace'?`Extracted · Replaced ${existing}`:'Extracted · Added to this intake';toast(decision==='replace'?`${file.name} replaced ${existing}.`:`${file.name} added alongside ${existing}.`);}
+  renderDocuments();updateProgress();
+  openDupDialog();
+});

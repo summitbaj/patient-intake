@@ -256,3 +256,20 @@ $$('[data-nav-section]').forEach(section=>section.addEventListener('click',()=>{
 $$('.shell-nav a[href="#"]').forEach(link=>link.addEventListener('click',event=>event.preventDefault()));
 
 render();
+
+// Pre-checking takes a moment: show progress before the results appear.
+(function precheckLoader(){
+  const main=$('.pr-main');if(!main)return;
+  const steps=['Checking medical criteria','Verifying coverage and eligibility','Reviewing prior authorizations','Comparing with existing orders'];
+  const veil=document.createElement('div');veil.className='pc-loader';veil.setAttribute('role','status');veil.setAttribute('aria-live','polite');
+  veil.innerHTML=`<div class="pc-loader-card"><span class="ai-label"><i data-lucide="sparkles"></i> AI coverage pre-check</span><h2>Running pre-check</h2><p>Checking each HCPCS code against coverage rules. This takes a moment.</p><div class="progress-track"><span id="pcLoaderBar"></span></div><ul class="pc-loader-steps">${steps.map((step,index)=>`<li data-step="${index}"><span class="spinner"></span><i data-lucide="check"></i>${step}</li>`).join('')}</ul></div>`;
+  main.appendChild(veil);icons();
+  const items=[...veil.querySelectorAll('li')],bar=$('#pcLoaderBar'),each=750;
+  items[0].classList.add('active');bar.style.width='8%';
+  steps.forEach((step,index)=>setTimeout(()=>{
+    items[index].classList.remove('active');items[index].classList.add('done');
+    if(items[index+1])items[index+1].classList.add('active');
+    bar.style.width=`${Math.round((index+1)/steps.length*100)}%`;
+  },each*(index+1)));
+  setTimeout(()=>{veil.classList.add('leaving');setTimeout(()=>veil.remove(),250);},each*steps.length+350);
+})();

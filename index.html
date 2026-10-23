@@ -128,14 +128,14 @@
         <div class="data-group"><div class="compact-fields">
           <div><span>First name<i class="req" title="Required" aria-label="required">*</i></span><strong>Ashlynn</strong></div><div><span>Middle name</span><strong>—</strong></div>
           <div><span>Last name<i class="req" title="Required" aria-label="required">*</i></span><strong>Botosh</strong></div><div class="missing-cell" id="genderField"><label class="cell-label" for="genderInput">Gender<i class="req" title="Required" aria-label="required">*</i><em class="miss-chip" id="genderHint">Not found</em></label><select class="input inline-input" id="genderInput" aria-label="Gender"><option value="">Select gender</option><option>Female</option><option>Male</option><option>Other</option><option>Unknown</option></select></div>
-          <div class="ai-cell" id="dobConflict"><span class="cell-label">Date of birth<i class="req" title="Required" aria-label="required">*</i><em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved date of birth" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="dobValue">03/15/1978</strong><div class="ai-pop" role="dialog" aria-label="How AI resolved date of birth" hidden><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Conflict resolved automatically</b> Referral and prior patient history agree. The insurance card value was treated as a likely scan error.</span><button class="text-btn" id="changeDob">Change</button></div><div class="ai-source"><span>Source</span><button class="source-link" data-doc="referral"><i data-lucide="scan-text"></i> Referral.pdf · p1</button></div></div></div>
+          <div class="ai-cell" id="dobConflict"><span class="cell-label">Date of birth<i class="req" title="Required" aria-label="required">*</i><em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved date of birth" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="dobValue">03/15/1978</strong></div>
         </div></div>
       </section>
 
       <section class="review-card" id="contact-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="contact"></i></span><div><h3>Contact information</h3><p>7 of 8 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
         <div class="data-group"><div class="compact-fields">
-          <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved mobile number" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="mobileValue">(415) 220-8841</strong><div class="ai-pop" role="dialog" aria-label="How AI resolved mobile number" hidden><div class="ai-decision"><i data-lucide="sparkles"></i><span><b>Unclear digits resolved</b> The last four digits were blurry on the consent form. AI matched them to the number on the patient’s existing record.</span><button class="text-btn" data-ai-change="mobile">Change</button></div><div class="ai-source"><span>Source</span><button class="source-link" data-doc="consent"><i data-lucide="scan-text"></i> Consent Form.pdf · p1</button></div></div></div><div><span>Home phone number</span><strong>(206) 555-0142</strong></div>
+          <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved mobile number" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div><span>Home phone number</span><strong>(206) 555-0142</strong></div>
           <div class="wide"><span>Street address</span><strong>1234 Healthways Blvd, Suite 200</strong></div>
           <div><span>City</span><strong>Seattle</strong></div><div><span>State/Province</span><strong>WA</strong></div>
           <div><span>ZIP code</span><strong>98101</strong></div>
@@ -241,7 +241,7 @@
         <section class="viewer-preview" id="viewerPreview" role="tabpanel" aria-labelledby="tabPreview" hidden>
           <div class="preview-toolbar"><button class="text-btn back-to-files" id="backToFiles"><i data-lucide="arrow-left"></i> Files</button><div><i data-lucide="file-text"></i><span id="previewName">Referral.pdf</span><small id="previewMeta">Page 1 of 2</small></div><button class="icon-btn" id="openFullView" aria-label="Open in full screen" title="Full screen"><i data-lucide="maximize-2"></i></button></div>
           <div class="preview-empty"><i data-lucide="file-search"></i><strong>No file to preview</strong><span>Upload documents, then select one to see it here.</span></div>
-          <div class="paper document-image-stage" id="paperPreview"><img id="documentImage" src="assets/referral.svg" alt="Referral document preview"></div>
+          <div class="paper document-image-stage" id="paperPreview"><div class="doc-frame"><img id="documentImage" src="assets/referral.svg" alt="Referral document preview"><span class="doc-highlight" id="docHighlight" hidden></span></div></div>
         </section>
       </div>
     </aside>
@@ -255,6 +255,11 @@
   <dialog class="confirm-dialog resolve-dialog" id="resolveDialog" aria-labelledby="resolveTitle">
     <div class="resolve-head"><span class="ai-label"><i data-lucide="sparkles"></i> Extraction complete</span><h2 id="resolveTitle">Confirm before we upload the intake</h2></div>
     <div class="extraction-issues" id="extractionIssues"><section class="extraction-issue" id="patientIssue"><div class="issue-title"><span class="issue-number">1</span><div><strong>Which patient is this?</strong><span>Choose one record, or create a new one.</span></div><b>Required</b></div><div id="extractionPatientMatches"></div><button class="create-new-patient" data-extract-new-patient><i data-lucide="user-plus"></i><span><strong>None of these</strong><small>Create a new patient record</small></span><i data-lucide="chevron-right"></i></button></section><section class="extraction-issue" id="documentIssue"><div class="issue-title"><span class="issue-number" id="documentIssueNumber">2</span><div><strong>What should we do with similar documents?</strong><span id="documentIssueHint">Decide how to store the same and similar documents.</span></div><b>Required</b></div><div id="extractionDocumentMatches"></div></section><div class="extraction-waiting" id="extractionWaiting" hidden></div></div>
+  </dialog>
+
+  <dialog class="confirm-dialog resolve-dialog" id="dupDialog" aria-labelledby="dupTitle">
+    <div class="resolve-head"><span class="ai-label"><i data-lucide="sparkles"></i> Extraction complete</span><h2 id="dupTitle">Confirm how to store this document</h2></div>
+    <div class="extraction-issues single-step"><section class="extraction-issue"><div class="issue-title"><div><strong>Similar documents found</strong><span>Decide how to store each one.</span></div><b>Required</b></div><div id="dupList"></div></section></div>
   </dialog>
 
   <dialog class="confirm-dialog" id="gateDialog" aria-labelledby="gateTitle" aria-describedby="gateBody">
