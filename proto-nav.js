@@ -46,7 +46,8 @@
   // ---------- Theme (intake page only): color presets, custom colors, corner radius ----------
   const THEME_KEY='signeticTheme';
   const presets=[
-    {id:'signetic',name:'Signetic blue',primary:'#2563eb',ai:'#6d4aff',bg:'#f4f6fa'},
+    // Default = Fluent UI theme primary, neutralLighter background (see fluent/fluent-tokens.css).
+    {id:'signetic',name:'Fluent blue',primary:'#0078d4',ai:'#0078d4',bg:'#f3f2f1'},
     {id:'teal',name:'Clinical teal',primary:'#0f766e',ai:'#7c3aed',bg:'#f2f7f6'},
     {id:'navy',name:'Hospital navy',primary:'#1e3a8a',ai:'#6d28d9',bg:'#f3f5f9'},
     {id:'ocean',name:'Ocean',primary:'#0369a1',ai:'#7c3aed',bg:'#f1f6fa'},

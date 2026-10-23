@@ -1,8 +1,12 @@
 # Patient Intake Design System
 
+The application follows the **Fluent UI** design system (web styles). The Fluent files, token mapping and rules for new UI are in [fluent/README.md](fluent/README.md). Fluent tokens (`--fluent-*`) are the source of truth; the app tokens below alias them.
+
 ## Foundations
 
-- Font family: Segoe UI, SegoeUI, Helvetica Neue, Arial, sans-serif.
+- Font family: Fluent stack — Segoe UI, Segoe UI Web (West European), -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif.
+- Type ramp: 10 / 12 / 14 / 16 / 18 / 20 / 24 / 28px; body 14px/20px; weights 400 and 600.
+- Corners: 2px; elevation: Fluent depths 4 / 8 / 16 / 64.
 - Primary color: `#0078D4`.
 - Primary text: `#323130`.
 - Secondary text: `#605E5C`.

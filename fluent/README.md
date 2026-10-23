@@ -1,6 +1,6 @@
 # Fluent UI design system
 
-The Generic Flow (`index.html`, `precheck.html`, `dme-order.html`) is built on Microsoft's Fluent UI web styles:
+Every application page is built on Microsoft's Fluent UI web styles — intake (`index.html`, `index-v2.html`), pre-check (`precheck.html`), prepare orders (`prepare-orders.html`), existing order (`existing-order.html`) and DME order (`dme-order.html`):
 https://developer.microsoft.com/en-us/fluentui#/styles/web
 
 ## Files
@@ -11,13 +11,13 @@ https://developer.microsoft.com/en-us/fluentui#/styles/web
 | `fluent-tokens.css` | Fluent tokens as CSS custom properties (`--fluent-*`). Values are copied from the `@fluentui/theme` package (Fluent UI React v8): palette, neutrals, shared colors, semantic colors, type ramp, weights, elevation, corners, spacing and motion. |
 | `fluent-components.css` | Maps the app's existing classes to Fluent UI React v8 component specs (Button, IconButton, CommandBar, TextField, Dropdown, ContextualMenu, Dialog, Checkbox, Link, Nav, Pivot). |
 
-Load order on every Generic Flow page:
+Load order on every application page:
 
 ```html
 <link rel="stylesheet" href="fluent/fabric-core.min.css">
 <link rel="stylesheet" href="fluent/fluent-tokens.css">
 <link rel="stylesheet" href="styles.css">
-<!-- page styles: order.css, precheck.css -->
+<!-- page styles: theme-modern.css, upload-start.css, flow-v2.css, order.css, precheck.css, prepare-orders.css -->
 <link rel="stylesheet" href="fluent/fluent-components.css">
 ```
 
@@ -53,4 +53,5 @@ The `<body>` carries `ms-Fabric`, which sets the Fluent font stack and text colo
 ## Not yet migrated
 
 - **Icons** still use Lucide outline icons. Fluent's own set is Fluent UI System Icons (or the MDL2 icon font).
-- The **Different direction** prototype (`different-direction.html`, `direction.css`) intentionally keeps its own style. It only loads `fluent-tokens.css` so the shared portal shell renders correctly.
+- The design explorations (`different-direction.html` + `direction.css`, `version-3.html` + `version3.css`) intentionally keep their own style. They only load `fluent-tokens.css` so the shared portal shell renders correctly.
+- `theme-modern.css` is still loaded, but its tokens now point at Fluent values (blue accent instead of purple, Segoe instead of Inter, 2px corners, Fluent depths), so it only adds component polish on top of Fluent.
