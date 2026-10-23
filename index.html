@@ -79,6 +79,11 @@
               <span class="us-label" id="recordListLabel">In the intake queue</span>
               <div class="us-patients" id="recordList"></div>
             </section>
+            <section class="us-manual" aria-labelledby="manualTitle">
+              <span class="us-record-icon"><i data-lucide="keyboard"></i></span>
+              <div><h3 id="manualTitle">No documents?</h3><p>Pick the patient, then type the prescription yourself.</p></div>
+              <button class="footer-btn" id="manualStart" type="button">Enter manually</button>
+            </section>
           </div>
         </div>
       </div>
@@ -262,6 +267,28 @@
     <div class="extraction-issues single-step"><section class="extraction-issue"><div class="issue-title"><div><strong>Similar documents found</strong><span>Decide how to store each one.</span></div><b>Required</b></div><div id="dupList"></div></section></div>
   </dialog>
 
+  <dialog class="confirm-dialog manual-dialog" id="manualDialog" aria-labelledby="manualDialogTitle">
+    <div class="manual-wrap">
+      <header class="manual-head"><div><h2 id="manualDialogTitle">Enter intake manually</h2><p>Pick the patient. Their details and insurance come from Signetic. You type the prescription.</p></div><button class="icon-btn" type="button" data-close-manual aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div id="manualPick">
+        <label class="us-search manual-search"><i data-lucide="search"></i><input id="manualSearch" type="text" placeholder="Search by name, date of birth or MRN" aria-label="Search patients" autocomplete="off"></label>
+        <div class="manual-list" id="manualList" role="list"></div>
+        <button class="manual-new" type="button" id="manualNewBtn"><i data-lucide="user-plus"></i> New patient · not in Signetic yet</button>
+      </div>
+      <form id="manualNewForm" class="manual-new-form" hidden>
+        <p class="manual-sub">New patient</p>
+        <div class="manual-grid">
+          <label>First name *<input class="input" name="first" required autocomplete="off"></label>
+          <label>Last name *<input class="input" name="last" required autocomplete="off"></label>
+          <label>Date of birth *<input class="input" name="dob" placeholder="MM/DD/YYYY" required autocomplete="off"></label>
+          <label>Gender *<select class="input" name="gender" required><option value="">Select</option><option>Female</option><option>Male</option><option>Other</option><option>Unknown</option></select></label>
+          <label>Mobile number<input class="input" name="phone" placeholder="(000) 000-0000" autocomplete="off"></label>
+        </div>
+        <p class="manual-error" id="manualError" hidden>Fill in the fields marked with *.</p>
+        <div class="manual-actions"><button class="footer-btn" type="button" id="manualBack">Back</button><button class="footer-btn primary" type="submit">Start intake</button></div>
+      </form>
+    </div>
+  </dialog>
   <dialog class="confirm-dialog" id="gateDialog" aria-labelledby="gateTitle" aria-describedby="gateBody">
     <form method="dialog">
       <h2 id="gateTitle">Finish the required review first</h2>

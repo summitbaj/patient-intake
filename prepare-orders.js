@@ -1,6 +1,10 @@
-// Prepare orders: after the pre-check, choose how each prescribed item is ordered, then finish each action in Signetic.
-// The routing unit is a prescribed item (single product or whole bundle). Bundles are never split across orders.
-// Two states: the plan (choose a route per item) and Order actions (one row per order to create or change).
+// Fulfillment: turn the reviewed intake into orders, refills and appointments.
+// Kept simple for non-technical users: one card per thing that will happen, plain words, one button per card,
+// and only the next card's button is highlighted. Three main cases:
+//   1. New order: every new item on a prescription goes on one order (2+ items = one order).
+//   2. Refill: items already on an existing order and due now.
+//   3. Already ordered: items already on an order that hasn't shipped. Nothing to do; they aren't ordered again.
+// Items are placed by matching HCPCS codes against the patient's Signetic orders. "Move" (hidden until clicked) handles exceptions.
 const $=selector=>document.querySelector(selector);
 const $$=selector=>[...document.querySelectorAll(selector)];
 const icons=()=>{if(window.lucide)window.lucide.createIcons();};
@@ -13,184 +17,184 @@ const intake=api.getIntake();
 const params=new URLSearchParams(location.search);
 let precheckStatus=null;try{precheckStatus=JSON.parse(sessionStorage.getItem('signeticPrecheckStatus'));}catch(error){}
 
-const ROUTES=[
-  {id:'new',label:'New order',icon:'file-plus'},
-  {id:'refill',label:'Refill',icon:'refresh-cw'},
-  {id:'add',label:'Add to order',icon:'list-plus'},
-  {id:'hold',label:'Hold',icon:'pause'}
-];
-const routeLabel=id=>ROUTES.find(r=>r.id===id).label;
-
-// ---------- Model: one entry per prescribed item ----------
-const items=intake.prescriptions.flatMap((rx,ri)=>rx.items.map((item,ii)=>({key:`${ri}-${ii}`,ri,rx,item,options:api.routeOptions(item),suggested:api.suggestRoute(item)})));
+// ---------- Model ----------
+const items=intake.prescriptions.flatMap((rx,ri)=>rx.items.map((item,ii)=>({key:`${ri}-${item.id||ii}`,ri,rx,item,options:api.routeOptions(item),suggested:api.suggestRoute(item)})));
 let plan=api.getPlan();
-items.forEach(entry=>{if(!plan.routes[entry.key])plan.routes[entry.key]={route:entry.suggested.route,target:entry.suggested.target};});
+plan.routes=plan.routes||{};plan.done=plan.done||[];plan.ordered=plan.ordered||{};plan.pending=plan.pending||{};plan.appts=plan.appts||{};
+items.forEach(entry=>{
+  const r=plan.routes[entry.key]||{route:entry.suggested.route,target:entry.suggested.target};
+  if(r.route==='new'&&!/^n\d+$/.test(r.target||''))r.target='n1';   // every new item starts on the same new order
+  plan.routes[entry.key]=r;
+});
 api.savePlan(plan);
+let moving='';   // the item whose Move choices are open
+
+// A finished action comes back with ?done=<action id>: its items are now ordered.
+const returned=params.get('done');
+if(returned){
+  (plan.pending[returned]||[]).forEach(key=>{plan.ordered[key]=returned;});
+  if(!plan.done.includes(returned))plan.done.push(returned);
+  delete plan.pending[returned];api.savePlan(plan);
+  history.replaceState(null,'','prepare-orders.html');
+  setTimeout(()=>toast(returned.startsWith('new')?'Order created':returned.startsWith('refill')?'Refill done':'Order updated'),100);
+}
 
 const choice=entry=>plan.routes[entry.key];
-const needsTarget=entry=>{const c=choice(entry);return (c.route==='refill'||c.route==='add')&&!c.target;};
+const ordered=entry=>Boolean(plan.ordered[entry.key]);
 function itemStatus(entry){
   if(!precheckStatus)return null;
-  const s=api.codesOf(entry.item).map(code=>precheckStatus[code]||'pass');
+  const codes=api.codesOf(entry.item);
+  if(!codes.length||codes.some(code=>!precheckStatus[code]))return 'unchecked';
+  const s=codes.map(code=>precheckStatus[code]);
   return s.includes('fail')?'fail':s.includes('warn')?'warn':'pass';
 }
-const statusPill={pass:['success','circle-check','Qualified'],warn:['warning','triangle-alert','Needs attention'],fail:['danger','circle-x','Not qualified']};
+const statusPill={warn:['warning','triangle-alert','Pre-check: needs attention'],fail:['danger','circle-x','Pre-check: not qualified'],unchecked:['neutral','shield-question','Not pre-checked']};
 
-// Order actions grouped by destination: one new order per prescription, one refill per order, one change per order.
-function buildActions(){
-  const actions=[];
-  items.forEach(entry=>{
-    const {route,target}=choice(entry);if(route==='hold')return;
-    const id=route==='new'?`new-${entry.ri}`:`${route}-${target}`;
-    let action=actions.find(a=>a.id===id);
-    if(!action){action={id,route,target,ri:entry.ri,rx:entry.rx,entries:[]};actions.push(action);}
-    action.entries.push(entry);
+// ---------- Cards ----------
+// For one prescription, in this order: new orders, refills, adds, already ordered, not ordering now.
+function cardsFor(ri){
+  const list=items.filter(e=>e.ri===ri),cards=[];
+  const push=(kind,target,entries)=>{if(entries.length)cards.push({id:kind==='new'?`new-${ri}-${target}`:`${kind}-${ri}-${target||entries[0].key}`,ri,kind,target,entries});};
+  const news=list.filter(e=>choice(e).route==='new');
+  [...new Set(news.map(e=>choice(e).target))].sort().forEach(n=>push('new',n,news.filter(e=>choice(e).target===n)));
+  ['refill','add'].forEach(kind=>{
+    const entries=list.filter(e=>choice(e).route===kind);
+    [...new Set(entries.map(e=>choice(e).target))].forEach(target=>{
+      if(target)push(kind,target,entries.filter(e=>choice(e).target===target));
+      else entries.filter(e=>!choice(e).target).forEach(e=>push(kind,'',[e]));
+    });
   });
-  const order={new:0,refill:1,add:2};
-  return actions.sort((a,b)=>order[a.route]-order[b.route]||a.ri-b.ri);
+  push('hold','',list.filter(e=>choice(e).route==='hold'));
+  push('skip','',list.filter(e=>choice(e).route==='skip'));
+  const newCards=cards.filter(c=>c.kind==='new');
+  newCards.forEach((c,i)=>{c.label=newCards.length>1?`New order ${i+1}`:'New order';});
+  cards.forEach(c=>{c.actionable=['new','refill','add'].includes(c.kind);c.done=c.actionable&&c.entries.every(ordered);});
+  return cards;
 }
+const allCards=()=>intake.prescriptions.flatMap((rx,ri)=>cardsFor(ri));
 
-// ---------- Plan ----------
-function targetList(entry){
-  const c=choice(entry),o=entry.options;
-  if(c.route==='refill'){
-    const orders=o.refill;
-    return `<fieldset class="po-targets"><legend>${orders.length>1?'Choose the order to refill':'Refill from'}</legend>${orders.map(order=>{
-      const lines=api.codesOf(entry.item).map(code=>order.items.find(i=>i.code===code));
-      return `<label class="po-target ${c.target===order.id?'on':''}"><input type="radio" name="t-${entry.key}" value="${order.id}" data-target="${entry.key}" ${c.target===order.id?'checked':''}><span><b>${order.id} · ${esc(order.title)}</b><small>${esc(order.status)} · ${esc(order.statusNote)}</small><small>${lines.map(i=>`${i.code} last filled ${i.lastFilled} · ${i.limit}`).join(' · ')}</small></span></label>`;
-    }).join('')}</fieldset>`;
-  }
-  if(c.route==='add'){
-    const orders=[...o.addSuggested,...o.add.filter(order=>!o.addSuggested.includes(order))];
-    return `<fieldset class="po-targets"><legend>Add to an open order</legend>${orders.map(order=>`<label class="po-target ${c.target===order.id?'on':''}"><input type="radio" name="t-${entry.key}" value="${order.id}" data-target="${entry.key}" ${c.target===order.id?'checked':''}><span><b>${order.id} · ${esc(order.title)}</b><small>${esc(order.status)} · ${esc(order.statusNote)}</small><small>On the order: ${order.items.map(i=>i.code).join(', ')}</small></span></label>`).join('')}</fieldset>`;
-  }
-  if(c.route==='new')return `<p class="po-dest"><i data-lucide="file-plus"></i> Goes on the new order for ${esc(entry.rx.title)}${entry.item.bundle?' with the whole bundle':''}.</p>`;
-  return `<p class="po-dest"><i data-lucide="pause"></i> Not ordered now. It stays on the intake so you can order it later.</p>`;
+// The Move choices for one item, shown only after the user clicks Move.
+function moveChoices(entry,cards){
+  const c=choice(entry),opts=[],seen=new Set([`${c.route}:${c.target||''}`]);
+  const add=(value,label)=>{if(!seen.has(value)){seen.add(value);opts.push([value,label]);}};
+  cards.filter(card=>card.kind==='new'&&!card.done).forEach(card=>add(`new:${card.target}`,`Put it on ${card.label.toLowerCase()}`));
+  const nextN=`n${Math.max(0,...items.filter(e=>e.ri===entry.ri&&choice(e).route==='new').map(e=>+choice(e).target.slice(1)))+1}`;
+  add(`new:${nextN}`,'Order it separately');
+  entry.options.refill.forEach(o=>add(`refill:${o.id}`,`Refill it on ${o.id}`));
+  entry.options.addSuggested.forEach(o=>add(`add:${o.id}`,`Add it to ${o.id} (not shipped yet)`));
+  add('skip:','Don’t order it now');
+  return `<div class="ful-move-box" role="group" aria-label="Move ${esc(entry.item.name)}"><span>Move ${esc(entry.item.name)} to:</span>${opts.map(([v,l])=>`<button type="button" class="ful-choice" data-move-to="${v}" data-key="${entry.key}">${esc(l)}</button>`).join('')}<button type="button" class="ful-cancel" data-move-cancel>Cancel</button></div>`;
 }
-function warnings(entry){
-  const c=choice(entry),order=c.target&&api.orderById(c.target);
-  if(!order||!entry.rx.physician||order.physician===entry.rx.physician)return '';
-  return `<p class="po-warn"><i data-lucide="triangle-alert"></i> Prescribed by Dr. ${esc(entry.rx.physician)}; ${order.id} is under Dr. ${esc(order.physician)}.</p>`;
+function itemRow(entry,cards,card){
+  const s=itemStatus(entry),pill=s&&s!=='pass'?`<span class="section-status ${statusPill[s][0]} ful-pc"><i data-lucide="${statusPill[s][1]}"></i> ${statusPill[s][2]}</span>`:'';
+  const codes=api.codesOf(entry.item).join(', ')||'No HCPCS code';
+  const holdNote=card.kind==='hold'?(()=>{const m=api.codesOf(entry.item).flatMap(code=>api.lineMatches(code)).find(x=>x.order.editable);return m?`<small class="ful-note">On ${m.order.id} · ${esc(m.order.title)} · ${esc(m.order.statusNote)}</small>`:'';})():'';
+  const canMove=!ordered(entry)&&!card.done;
+  return `<li class="ful-item"><div class="ful-item-main"><span class="ful-item-name">${esc(entry.item.name)}</span><span class="ful-item-codes">${codes}</span>${pill}${holdNote}</div>${canMove?`<button type="button" class="ful-move" data-move="${entry.key}" aria-expanded="${moving===entry.key}">${card.kind==='hold'?'Order anyway':card.kind==='skip'?'Undo':'Move'}</button>`:''}${moving===entry.key?moveChoices(entry,cards):''}</li>`;
 }
-function evidence(entry){
-  const rows=api.codesOf(entry.item).map(code=>{
-    const m=api.lineMatches(code),line=entry.item.lines.find(l=>l.code===code);
-    const text=m.length?m.map(({order,item})=>item.refillable?`${order.id} · refillable · ${item.due?'due now':`due ${item.nextEligible}`}`:`${order.id} · ${esc(item.note||'not refillable')}`).join(' · '):'No match on existing orders';
-    return `<li><b>${code}</b><span>${esc(line?.description||'')}</span><small>${text}</small></li>`;
-  }).join('');
-  const matched=api.codesOf(entry.item).some(code=>api.lineMatches(code).length);
-  if(!matched)return '';
-  return `<details class="po-evidence"><summary>Existing order matches</summary><ul>${rows}</ul></details>`;
+// Plain-language copy per card.
+function cardCopy(card){
+  const order=card.target&&card.kind!=='new'?api.orderById(card.target):null;
+  if(card.kind==='new')return {icon:'file-plus',title:card.label,sub:card.entries.length>1?`These ${card.entries.length} items go on one new order.`:'This item goes on a new order.',button:'Create order'};
+  if(card.kind==='refill'&&!card.target)return {icon:'refresh-cw',title:'Refill',sub:'This item can be refilled on more than one order. Pick one.',button:'Open refill'};
+  if(card.kind==='refill')return {icon:'refresh-cw',title:`Refill ${order.id}`,sub:`Already on ${order.id} (${order.title}) and due now.`,button:'Open refill'};
+  if(card.kind==='add')return {icon:'list-plus',title:`Add to ${order.id}`,sub:`${order.id} hasn’t shipped yet. These items will be added to it.`,button:'Open order'};
+  if(card.kind==='hold')return {icon:'copy-check',title:'Already ordered',sub:'These are already on an order that hasn’t shipped. They won’t be ordered again. Nothing to do.'};
+  return {icon:'pause',title:'Not ordering now',sub:'These stay on the intake. You can order them later.'};
 }
-function itemRow(entry){
-  const c=choice(entry),o=entry.options,s=itemStatus(entry),codes=api.codesOf(entry.item);
-  const blocked={refill:o.refill.length?'':o.refillBlocked,add:o.add.length?'':o.addBlocked};
-  const changed=c.route!==entry.suggested.route;
-  const seg=ROUTES.map(r=>{const why=blocked[r.id];return `<button type="button" role="radio" aria-checked="${c.route===r.id}" data-route="${r.id}" data-key="${entry.key}" ${why?`disabled title="${esc(why)}"`:''}>${r.id===entry.suggested.route?'<i data-lucide="sparkles" class="po-sug" aria-label="Suggested"></i>':''}${r.label}</button>`;}).join('');
-  // Explain why Refill is off when some of the item's codes are refillable (e.g. a bundle with one item not due).
-  const partlyRefillable=codes.some(code=>api.lineMatches(code).some(m=>m.item.refillable));
-  const note=!o.refill.length&&partlyRefillable?`<p class="po-why-not"><i data-lucide="info"></i> Refill unavailable. ${esc(o.refillBlocked)}.</p>`:'';
-  return `<article class="po-item ${needsTarget(entry)?'needs':''}" id="item-${entry.key}">
-    <div class="po-item-head">
-      <div class="po-item-name"><b>${esc(entry.item.name)}</b><span class="pill ai-kind">${entry.item.bundle?`Bundle · ${codes.length}`:'Single'}</span></div>
-      <div class="po-codes">${codes.map(code=>`<code>${code}</code>`).join('')}</div>
-      ${s?`<span class="section-status ${statusPill[s][0]}"><i data-lucide="${statusPill[s][1]}"></i> ${statusPill[s][2]}</span>`:'<span class="section-status po-unchecked"><i data-lucide="shield-question"></i> Not pre-checked</span>'}
-    </div>
-    <div class="po-seg" role="radiogroup" aria-label="How to order ${esc(entry.item.name)}">${seg}</div>
-    <p class="po-why"><i data-lucide="sparkles"></i><span><b>Suggested: ${routeLabel(entry.suggested.route)}.</b> ${esc(entry.suggested.why)}${changed?` <em>You changed this to ${routeLabel(c.route)}.</em>`:''}</span></p>
-    ${note}${targetList(entry)}${warnings(entry)}${evidence(entry)}
+function cardHtml(card,cards,step,isNext){
+  const copy=cardCopy(card);
+  let action='';
+  if(card.done)action=`<span class="section-status success-visible"><i data-lucide="circle-check"></i> ${card.kind==='new'?'Order created':card.kind==='refill'?'Refill done':'Added'}</span>`;
+  else if(card.actionable&&!card.target)action='';
+  else if(card.actionable)action=`<button class="footer-btn primary" data-open-card="${card.id}">${copy.button} <i data-lucide="arrow-right"></i></button>`;
+  const pick=card.actionable&&!card.target?`<div class="ful-pick"><b>Which order?</b>${(card.kind==='refill'?card.entries[0].options.refill:card.entries[0].options.addSuggested).map(o=>`<button type="button" class="ful-choice" data-target="${card.entries[0].key}" data-order="${o.id}"><b>${o.id}</b> · ${esc(o.title)}</button>`).join('')}</div>`:'';
+  const order=card.target&&card.kind!=='new'&&card.kind!=='hold'?api.orderById(card.target):null;
+  const physician=order&&card.entries[0].rx.physician&&order.physician&&order.physician!==card.entries[0].rx.physician?`<p class="ful-warn"><i data-lucide="triangle-alert"></i> Prescribed by Dr. ${esc(card.entries[0].rx.physician)}, but ${order.id} is under Dr. ${esc(order.physician)}.</p>`:'';
+  return `<article class="ful-card ful-${card.kind} ${card.done?'done':''}">
+    <header class="ful-head">${card.actionable?`<span class="ful-step">${card.done?'<i data-lucide="check"></i>':step}</span>`:`<span class="ful-step info"><i data-lucide="${copy.icon}"></i></span>`}<div class="ful-title"><b>${copy.title}</b><small>${copy.sub}</small></div>${action}</header>
+    <ul class="ful-items">${card.entries.map(e=>itemRow(e,cards,card)).join('')}</ul>${pick}${physician}
   </article>`;
 }
-function renderPlan(){
-  $('#poStage').textContent='Prepare orders';
-  $('#poLead').textContent='Choose how each prescribed item is ordered. A bundle is ordered as a whole. Nothing is created until you confirm.';
-  $('#poBody').innerHTML=intake.prescriptions.map((rx,ri)=>{
-    const list=items.filter(e=>e.ri===ri),open=list.filter(needsTarget).length;
-    return `<section class="review-card po-rx"><div class="card-header"><div><span class="section-icon"><i data-lucide="file-text"></i></span><div><h3>${esc(rx.title)}</h3><p>${rx.physician?`Dr. ${esc(rx.physician)}`:'Ordering physician not added'} · ${plural(list.length,'item')}</p></div></div>${open?`<span class="section-status warning"><i data-lucide="triangle-alert"></i> ${open} needs a choice</span>`:`<span class="section-status success"><i data-lucide="circle-check"></i> Ready</span>`}</div><div class="po-items">${list.map(itemRow).join('')}</div></section>`;
+// Recommended services: optional suggestions based on what was prescribed. Not steps; nothing has to be done.
+function recommendedServices(){
+  const codes=items.flatMap(e=>api.codesOf(e.item)),list=[];
+  if(codes.some(c=>/^(E0601|E047)/.test(c))){
+    list.push({id:'pap-setup',name:'PAP setup and education',why:'Helps the patient start CPAP therapy safely.'});
+    list.push({id:'mask-fitting',name:'Mask fitting',why:'Finds a mask that fits before the first night.'});
+    list.push({id:'compliance',name:'Compliance monitoring',why:'Medicare requires 4+ hours a night on 70% of nights in the first 90 days.'});
+  }
+  if(codes.some(c=>/^(E139|E04)/.test(c)))list.push({id:'oxygen-setup',name:'Home oxygen setup and safety education',why:'Needed for the new oxygen prescription.'});
+  return list;
+}
+function render(){
+  $('#poTitle').innerHTML=`<span class="title-muted">Fulfillment for</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>`;
+  $('#poStage').textContent='Fulfillment';
+  const cards=allCards(),todo=cards.filter(c=>c.actionable&&!c.done);
+  const count=k=>cards.filter(c=>c.kind===k).length;
+  const summary=[[count('new'),'new order'],[count('refill'),'refill'],[count('add'),'add to an order'],[count('hold'),'already ordered']].filter(([n])=>n).map(([n,w])=>w==='already ordered'||w==='add to an order'?`${n} ${w}`:plural(n,w)).join(' · ');
+  $('#poPatient').textContent=`From intake #${intake.id}${precheckStatus?'':' · pre-check not run'}`;
+  $('#poLead').innerHTML=`<b>What will happen:</b> ${summary||'Nothing to order'}. Finish each card below.`;
+  const next=todo.find(c=>c.target)||null;let step=0;
+  const rxHtml=intake.prescriptions.map((rx,ri)=>{
+    const list=cardsFor(ri);
+    return `<section class="ful-rx"><h2>${esc(rx.title)} <span>${rx.physician?`Dr. ${esc(rx.physician)}`:''}</span></h2>${list.map(c=>cardHtml(c,list,c.actionable?++step:0,next&&c.id===next.id)).join('')}</section>`;
   }).join('');
-  const missing=items.filter(needsTarget),actions=buildActions(),held=items.filter(e=>choice(e).route==='hold').length;
-  $('#poStatus').className=`pk-footer-status ${missing.length?'todo':'done'}`;
-  $('#poStatus').innerHTML=missing.length
-    ?`<span class="pk-status-icon"><i data-lucide="list-checks"></i></span><span><b>Choose an order for ${plural(missing.length,'item')}</b><span class="v2-next">${esc(missing[0].item.name)}</span></span>`
-    :`<span class="pk-status-icon"><i data-lucide="check"></i></span><span><b>${plural(items.length,'item')} · ${plural(actions.length,'action')}</b><span class="v2-next">${held?`${held} on hold · `:''}Confirm to open each action</span></span>`;
-  $('#poActions').innerHTML=`<button class="footer-btn primary" id="poConfirm" ${missing.length?'disabled':''}>Confirm <i data-lucide="arrow-right"></i></button>`;
-  icons();
-}
-
-// ---------- Order actions ----------
-function actionCopy(a){
-  if(a.route==='new')return {title:'Create new order',sub:`${a.rx.title} · ${a.rx.physician?`Dr. ${a.rx.physician}`:'No physician'}`,button:'Open order',icon:'file-plus',where:'Opens the DME order wizard with the intake filled in.'};
-  const order=api.orderById(a.target);
-  if(a.route==='refill')return {title:`Refill on ${a.target}`,sub:`${order.title} · ${order.status}`,button:'Open refill',icon:'refresh-cw',where:'Opens the order’s refillable items with these items selected.'};
-  return {title:`Add to ${a.target}`,sub:`${order.title} · ${order.statusNote}`,button:'Open order',icon:'list-plus',where:'Opens the order with these items ready to add.'};
-}
-function renderActions(){
-  const actions=buildActions(),held=items.filter(e=>choice(e).route==='hold'),done=actions.filter(a=>plan.done.includes(a.id)).length;
-  $('#poStage').textContent='Order actions';
-  $('#poLead').textContent='Open each action to finish it in Signetic. Patient, insurance, prescription and pre-check details are carried over.';
-  $('#poBody').innerHTML=`<section class="review-card po-actions-card"><div class="card-header"><div><span class="section-icon"><i data-lucide="list-checks"></i></span><div><h3>${plural(actions.length,'action')}</h3><p>${done} of ${actions.length} done</p></div></div><button class="text-btn" data-edit-plan><i data-lucide="pencil"></i> Edit plan</button></div>
-    <ol class="po-action-list">${actions.map(a=>{const c=actionCopy(a),isDone=plan.done.includes(a.id);return `<li class="po-action ${isDone?'done':''}">
-      <span class="po-action-icon"><i data-lucide="${isDone?'check':c.icon}"></i></span>
-      <div class="po-action-copy"><b>${c.title}</b><small>${esc(c.sub)}</small><ul>${a.entries.map(e=>`<li>${esc(e.item.name)} <span>${api.codesOf(e.item).join(', ')}</span></li>`).join('')}</ul><small class="po-where">${c.where}</small></div>
-      ${isDone?'<span class="section-status success"><i data-lucide="circle-check"></i> Done</span>':`<button class="footer-btn primary" data-open-action="${a.id}">${c.button} <i data-lucide="external-link"></i></button>`}
-    </li>`;}).join('')}</ol></section>
-    ${held.length?`<section class="review-card po-held"><div class="card-header"><div><span class="section-icon"><i data-lucide="pause"></i></span><div><h3>Not ordered now</h3><p>${plural(held.length,'item')} on hold</p></div></div></div><ul class="po-held-list">${held.map(e=>`<li><b>${esc(e.item.name)}</b> <span>${api.codesOf(e.item).join(', ')}</span><small>${esc(e.suggested.route==='hold'?e.suggested.why:'Held by you.')}</small></li>`).join('')}</ul></section>`:''}`;
-  const all=done===actions.length;
+  const services=recommendedServices();
+  const apptHtml=services.length?`<section class="ful-rx"><h2>Recommended services <span>Optional · based on this intake</span></h2><div class="ful-card ful-services"><ul class="ful-svc">${services.map(s=>{const booked=plan.appts[s.id];return `<li><i data-lucide="${booked?'circle-check':'sparkles'}" class="${booked?'ok':''}"></i><div><b>${s.name}</b><small>${booked?`Scheduled · ${esc(booked)}`:s.why}</small></div>${booked?'':`<button type="button" class="ful-move" data-appt="${s.id}">Schedule</button>`}</li>`;}).join('')}</ul></div></section>`:'';
+  $('#poBody').innerHTML=rxHtml+apptHtml;
+  const left=todo.length,all=left===0;
   $('#poStatus').className=`pk-footer-status ${all?'done':'todo'}`;
-  $('#poStatus').innerHTML=`<span class="pk-status-icon"><i data-lucide="${all?'check':'list-checks'}"></i></span><span><b>${done} of ${plural(actions.length,'action')} done</b><span class="v2-next">${all?'All orders are prepared':'Open the next action to continue'}</span></span>`;
-  $('#poActions').innerHTML=`<button class="footer-btn" data-edit-plan><i data-lucide="arrow-left"></i> Edit plan</button><a class="footer-btn primary ${all?'':'is-disabled'}" href="index.html" id="poFinish" ${all?'':'aria-disabled="true"'}>Back to intake</a>`;
+  $('#poStatus').innerHTML=all
+    ?'<span class="pk-status-icon"><i data-lucide="check"></i></span><span><b>All done</b><span class="v2-next">Orders and refills are in Signetic</span></span>'
+    :`<span class="pk-status-icon"><i data-lucide="list-checks"></i></span><span><b>${plural(left,'step')} left</b><span class="v2-next">Finish each card to complete fulfillment</span></span>`;
+  $('#poActions').innerHTML='';
   icons();
 }
 
-// Each action opens the existing Signetic screen with only its own items.
-function openAction(id){
-  const a=buildActions().find(x=>x.id===id);if(!a)return;
-  const pick={...a.rx,items:a.entries.map(e=>e.item)};
-  const codes=pick.items.flatMap(it=>api.codesOf(it));
-  api.setAction({id:a.id,route:a.route,target:a.target,rxTitle:a.rx.title,physician:a.rx.physician,icd:a.rx.icd,items:pick.items,intakeId:intake.id});
-  if(a.route==='new'){
-    const order={...intake,prescriptions:[pick],priorAuths:(intake.priorAuths||[]).filter(pa=>codes.includes(pa.code)),fromAction:a.id};
+// ---------- Actions: each card opens the existing Signetic screen with only its own items ----------
+function openCard(id){
+  const card=allCards().find(c=>c.id===id);if(!card)return;
+  const rx=intake.prescriptions[card.ri],entries=card.entries.filter(e=>!ordered(e)),picked=entries.map(e=>e.item);
+  const actionId=card.kind==='new'?`${card.id}-${Date.now()}`:card.id;
+  plan.pending[actionId]=entries.map(e=>e.key);api.savePlan(plan);
+  api.setAction({id:actionId,route:card.kind,target:card.kind==='new'?'':card.target,rxTitle:rx.title,physician:rx.physician,icd:rx.icd,items:picked,intakeId:intake.id});
+  if(card.kind==='new'){
+    const codes=picked.flatMap(it=>api.codesOf(it));
+    const order={...intake,prescriptions:[{...rx,items:picked}],priorAuths:(intake.priorAuths||[]).filter(pa=>codes.includes(pa.code)),fromAction:actionId};
     try{sessionStorage.setItem('signeticIntakeFull',JSON.stringify(intake));sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(order));}catch(error){}
     location.href='dme-order.html';return;
   }
-  location.href=`existing-order.html?mode=${a.route}&order=${a.target}`;
+  location.href=`existing-order.html?mode=${card.kind}&order=${card.target}`;
 }
 
-// Without a pre-check (Create order without pre-check), back goes to the intake.
+// Back goes to the pre-check when it was run, otherwise to the intake.
 if(!precheckStatus){$('#poBack').href='index.html';$('#poBack').innerHTML='<i data-lucide="arrow-left"></i> Back to intake';}
-function render(){
-  $('#poTitle').innerHTML=`<span class="title-muted">${plan.confirmed?'Order actions for':'Prepare orders for'}</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>`;
-  $('#poPatient').textContent=`From intake #${intake.id} · ${plural(intake.prescriptions.length,'prescription')} · ${plural(items.length,'item')}${precheckStatus?'':' · pre-check not run'}`;
-  plan.confirmed?renderActions():renderPlan();
-}
 
 document.addEventListener('click',event=>{
-  const route=event.target.closest('[data-route]');
-  if(route&&!route.disabled){
-    const entry=items.find(e=>e.key===route.dataset.key),r=route.dataset.route;
-    const suggestedTarget=entry.suggested.route===r?entry.suggested.target:'';
-    const only=r==='refill'&&entry.options.refill.length===1?entry.options.refill[0].id:r==='add'&&entry.options.addSuggested.length===1?entry.options.addSuggested[0].id:'';
-    plan.routes[entry.key]={route:r,target:suggestedTarget||(r==='refill'?'':only)};
-    api.savePlan(plan);render();return;
+  const open=event.target.closest('[data-open-card]');if(open){openCard(open.dataset.openCard);return;}
+  const appt=event.target.closest('[data-appt]');
+  if(appt){plan.appts[appt.dataset.appt]='Wed 10/28/2026, 10:00 AM';api.savePlan(plan);render();toast('Opens scheduling in Signetic');return;}
+  const move=event.target.closest('[data-move]');
+  if(move){
+    const entry=items.find(e=>e.key===move.dataset.move),r=choice(entry).route;
+    if(r==='skip'||r==='hold'){   // Undo / Order anyway: one click, no menu
+      const to=r==='skip'&&entry.suggested.route!=='hold'?entry.suggested:{route:'new',target:''};
+      plan.routes[entry.key]={route:to.route,target:to.route==='new'?'n1':to.target||''};api.savePlan(plan);moving='';render();
+      toast(r==='skip'?`${entry.item.name} is back`:`${entry.item.name} will go on a new order`);return;
+    }
+    moving=moving===entry.key?'':entry.key;render();return;
   }
-  if(event.target.closest('#poConfirm')){plan.confirmed=true;api.savePlan(plan);render();$('#poScroll').scrollTop=0;return;}
-  if(event.target.closest('[data-edit-plan]')){plan.confirmed=false;api.savePlan(plan);render();return;}
-  const open=event.target.closest('[data-open-action]');if(open){openAction(open.dataset.openAction);return;}
-  if(event.target.closest('#poFinish.is-disabled')){event.preventDefault();toast('Finish each action first');}
+  if(event.target.closest('[data-move-cancel]')){moving='';render();return;}
+  const to=event.target.closest('[data-move-to]');
+  if(to){
+    const entry=items.find(e=>e.key===to.dataset.key),[route,target]=to.dataset.moveTo.split(':');
+    plan.routes[entry.key]={route,target:target||''};api.savePlan(plan);moving='';render();
+    toast(`${entry.item.name} moved`);return;
+  }
+  const pick=event.target.closest('[data-order]');
+  if(pick){plan.routes[pick.dataset.target]={...plan.routes[pick.dataset.target],target:pick.dataset.order};api.savePlan(plan);render();return;}
 });
-document.addEventListener('change',event=>{
-  const key=event.target.dataset.target;if(!key)return;
-  plan.routes[key]={...plan.routes[key],target:event.target.value};api.savePlan(plan);render();
-});
-
-// Prototype navigator deep link: ?screen=actions shows Order actions with every choice filled in.
-if(params.get('screen')==='plan'&&plan.confirmed){plan.confirmed=false;api.savePlan(plan);}
-else if(params.get('screen')==='actions'&&!plan.confirmed){
-  items.forEach(entry=>{const c=choice(entry);if(needsTarget(entry))c.target=(c.route==='refill'?entry.options.refill:entry.options.add)[0]?.id||'';});
-  plan.confirmed=true;api.savePlan(plan);
-}
-const returned=params.get('done');
-if(returned){api.markActionDone(returned);plan=api.getPlan();setTimeout(()=>toast('Action done'),100);}
 
 // Shell
 const setNavCollapsed=collapsed=>{document.body.classList.toggle('nav-collapsed',collapsed);const toggle=$('#navToggle');toggle.setAttribute('aria-expanded',String(!collapsed));toggle.setAttribute('aria-label',collapsed?'Expand navigation':'Collapse navigation');toggle.title=toggle.getAttribute('aria-label');};

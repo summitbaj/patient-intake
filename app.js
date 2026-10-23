@@ -78,7 +78,7 @@ const aiChangeFields={
   mobile:{value:'#mobileValue',label:'mobile number',row:'mobileField'}
 };
 const postIntakeRecommendation={
-  patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Start pre-check',reason:'Confirm payer qualification, coverage, and required documentation before creating the new equipment order.',alternatives:['Create order without pre-check','Schedule setup appointment'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'},{name:'Home oxygen setup and safety education',reason:'Needed for the new oxygen concentrator prescription.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'},{name:'Oxygen concentrator and cannula',reason:'Supported by the reviewed oxygen prescription.'}],note:'Final coverage and item eligibility remain subject to payer review.'
+  patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Start pre-check',reason:'Confirm payer qualification, coverage, and required documentation before creating the new equipment order.',alternatives:['Start fulfillment'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'},{name:'Home oxygen setup and safety education',reason:'Needed for the new oxygen concentrator prescription.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'},{name:'Oxygen concentrator and cannula',reason:'Supported by the reviewed oxygen prescription.'}],note:'Final coverage and item eligibility remain subject to payer review.'
 };
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -557,6 +557,14 @@ function servicePill(plan){
 }
 
 function renderInsurance(index=state.currentPlan){
+  if(!insurancePlans.length){
+    $('#planList').innerHTML='';$('#planName').textContent='No insurance yet';$('#planPills').innerHTML='';
+    $('#planDiscovered').hidden=true;$('#planAiNote').hidden=true;$('#planActions').innerHTML='';$('#orderNotice').innerHTML='';$('#orderSource').hidden=true;
+    $('#insuranceFields').innerHTML='<p class="empty-note">Add the patient’s insurance with “Add another plan”.</p>';
+    $('#insuranceMeta').textContent='No coverage plans';renderEligibility();icons();return;
+  }
+  if(index>=insurancePlans.length)index=0;
+  $('#orderSource').hidden=false;
   if(index!==state.currentPlan)state.editingPlan=false;
   state.currentPlan=index;
   const plan=insurancePlans[index],result=planResult(plan);
@@ -620,7 +628,19 @@ function reviewItems(){
     !state.mobile&&{id:'mobileField',label:'Mobile phone number',detail:'Digits look blurry',section:'Contact information',severity:'warning'},
     !state.provider&&{id:'providerField',label:'Ordering physician',detail:'Not found in the NPI registry · search to add',section:'Prescription 1',severity:'missing'},
     !state.product&&{id:'rx-rx1-item-1',label:'Medicare coverage for E0601',detail:'Choose the policy that applies',section:'Prescription 1',severity:'missing',tag:'Select'}
-  ].filter(Boolean).concat(requiredFieldGaps());
+  ].filter(Boolean).concat(requiredFieldGaps(),manualGaps());
+}
+// Manual intake: the prescription is typed in, so the essentials are required review items.
+function manualGaps(){
+  const gaps=[];
+  prescriptions.forEach((rx,i)=>{
+    if(!rx.manual||!rxStarted(rx))return;   // an untouched typed-in prescription is optional
+    const id=rx.main?'prescription-section':`rx-section-${rx.id}`,section=`Prescription ${i+1}`;
+    if(!rx.physician.npi)gaps.push({id,label:'Ordering physician',detail:'Search by name or NPI to add',section,severity:'missing'});
+    if(!rx.icd.length)gaps.push({id,label:'Diagnosis (ICD-10)',detail:'Add at least one ICD-10 code',section,severity:'missing'});
+    if(!rx.items.some(item=>item.lines.some(l=>l.code)))gaps.push({id,label:'Prescribed items',detail:'Search a HCPCS code or bundle to add an item',section,severity:'missing'});
+  });
+  return gaps;
 }
 
 // Required patient fields: empty values (not found, or removed by the user) become required review items.
@@ -745,6 +765,7 @@ function updateProgress(){
   const prescriptionStatus=$('#prescription-section .section-status');
   prescriptionStatus.className=`section-status ${prescriptionRemaining?'danger':'success'}`;
   prescriptionStatus.innerHTML=prescriptionRemaining?`<i data-lucide="circle-x"></i> ${prescriptionRemaining} to resolve`:'<i data-lucide="circle-check"></i> Reviewed';
+  if(prescriptions[0]?.main&&prescriptions[0].manual)setRxStatus(prescriptions[0]);   // typed-in prescription: optional until started
   setSectionStatus('#prior-auth-section',state.authAck,'warning','1 needs review');
   const requiredRemaining=reviewItems().filter(item=>item.severity==='missing').length;
   $('#completionCard').hidden=requiredRemaining>0;
@@ -1110,7 +1131,10 @@ const prescriptions=[
         lines:[line('E0601',true),line('E0562',true),line('A7030',true),line('A7031',true),line('A7037',true),line('A7038',true)]},
       {id:'item-2',name:'PAP headgear',bundle:false,qty:1,policy:'L33718',policyAi:true,
         dispense:{type:'Purchase',length:'99 months (lifetime)',start:'10/15/2026'},
-        lines:[line('A7035')]}
+        lines:[line('A7035')]},
+      {id:'item-3',name:'PAP chinstrap',bundle:false,qty:1,frequency:'1 per 6 months',policy:'L33718',policyAi:true,
+        dispense:{type:'Purchase',length:'99 months (lifetime)',start:'10/15/2026'},
+        lines:[line('A7036',true)]}
     ]},
   {id:'rx2',docId:'prescription-2',source:'Oxygen Prescription.jpg',date:'10/13/2026',
     physician:{first:'Michael',last:'Reyes',npi:'1487265930',specialty:'Pulmonology',enrollment:['DME','Part B']},
@@ -1180,7 +1204,7 @@ function physicianHtml(rx){
         <button class="small-btn primary" type="submit">Search</button>
         <div class="phys-results" id="phys-results-${rx.id}" role="listbox" hidden></div>
       </form>${found?`<button type="button" class="text-btn" data-cancel-physician="${rx.id}">Cancel</button>`:''}</div>`:'';
-  return `<details class="data-group" open><summary><span>Ordering physician</span><small>${found?(p.picked?'Added from NPI registry':''):'<span class="phys-status-miss">Not found in NPI registry</span>'}</small><i data-lucide="chevron-down"></i></summary>
+  return `<details class="data-group" open><summary><span>Ordering physician</span><small>${found?(p.picked?'Added from NPI registry':''):(rx.manual?(rxStarted(rx)?'<span class="phys-status-miss">Required</span>':''):'<span class="phys-status-miss">Not found in NPI registry</span>')}</small><i data-lucide="chevron-down"></i></summary>
     <div class="phys-block">${notFound}${search}${card}</div>
   </details>`;
 }
@@ -1226,32 +1250,56 @@ function docsButton(ref,docs){
   const title=`Required documents: ${have} of ${needed.length} on file${all?'':` · ${needed.length-have} not found in uploads`}`;
   return `<button type="button" class="doc-info req-docs ${all?'complete':'partial'}" data-item-docs="${ref}" title="${title}" aria-label="${title}"><i data-lucide="${all?'file-check':'file-warning'}"></i><span>Required docs</span><b>${have}/${needed.length}</b></button>`;
 }
+const escAttr=value=>String(value??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const frequencyOptions=['During sleep','Nightly during sleep','Continuous','Daily','As needed','1 per month','2 per month','1 per 3 months','1 per 6 months'];
+// HCPCS search box: adds a HCPCS code only (by code or description). Used to add items and to add codes to an item.
+function hcpcsSearchHtml(key,{placeholder,button,cls=''}){
+  return `<form class="inline-add hcpcs-search ${cls}" data-add-item="${key}" data-hcpcs-search="${key}"><i data-lucide="search" class="add-spark"></i><input class="input" name="hcpcs" placeholder="${placeholder}" aria-label="Search HCPCS by code or description" role="combobox" aria-autocomplete="list" aria-expanded="false" autocomplete="off"><button class="small-btn add-item-btn" type="submit"><i data-lucide="plus"></i> ${button}</button><div class="ai-suggest" role="listbox" hidden></div></form>`;
+}
+// Edit an item: name, quantity, frequency and its HCPCS codes.
+// Where a HCPCS code came from: selected by AI from the documents, or added by the user.
+const codeSource=l=>l.ai?'<span class="code-source ai" title="AI selected this code from the prescription"><i data-lucide="sparkles"></i> AI selected</span>':'<span class="code-source manual" title="Added by you"><i data-lucide="user"></i> Added by you</span>';
+function itemEditHtml(rx,item,ref){
+  const listId=`freq-${rx.id}-${item.id}`;
+  const lines=item.lines.filter(l=>l.code).map((l,i)=>`<div class="hcpcs-row editing"><span class="hcpcs-badge">${l.code}</span><span class="hcpcs-desc">${hcpcsCatalog[l.code]||'Code not in catalog · verify'}${l.code?codeSource(l):''}</span><button type="button" class="icon-btn" data-remove-line="${ref}|${item.lines.indexOf(l)}" aria-label="Remove ${l.code}" title="Remove ${l.code}"><i data-lucide="x"></i></button></div>`).join('');
+  return `<div class="item-edit">
+    <div class="item-edit-fields">
+      <label class="item-edit-field item-edit-name"><span>Item name</span><input class="input" data-item-field="name" data-item="${ref}" value="${escAttr(item.name)}" placeholder="Item name" autocomplete="off"></label>
+      <label class="item-edit-field"><span>Qty</span><input class="input" type="number" min="1" inputmode="numeric" data-item-field="qty" data-item="${ref}" value="${escAttr(item.qty||'')}" placeholder="—"></label>
+      <label class="item-edit-field"><span>Frequency</span><input class="input" list="${listId}" data-item-field="frequency" data-item="${ref}" value="${escAttr(item.frequency||'')}" placeholder="e.g. During sleep" autocomplete="off"><datalist id="${listId}">${frequencyOptions.map(f=>`<option value="${f}">`).join('')}</datalist></label>
+    </div>
+    <div class="item-edit-codes">
+      <span class="item-edit-label">HCPCS codes</span>
+      <div class="item-edit-lines">${lines||'<p class="item-edit-empty">No HCPCS code yet. Search below to add one.</p>'}</div>
+      ${hcpcsSearchHtml(ref,{placeholder:'Add a HCPCS code, e.g. A4615 or nasal cannula',button:'Add code',cls:'compact'})}
+    </div>
+    <div class="item-edit-actions"><button type="button" class="small-btn primary" data-edit-item="${ref}">Done</button></div>
+  </div>`;
+}
 function itemHtml(rx,item){
   const ref=`${rx.id}|${item.id}`,mapped=item.lines.some(l=>l.ai),docs=docsForItem(rx,item);
-  const rows=item.editing
-    ?item.lines.map((l,i)=>`<div class="hcpcs-row editing"><input class="input code-input" list="hcpcsOptions" value="${l.code}" placeholder="Code" maxlength="5" aria-label="HCPCS code" data-line="${ref}|${i}" data-line-field="code"><span class="hcpcs-desc">${l.code?(hcpcsCatalog[l.code]||'Code not in catalog · verify'):'Enter a HCPCS code'}</span>${item.lines.length>1?`<button type="button" class="icon-btn" data-remove-line="${ref}|${i}" aria-label="Remove line" title="Remove"><i data-lucide="x"></i></button>`:'<span></span>'}</div>`).join('')
-    :item.lines.map(l=>`<div class="hcpcs-row ${l.code?'':'unmapped'}"><span class="hcpcs-badge">${l.code||'—'}</span><span class="hcpcs-desc">${l.code?(hcpcsCatalog[l.code]||'Code not in catalog · verify'):'No HCPCS match. Select Edit to enter a code.'}${l.ai?'<i data-lucide="sparkles" class="ai-dot" aria-label="AI mapped" title="AI mapped"></i>':''}</span></div>`).join('');
+  const rows=item.lines.map(l=>`<div class="hcpcs-row ${l.code?'':'unmapped'}"><span class="hcpcs-badge">${l.code||'—'}</span><span class="hcpcs-desc">${l.code?(hcpcsCatalog[l.code]||'Code not in catalog · verify'):'No HCPCS match. Select Edit to enter a code.'}${l.code?codeSource(l):''}</span></div>`).join('');
   const open=item.editing||item.expanded,qty=item.qty,usage=item.frequency||'';
   const dosing=[qty?`Qty <b>${qty}</b>`:'',usage?`<span>${usage}</span>`:''].filter(Boolean).join('<span class="dot-sep"></span>')||'<span class="not-stated">Qty and frequency not on the prescription</span>';
-  const count=item.lines.length,codesLabel=`${mapped?'AI selected ':''}${count} HCPCS ${count===1?'code':'codes'}`;
+  const count=item.lines.length,codesLabel=`${count} HCPCS ${count===1?'code':'codes'}`;
   return `<article class="rx-item ${open?'open':''}" id="rx-${rx.id}-${item.id}">
     <header class="rx-item-head">
       <div class="rx-item-main">
         <div class="rx-item-title"><strong>${item.bundle?item.name:(mapped||!/^[A-Z]\d{4}$/.test(item.name)?item.name:hcpcsCatalog[item.name]||item.name)}</strong>${kindPill(item)}</div>
         <p class="rx-item-meta">${dosing}${item.matchedFrom&&item.matchedFrom.toLowerCase()!==item.name.toLowerCase()?`<span class="dot-sep"></span><span class="matched-from">You searched “${item.matchedFrom}”</span>`:''}</p>
-        <button type="button" class="codes-toggle" data-toggle-codes="${ref}" aria-expanded="${open}" ${item.editing?'disabled':''}><i data-lucide="sparkles"></i><span>${codesLabel}</span><i data-lucide="chevron-down" class="chev"></i></button>
+        <button type="button" class="codes-toggle" data-toggle-codes="${ref}" aria-expanded="${open}" ${item.editing?'disabled':''}><i data-lucide="list"></i><span>${codesLabel}</span><i data-lucide="chevron-down" class="chev"></i></button>
       </div>
       ${docsButton(ref,docs)}
       <button type="button" class="text-btn" data-edit-item="${ref}">${item.editing?'Done':'Edit'}</button>
       <button type="button" class="icon-btn" data-remove-item="${ref}" aria-label="Remove item" title="Remove item"><i data-lucide="trash-2"></i></button>
     </header>
-    ${open?`<div class="hcpcs-rows">${rows}</div>`:''}
+    ${item.editing?itemEditHtml(rx,item,ref):open?`<div class="hcpcs-rows">${rows}</div>`:''}
   </article>`;
 }
 function itemsHtml(rx){
   return `${rx.items.some(item=>item.kindAi!==false)?'<p class="ai-kind-note"><i data-lucide="sparkles"></i><span>AI grouped the prescribed products into <b>bundles</b> and <b>single items</b> and matched their HCPCS codes. Open an item’s codes to check them.</span></p>':''}<div class="rx-items">${rx.items.map(item=>itemHtml(rx,item)).join('')||'<p class="empty-note">No items yet</p>'}</div>
-    <form class="inline-add" data-add-item="${rx.id}"><i data-lucide="sparkles" class="add-spark"></i><input class="input" name="product" placeholder="Search a product name or HCPCS, e.g. nasal pillows or A7034" aria-label="Search products to add" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest-${rx.id}" autocomplete="off"><button class="small-btn add-item-btn" type="submit"><i data-lucide="plus"></i> Add item</button><div class="ai-suggest" id="suggest-${rx.id}" role="listbox" hidden></div></form>
-    <p class="inline-hint">AI finds the closest product in your system and fills in its HCPCS. Kits are added as a bundle.</p>`;
+    ${hcpcsSearchHtml(rx.id,{placeholder:'Search a HCPCS code or bundle, e.g. A7034, nasal mask or CPAP starter kit',button:'Add item'})}
+    <p class="inline-hint">Pick a HCPCS code or a bundle to add it as an item. To build your own bundle, choose Create a bundle in the search results.</p>`;
 }
 // Each prescription carries its own physician note.
 function noteHtml(rx){
@@ -1292,9 +1340,15 @@ function refreshIcd(rx){
 }
 function refreshItemDocs(){prescriptions.forEach(rx=>{if($(`[data-items="${rx.id}"]`))refreshItems(rx);});}
 // Section badge for prescriptions after the first (the first is driven by updateProgress).
+// A typed-in prescription is only required once it has a prescription document or anything entered in it.
+function rxStarted(rx){
+  const p=rx.physician||{};
+  return Boolean(rx.source||rx.docId||p.first||p.last||p.npi||rx.icd.length||rx.items.length||(rx.note?.text||'').trim());
+}
 function setRxStatus(rx){
-  if(rx.main)return;
+  if(rx.main&&!rx.manual)return;
   const status=$(`[data-rx-section="${rx.id}"] .section-status`);if(!status)return;
+  if(!rxStarted(rx)){status.className='section-status neutral';status.innerHTML='Optional';return;}
   const gaps=[!rx.physician.first||!rx.physician.last,!/^\d{10}$/.test(rx.physician.npi),!rx.icd.length,!rx.items.length,rx.items.some(item=>item.lines.some(l=>!l.code))].filter(Boolean).length;
   status.className=`section-status ${gaps?'danger':'success'}`;
   status.innerHTML=gaps?`<i data-lucide="circle-x"></i> ${gaps} missing`:'<i data-lucide="circle-check"></i> Reviewed';
@@ -1325,35 +1379,46 @@ const systemProducts=[
   {name:'Oxygen supplies kit',bundle:true,codes:['A4615','A4616'],terms:'oxygen supplies kit bundle cannula tubing o2'}
 ];
 const words=text=>text.toLowerCase().replace(/[^a-z0-9\s-]/g,' ').split(/\s+/).filter(w=>w.length>1);
-// Best matches for a name or HCPCS typed by the user, highest confidence first.
-function matchProducts(query){
+// HCPCS codes matching what the user typed: a code (or the start of one) or words from the description.
+// Product names in the system only help match common words (e.g. "nasal pillows" → A7034); results are always HCPCS codes.
+function matchHcpcs(query){
   const q=query.trim();if(q.length<2)return [];
   const code=q.toUpperCase();
-  if(/^[A-Z]\d{1,4}$/.test(code)){
-    return systemProducts.filter(p=>!p.bundle&&p.code.startsWith(code)).slice(0,4).map(p=>({product:p,confidence:p.code===code?100:90}));
+  if(/^[A-Z]\d{0,4}$/.test(code)){
+    const hits=Object.keys(hcpcsCatalog).filter(c=>c.startsWith(code)).slice(0,6).map(c=>({code:c}));
+    if(/^[A-Z]\d{4}$/.test(code)&&!hcpcsCatalog[code])hits.unshift({code,unverified:true});
+    return hits;
   }
   const qw=words(q);if(!qw.length)return [];
   const ruled=productRules.find(([pattern])=>pattern.test(q))?.[1];
-  const wantsKit=/kit|bundle|supplies|starter|resupply/i.test(q);
-  return systemProducts.map(p=>{
-    const hay=`${p.name} ${p.terms}`.toLowerCase(),hw=words(hay);
+  return Object.entries(hcpcsCatalog).map(([c,desc])=>{
+    const synonyms=systemProducts.filter(p=>!p.bundle&&p.code===c).map(p=>`${p.name} ${p.terms}`).join(' ');
+    const hw=words(`${desc} ${synonyms}`);
     const hits=qw.filter(w=>hw.some(h=>h===w||h.startsWith(w)||(w.length>3&&h.startsWith(w.slice(0,4))))).length;
-    let score=hits/qw.length;
-    if(!p.bundle&&ruled===p.code)score+=.35;
-    if(p.bundle)score+=wantsKit?.3:-.25;
-    if(p.name.toLowerCase()===q.toLowerCase())score+=.5;
-    return {product:p,score};
-  }).filter(r=>r.score>.3).sort((a,b)=>b.score-a.score).slice(0,4)
-    .map((r,i)=>({product:r.product,confidence:Math.max(55,Math.min(98,Math.round(60+r.score*30)-i*3))}));
+    return {code:c,score:hits/qw.length+(ruled===c?.35:0)};
+  }).filter(r=>r.score>.3).sort((a,b)=>b.score-a.score).slice(0,5).map(r=>({code:r.code}));
 }
-function itemFromProduct(product,query){
-  const lines=product.bundle?product.codes.map(c=>line(c,true)):[line(product.code,true)];
-  return {name:product.name,bundle:Boolean(product.bundle),kindAi:true,matchedFrom:query,lines};
+// Bundles: named sets of HCPCS codes set up in the system (e.g. CPAP starter kit).
+const systemBundles=systemProducts.filter(p=>p.bundle);
+function matchBundles(query){
+  const q=query.trim();if(q.length<2)return [];
+  const code=q.toUpperCase();
+  if(/^[A-Z]\d{0,4}$/.test(code))return systemBundles.filter(b=>b.codes.some(c=>c.startsWith(code))).slice(0,2);
+  const qw=words(q);if(!qw.length)return [];
+  return systemBundles.map(b=>{const hw=words(`${b.name} ${b.terms}`);const hits=qw.filter(w=>hw.some(h=>h===w||h.startsWith(w)||(w.length>3&&h.startsWith(w.slice(0,4))))).length;return {b,score:hits/qw.length};})
+    .filter(r=>r.score>=.5).sort((a,b)=>b.score-a.score).slice(0,2).map(r=>r.b);
 }
-function suggestionsHtml(rxId,matches,active=0){
-  if(!matches.length)return `<div class="ai-suggest-empty"><i data-lucide="search-x"></i> No close match in the system. Press Enter to add it and enter a HCPCS code.</div>`;
-  return `<div class="ai-suggest-head"><i data-lucide="sparkles"></i> AI matches from your product catalog</div>`+matches.map((m,i)=>{const p=m.product;
-    return `<button type="button" role="option" class="ai-suggest-row ${i===active?'active':''}" aria-selected="${i===active}" data-pick-product="${rxId}" data-product="${systemProducts.indexOf(p)}"><span class="ai-suggest-name"><strong>${p.name}</strong><small>${p.bundle?`Bundle · ${p.codes.join(', ')}`:hcpcsCatalog[p.code]||''}</small></span>${p.bundle?`<span class="hcpcs-badge bundle">${p.codes.length} codes</span>`:`<span class="hcpcs-badge">${p.code}</span>`}${i===0?`<em class="best-match">Best match · ${m.confidence}%</em>`:`<em class="match-score">${m.confidence}%</em>`}</button>`;}).join('');
+// Search results: bundles first, then single HCPCS codes.
+const searchMatches=query=>[...matchBundles(query).map(bundle=>({bundle})),...matchHcpcs(query)];
+function suggestionsHtml(key,matches,active=0){
+  const query=suggestState[key]?.query||'';
+  const create=key.includes('|')?'':`<button type="button" class="ai-suggest-row ai-suggest-create" data-new-bundle="${key}"><span class="ai-suggest-name"><strong><i data-lucide="boxes"></i> Create a bundle${query?` “${escAttr(query)}”`:''}</strong><small>Name it, then add its HCPCS codes</small></span><span></span><span></span></button>`;
+  if(!matches.length)return `<div class="ai-suggest-empty"><i data-lucide="search-x"></i> No HCPCS code or bundle matches. Try a code like A7034 or different words.</div>${create}`;
+  const row=(m,i)=>m.bundle
+    ?`<button type="button" role="option" class="ai-suggest-row ${i===active?'active':''}" aria-selected="${i===active}" data-pick-bundle="${key}" data-bundle="${systemBundles.indexOf(m.bundle)}"><span class="ai-suggest-name"><strong>${m.bundle.name}</strong><small>${m.bundle.codes.join(', ')}</small></span><span class="hcpcs-badge bundle">Bundle · ${m.bundle.codes.length} codes</span><span></span></button>`
+    :`<button type="button" role="option" class="ai-suggest-row ${i===active?'active':''}" aria-selected="${i===active}" data-pick-hcpcs="${key}" data-code="${m.code}"><span class="ai-suggest-name"><strong>${m.unverified?'Code not in catalog':hcpcsCatalog[m.code]}</strong>${m.unverified?'<small>Add only if you’ve verified the code</small>':''}</span><span class="hcpcs-badge">${m.code}</span><span></span></button>`;
+  const firstCode=matches.findIndex(m=>!m.bundle);
+  return matches.map((m,i)=>(i===0&&m.bundle?'<div class="ai-suggest-head"><i data-lucide="boxes"></i> Bundles</div>':'')+(i===firstCode?'<div class="ai-suggest-head"><i data-lucide="search"></i> HCPCS codes</div>':'')+row(m,i)).join('')+create;
 }
 // AI mapping of a product name (or a HCPCS code typed directly) to HCPCS lines.
 function mapProduct(text){
@@ -1395,38 +1460,94 @@ $('#prescriptions').addEventListener('submit',event=>{
     refreshIcd(rx);toast(`${code} added`);
     $(`[data-add-icd="${rx.id}"] input`)?.focus();return;
   }
-  if(form.dataset.addItem){
-    const s=suggestState[form.dataset.addItem],pick=s&&s.query===value?s.matches[s.active]:matchProducts(value)[0];
-    addItemToRx(form.dataset.addItem,value,pick);
+  if(form.dataset.hcpcsSearch){
+    const key=form.dataset.hcpcsSearch,s=suggestState[key];
+    const pick=s&&s.query===value&&s.matches.length?s.matches[s.active]:searchMatches(value)[0];
+    if(!pick){toast('No HCPCS code or bundle matches. Pick one from the list.');return;}
+    if(pick.bundle)addBundle(key,pick.bundle);else addHcpcs(key,pick.code);
   }
 });
+// HCPCS search state, keyed by the search box: "rxId" adds an item, "rxId|itemId" adds a code to that item.
 const suggestState={};
-function closeSuggest(rxId){const box=$(`#suggest-${rxId}`);if(box){box.hidden=true;box.innerHTML='';}$(`[data-add-item="${rxId}"] input`)?.setAttribute('aria-expanded','false');delete suggestState[rxId];}
-function showSuggest(rxId,query){
-  const box=$(`#suggest-${rxId}`);if(!box)return;
-  if(query.trim().length<2){closeSuggest(rxId);return;}
-  const matches=matchProducts(query);
-  suggestState[rxId]={query:query.trim(),matches,active:0};
-  box.innerHTML=suggestionsHtml(rxId,matches,0);box.hidden=false;
-  $(`[data-add-item="${rxId}"] input`).setAttribute('aria-expanded','true');icons();
+const searchForm=key=>document.querySelector(`[data-hcpcs-search="${key}"]`);
+function closeSuggest(key){const form=searchForm(key),box=form?.querySelector('.ai-suggest');if(box){box.hidden=true;box.innerHTML='';}form?.querySelector('input')?.setAttribute('aria-expanded','false');delete suggestState[key];}
+function showSuggest(key,query){
+  const form=searchForm(key),box=form?.querySelector('.ai-suggest');if(!box)return;
+  if(query.trim().length<2){closeSuggest(key);return;}
+  const matches=searchMatches(query);
+  suggestState[key]={query:query.trim(),matches,active:0};
+  box.innerHTML=suggestionsHtml(key,matches,0);box.hidden=false;
+  form.querySelector('input').setAttribute('aria-expanded','true');icons();
 }
-function addItemToRx(rxId,value,pick){
-  const rx=rxById(rxId);
-  const mapped=pick?itemFromProduct(pick.product,value):mapProduct(value),first=mapped.lines[0].code;
-  if(pick)mapped.confidence=pick.confidence;
-  rx.items.push({id:`item-${Date.now()}`,kindAi:mapped.lines.some(l=>l.ai),...mapped,policy:policyFor(first),policyAi:Boolean(policyFor(first)),dispense:{type:/^E/.test(first)?'Rental':'Purchase',length:'99 months (lifetime)',start:'10/15/2026'}});
-  closeSuggest(rxId);refreshItems(rx);
-  toast(pick?`AI matched “${value}” to ${mapped.name}${mapped.bundle?` · bundle of ${mapped.lines.length} codes`:` · ${first}`}`:mapped.lines[0].ai?`AI mapped “${value}” to ${first}`:first?`${first} added`:'No HCPCS match found. Enter a code.');
-  $(`[data-add-item="${rx.id}"] input`)?.focus();
+function addHcpcs(key,code){
+  const [rxId,itemId]=key.split('|'),rx=rxById(rxId);if(!rx)return;
+  closeSuggest(key);
+  if(itemId){
+    const item=rx.items.find(x=>x.id===itemId);if(!item)return;
+    if(item.lines.some(l=>l.code===code)){toast(`${code} is already on this item`);return;}
+    item.lines=item.lines.filter(l=>l.code);item.lines.push(line(code));
+    item.kindAi=false;item.bundle=item.lines.length>1;
+    if(!item.policy&&policyFor(code)){item.policy=policyFor(code);item.policyAi=true;}
+    refreshItems(rx);toast(`${code} added`);
+    searchForm(key)?.querySelector('input')?.focus();return;
+  }
+  rx.items.push({id:`item-${Date.now()}`,name:hcpcsCatalog[code]||code,bundle:false,kindAi:false,lines:[line(code)],policy:policyFor(code),policyAi:Boolean(policyFor(code)),dispense:{type:/^E/.test(code)?'Rental':'Purchase',length:'99 months (lifetime)',start:'10/15/2026'}});
+  refreshItems(rx);toast(`${code} added as an item`);
+  searchForm(rx.id)?.querySelector('input')?.focus();
 }
-$('#prescriptions').addEventListener('input',event=>{const form=event.target.closest('[data-add-item]');if(form&&event.target.name==='product')showSuggest(form.dataset.addItem,event.target.value);});
-$('#prescriptions').addEventListener('keydown',event=>{
-  const form=event.target.closest('[data-add-item]');if(!form||event.target.name!=='product')return;
-  const id=form.dataset.addItem,s=suggestState[id];if(!s)return;
-  if(event.key==='Escape'){closeSuggest(id);return;}
-  if((event.key==='ArrowDown'||event.key==='ArrowUp')&&s.matches.length){event.preventDefault();s.active=(s.active+(event.key==='ArrowDown'?1:-1)+s.matches.length)%s.matches.length;$(`#suggest-${id}`).innerHTML=suggestionsHtml(id,s.matches,s.active);icons();}
+// Add a bundle: as a new item, or its codes to the item being edited.
+function addBundle(key,bundle){
+  const [rxId,itemId]=key.split('|'),rx=rxById(rxId);if(!rx)return;
+  closeSuggest(key);
+  if(itemId){
+    const item=rx.items.find(x=>x.id===itemId);if(!item)return;
+    const added=bundle.codes.filter(c=>!item.lines.some(l=>l.code===c));
+    if(!added.length){toast(`All ${bundle.name} codes are already on this item`);return;}
+    item.lines=[...item.lines.filter(l=>l.code),...added.map(c=>line(c))];item.kindAi=false;item.bundle=item.lines.length>1;
+    if(!item.policy&&policyFor(added[0])){item.policy=policyFor(added[0]);item.policyAi=true;}
+    refreshItems(rx);toast(`${added.length} ${added.length===1?'code':'codes'} added from ${bundle.name}`);
+    searchForm(key)?.querySelector('input')?.focus();return;
+  }
+  const first=bundle.codes[0];
+  rx.items.push({id:`item-${Date.now()}`,name:bundle.name,bundle:true,kindAi:false,lines:bundle.codes.map(c=>line(c)),policy:policyFor(first),policyAi:Boolean(policyFor(first)),dispense:{type:'Purchase',length:'99 months (lifetime)',start:'10/15/2026'}});
+  refreshItems(rx);toast(`${bundle.name} added · bundle of ${bundle.codes.length} codes`);
+  searchForm(rx.id)?.querySelector('input')?.focus();
+}
+// Start a custom bundle: a new item opened in edit mode, ready for its codes.
+function newBundle(rxId,name){
+  const rx=rxById(rxId);if(!rx)return;
+  closeSuggest(rxId);
+  const item={id:`item-${Date.now()}`,name:name||'New bundle',bundle:true,kindAi:false,lines:[],editing:true,editStartName:name||'New bundle',dispense:{type:'Purchase',length:'99 months (lifetime)',start:'10/15/2026'}};
+  rx.items.push(item);refreshItems(rx);
+  const input=searchForm(`${rx.id}|${item.id}`)?.querySelector('input');input?.focus();
+  toast('Bundle started. Add its HCPCS codes.');
+}
+// Finish editing an item: keep a name, drop empty code lines, and flag the item if it has no HCPCS code.
+function finishItemEdit(rx,item){
+  if(!String(item.name||'').trim()){item.name=item.editStartName||'Untitled item';toast('Item name can’t be empty. The previous name was kept.');}
+  item.name=String(item.name).trim();
+  item.lines=item.lines.filter(l=>l.code);
+  if(!item.lines.length)item.lines=[line('')];
+  item.bundle=item.lines.filter(l=>l.code).length>1;
+  item.editing=false;item.expanded=true;delete item.editStartName;
+}
+$('#prescriptions').addEventListener('input',event=>{
+  const el=event.target;
+  const form=el.closest('[data-hcpcs-search]');if(form&&el.name==='hcpcs'){showSuggest(form.dataset.hcpcsSearch,el.value);return;}
+  if(el.dataset.itemField){
+    const [rxId,itemId]=el.dataset.item.split('|'),item=rxById(rxId)?.items.find(x=>x.id===itemId);if(!item)return;
+    const field=el.dataset.itemField,value=el.value;
+    if(field==='qty')item.qty=value.trim()?Math.max(1,parseInt(value,10)||1):'';
+    else item[field]=field==='name'?value:value.trim();
+  }
 });
-document.addEventListener('mousedown',event=>{Object.keys(suggestState).forEach(id=>{if(!event.target.closest(`[data-add-item="${id}"]`))closeSuggest(id);});});
+$('#prescriptions').addEventListener('keydown',event=>{
+  const form=event.target.closest('[data-hcpcs-search]');if(!form||event.target.name!=='hcpcs')return;
+  const key=form.dataset.hcpcsSearch,s=suggestState[key];if(!s)return;
+  if(event.key==='Escape'){closeSuggest(key);return;}
+  if((event.key==='ArrowDown'||event.key==='ArrowUp')&&s.matches.length){event.preventDefault();s.active=(s.active+(event.key==='ArrowDown'?1:-1)+s.matches.length)%s.matches.length;form.querySelector('.ai-suggest').innerHTML=suggestionsHtml(key,s.matches,s.active);icons();}
+});
+document.addEventListener('mousedown',event=>{Object.keys(suggestState).forEach(key=>{if(!event.target.closest(`[data-hcpcs-search="${key}"]`))closeSuggest(key);});});
 $('#prescriptions').addEventListener('change',event=>{
   const el=event.target;
   if(el.dataset.line){
@@ -1439,13 +1560,17 @@ $('#prescriptions').addEventListener('change',event=>{
 });
 $('#prescriptions').addEventListener('click',event=>{
   const button=event.target.closest('button');if(!button)return;
-  if(button.dataset.pickProduct){const id=button.dataset.pickProduct,input=$(`[data-add-item="${id}"] input`),product=systemProducts[+button.dataset.product],m=suggestState[id]?.matches.find(x=>x.product===product);addItemToRx(id,input.value.trim(),m||{product,confidence:90});return;}
+  if(button.dataset.pickHcpcs){addHcpcs(button.dataset.pickHcpcs,button.dataset.code);return;}
+  if(button.dataset.pickBundle){addBundle(button.dataset.pickBundle,systemBundles[+button.dataset.bundle]);return;}
+  if(button.dataset.newBundle){const key=button.dataset.newBundle,q=searchForm(key)?.querySelector('input')?.value.trim()||'';newBundle(key,q&&!/^[A-Z]\d{0,4}$/i.test(q)?q:'');return;}
   if(button.dataset.removeIcd){const rx=rxById(button.dataset.removeIcd),[removed]=rx.icd.splice(+button.dataset.index,1);if(removed.primary&&rx.icd[0])rx.icd[0].primary=true;refreshIcd(rx);toast(`${removed.code} removed`);return;}
-  if(button.dataset.editItem){const [rxId,itemId]=button.dataset.editItem.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);item.editing=!item.editing;refreshItems(rx);if(item.editing)$(`#rx-${rxId}-${itemId} input`)?.focus();return;}
+  if(button.dataset.editItem){const [rxId,itemId]=button.dataset.editItem.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);
+    if(item.editing){finishItemEdit(rx,item);refreshItems(rx);toast(`${item.name} updated`);return;}
+    item.editing=true;item.editStartName=item.name;refreshItems(rx);$(`#rx-${rxId}-${itemId} [data-item-field="name"]`)?.focus();return;}
   if(button.dataset.toggleCodes){const [rxId,itemId]=button.dataset.toggleCodes.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);item.expanded=!item.expanded;refreshItems(rx);return;}
   if(button.dataset.itemDocs){const [rxId,itemId]=button.dataset.itemDocs.split('|');openItemDocs(rxId,itemId);return;}
   if(button.dataset.removeItem){const [rxId,itemId]=button.dataset.removeItem.split('|'),rx=rxById(rxId);rx.items=rx.items.filter(x=>x.id!==itemId);refreshItems(rx);toast('Item removed');return;}
-  if(button.dataset.removeLine){const [rxId,itemId,i]=button.dataset.removeLine.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);item.lines.splice(+i,1);item.kindAi=false;if(item.lines.length===1)item.bundle=false;refreshItems(rx);}
+  if(button.dataset.removeLine){const [rxId,itemId,i]=button.dataset.removeLine.split('|'),rx=rxById(rxId),item=rx.items.find(x=>x.id===itemId);const [removed]=item.lines.splice(+i,1);item.kindAi=false;item.bundle=item.lines.filter(l=>l.code).length>1;refreshItems(rx);if(removed?.code)toast(`${removed.code} removed`);}
 });
 $('#itemDocsDialog').addEventListener('click',event=>{
   const button=event.target.closest('button');if(!button)return;
@@ -1520,26 +1645,47 @@ async function runPrecheck(button){
   await wait(1200);
   state.precheck=precheckResults();state.precheckAt='just now';
   renderPrecheck();
-  $('#nextActionTitle').textContent='Create order';
-  $('#nextActionReason').textContent=`Pre-check ${precheckSummary(state.precheck).toLowerCase()}. Create the DME order and select products from the prescribed HCPCS codes.`;
-  button.disabled=false;button.innerHTML='<i data-lucide="arrow-right"></i> Create order';button.dataset.postAction='Create order';
+  $('#nextActionTitle').textContent='Start fulfillment';
+  $('#nextActionReason').textContent=`Pre-check ${precheckSummary(state.precheck).toLowerCase()}. Start fulfillment to create the orders, refills and appointments.`;
+  button.disabled=false;button.innerHTML='<i data-lucide="arrow-right"></i> Start fulfillment';button.dataset.postAction='Start fulfillment';
   $('#otherActionButtons').innerHTML='<button class="secondary-action compact" data-post-action="Run pre-check again">Run pre-check again</button>';
   icons();toast(`Pre-check ${precheckSummary(state.precheck).toLowerCase()}`);
   $('#precheckResult').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
+// Physician details as shown in the review, carried to the pre-check.
+function physicianSnapshot(p){
+  const has=k=>p[k]!==undefined?Boolean(p[k]):(p.enrollment||[]).some(e=>e.replace(/\s/g,'').toLowerCase()===k);
+  return {first:p.first||'',last:p.last||'',npi:p.npi||'',specialty:p.specialty||'',address:p.address||'',dme:has('dme'),pmd:has('pmd'),partb:has('partb')};
+}
+// The eligibility check (EC) result for a plan, as shown in the review's eligibility response.
+function eligibilitySnapshot(plan){
+  const result=planResult(plan);if(!result||!plan.check)return null;
+  const field=label=>plan.fields.find(([name])=>name===label)?.[1]||'—';
+  return {service:plan.check.service,checkedAt:plan.check.at,active:planStatus(plan)!=='inactive',eligible:result.eligible,benefit:result.detail,
+    deductible:plan.response.deductible,deductibleMet:plan.response.deductibleMet,oop:plan.response.oop,network:plan.response.network,payer:plan.response.payer,trace:plan.response.trace,
+    planDates:`${field('Effective from')} – ${field('Effective to')}`,other:plan.otherCoverage?{name:plan.otherCoverage.name,memberId:plan.otherCoverage.memberId,dates:plan.otherCoverage.dates}:null};
+}
 function intakeSnapshot(){
   return {
     id:INTAKE_ID,completed:'Oct 15, 2026',
-    patient:{first:'Ashlynn',middle:'',last:'Botosh',dob:$('#dobValue')?.textContent.trim()||'03/15/1978',gender:$('#genderInput')?.value||'Female',phone:$('#mobileValue')?.textContent.trim()||$('#mobileInput')?.value.trim()||'(415) 220-8841',home:'(206) 555-0142',email:'ashlynn.botosh@email.com',address:'1234 Healthways Blvd, Suite 200',city:'Seattle',state:'WA',zip:'98101',county:'King',mrn:'PT-10482'},
-    prescriptions:prescriptions.map((rx,i)=>({title:rxTitle(i),source:rx.source||'Added manually',date:rx.date,note:($(`#note-${rx.id}`)?.value||rx.note?.text||'').trim(),physician:`${rx.physician.first||''} ${rx.physician.last||''}`.trim(),npi:rx.physician.npi||'',specialty:rx.physician.specialty,
+    patient:state.manualPatient?{...state.manualPatient}:{first:'Ashlynn',middle:'',last:'Botosh',dob:$('#dobValue')?.textContent.trim()||'03/15/1978',gender:$('#genderInput')?.value||'Female',phone:$('#mobileValue')?.textContent.trim()||$('#mobileInput')?.value.trim()||'(415) 220-8841',home:'(206) 555-0142',email:'ashlynn.botosh@email.com',address:'1234 Healthways Blvd, Suite 200',city:'Seattle',state:'WA',zip:'98101',county:'King',mrn:'PT-10482'},
+    prescriptions:prescriptions.filter(rx=>!rx.manual||rxStarted(rx)).map((rx,i)=>({title:rxTitle(i),source:rx.source||'Added manually',date:rx.date,note:($(`#note-${rx.id}`)?.value||rx.note?.text||'').trim(),physician:`${rx.physician.first||''} ${rx.physician.last||''}`.trim(),npi:rx.physician.npi||'',specialty:rx.physician.specialty,physicianInfo:physicianSnapshot(rx.physician),
       icd:rx.icd.map(c=>({code:c.code,description:c.description,primary:Boolean(c.primary)})),
-      items:rx.items.map(item=>({name:item.bundle||item.lines.some(l=>l.ai)||!/^[A-Z]\d{4}$/.test(item.name)?item.name:(hcpcsCatalog[item.name]||item.name),bundle:Boolean(item.bundle),qty:item.qty||'',frequency:item.frequency||'',lines:item.lines.filter(l=>l.code).map(l=>({code:l.code,description:hcpcsCatalog[l.code]||'',qty:item.qty||'—',frequency:item.frequency||'Not on prescription'}))}))})),
-    insurance:insurancePlans.map((plan,i)=>({rank:planRank(i),name:plan.name,memberId:['Member ID prefix','Member ID','Member ID suffix'].map(k=>plan.fields.find(([n])=>n===k)?.[1]).filter(v=>v&&v!=='—'&&v!=='Not provided').join(' '),group:plan.fields.find(([n])=>n==='Group number')?.[1]||'',status:planStatus(plan)==='inactive'?'Inactive':'Active'})),
+      items:rx.items.map(item=>({id:item.id,docs:docsForItem(rx,item).map(d=>({name:d.name,status:d.status,found:d.found,na:d.na,recommended:d.recommended||''})),name:item.bundle||item.lines.some(l=>l.ai)||!/^[A-Z]\d{4}$/.test(item.name)?item.name:(hcpcsCatalog[item.name]||item.name),bundle:Boolean(item.bundle),qty:item.qty||'',frequency:item.frequency||'',lines:item.lines.filter(l=>l.code).map(l=>({code:l.code,description:hcpcsCatalog[l.code]||'',qty:item.qty||'—',frequency:item.frequency||'Not on prescription'}))}))})),
+    insurance:insurancePlans.map((plan,i)=>({rank:planRank(i),name:plan.name,memberId:['Member ID prefix','Member ID','Member ID suffix'].map(k=>plan.fields.find(([n])=>n===k)?.[1]).filter(v=>v&&v!=='—'&&v!=='Not provided').join(' '),group:plan.fields.find(([n])=>n==='Group number')?.[1]||'',status:planStatus(plan)==='inactive'?'Inactive':'Active',type:plan.fields.find(([n])=>n==='Insurance type')?.[1]||'',eligibility:eligibilitySnapshot(plan)})),
     priorAuths:priorAuthList.map(pa=>({code:pa.code,number:pa.number,payer:pa.payer,from:pa.from,to:pa.to,qty:pa.qty,frequency:pa.frequency})),
     documents:viewerFiles().map(file=>file.name),
     note:prescriptions.map((rx,i)=>{const text=($(`#note-${rx.id}`)?.value||rx.note?.text||'').trim();return text?`${rxTitle(i)}: ${text}`:'';}).filter(Boolean).join('\n\n'),
     precheck:state.precheck?{summary:precheckSummary(state.precheck),at:'Oct 15, 2026',results:state.precheck}:null
   };
+}
+// Fulfillment: turn the reviewed intake into orders, refills and appointments (prepare-orders.html).
+function startFulfillment(){
+  const snapshot=intakeSnapshot();
+  const status={};(state.precheck?prescriptions.flatMap(rx=>rx.items.flatMap(item=>item.lines.map(l=>l.code))):[]).forEach(code=>{if(code)status[code]='pass';});
+  try{sessionStorage.setItem('signeticIntakeFull',JSON.stringify(snapshot));sessionStorage.removeItem('signeticIntakeOrder');sessionStorage.removeItem('signeticOrderPlan');sessionStorage.removeItem('signeticOrderAction');
+    if(state.precheck)sessionStorage.setItem('signeticPrecheckStatus',JSON.stringify(status));else sessionStorage.removeItem('signeticPrecheckStatus');}catch(error){}
+  location.href='prepare-orders.html';
 }
 function createOrder(){
   const snapshot=intakeSnapshot();
@@ -1555,7 +1701,7 @@ function handlePostAction(action,button){
   const left=requiredReviewsLeft();
   if(left){openReviewGate(left);return;}
   if(action==='Start pre-check'||action==='Run pre-check again'){try{sessionStorage.removeItem('signeticIntakeFull');sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(intakeSnapshot()));}catch(error){}location.href='precheck.html';return;}
-  if(action==='Create order'||action==='Create order without pre-check'){createOrder();return;}
+  if(action==='Start fulfillment'||action==='Create order'||action==='Create order without pre-check'){startFulfillment();return;}
   if(action==='Schedule setup appointment'){toast('Setup appointment selected · opens scheduling');return;}
   toast(`${action} selected`);
 }
@@ -1578,7 +1724,7 @@ function buildIntakeSummary(){
   if(priorAuthList.some(pa=>pa.gap))watch.push('the CPAP authorization ends before the rental does');
   const s3=watch.length?`Before ordering, note that ${list(watch)}.`:'';
   // Context only: how each item is ordered (new, refill, add to an order) is chosen after the pre-check.
-  const s4=window.protoScenario==='issues'?'She has 3 existing orders, including refillable CPAP supplies and an open oxygen order. You’ll choose how each item is ordered after the pre-check.':'';
+  const s4='She has existing orders, including refillable CPAP supplies and an open oxygen order. Fulfillment shows how each item will be ordered.';
   return {
     title:`New ${list(therapy)||'DME'} intake`,
     context:`${state.patientLinked?'Existing patient':'New patient'} · ${prescriptions.length} ${prescriptions.length===1?'prescription':'prescriptions'}`,
@@ -1663,6 +1809,12 @@ function restoreProgress(){
 restoreProgress();
 window.progressReady=true;
 ['click','input','change','keyup','drop'].forEach(type=>document.addEventListener(type,saveSoon,true));
+// Keep the pre-check and Fulfillment on the latest reviewed intake: items added or edited in the review show up there.
+// Runs after the page's own handlers, also on prototype deep links (where saved progress is off).
+let syncTimer=null;
+function syncIntake(){if(state.phase!=='review')return;try{sessionStorage.setItem('signeticIntakeFull',JSON.stringify(intakeSnapshot()));}catch(error){}}
+['click','input','change','keyup'].forEach(type=>document.addEventListener(type,()=>{clearTimeout(syncTimer);syncTimer=setTimeout(syncIntake,300);}));
+addEventListener('pagehide',()=>{clearTimeout(syncTimer);syncIntake();});
 addEventListener('pagehide',()=>{if(window.progressReady){clearTimeout(saveTimer);saveProgress();}});
 const setNavCollapsed=collapsed=>{document.body.classList.toggle('nav-collapsed',collapsed);const toggle=$('#navToggle');toggle.setAttribute('aria-expanded',String(!collapsed));toggle.setAttribute('aria-label',collapsed?'Expand navigation':'Collapse navigation');toggle.title=toggle.getAttribute('aria-label');};
 // The main navigation stays collapsed until the user opens it.
@@ -1742,6 +1894,68 @@ $('#addPlanForm').addEventListener('submit',event=>{
   toast(`${plan.name} added as ${planRank(position).toLowerCase()} coverage`);
   if(form.checkNow.checked)checkPlanEligibility();
 });
+
+// ---------- Manual intake: pick the patient, then type the prescription (no documents, no AI extraction) ----------
+const manualPatients=()=>patientDirectory.map(p=>({...p,match:patientMatches.find(m=>m.id===p.id)}));
+function renderManualList(query=''){
+  const q=query.trim().toLowerCase();
+  const list=manualPatients().filter(p=>!q||`${p.name} ${p.dob} ${p.mrn}`.toLowerCase().includes(q));
+  $('#manualList').innerHTML=list.map(p=>`<button type="button" class="manual-row" data-manual-patient="${p.id}" role="listitem"><span class="avatar">${p.name.split(' ').map(w=>w[0]).join('').slice(0,2)}</span><span><b>${p.name}</b><small>DOB ${p.dob} · MRN ${p.mrn}</small></span><i data-lucide="arrow-right"></i></button>`).join('')||'<p class="empty-note">No patient matches. Add a new patient below.</p>';
+  icons();
+}
+function openManual(){
+  $('#manualPick').hidden=false;$('#manualNewForm').hidden=true;$('#manualSearch').value='';$('#manualError').hidden=true;
+  renderManualList();$('#manualDialog').showModal();$('#manualSearch').focus();
+}
+// Fill a review field by its label (demographics and contact cards).
+function setReviewField(section,label,value){
+  const cell=$$(`${section} .compact-fields>div`).find(div=>(div.querySelector('span,label')?.textContent||'').trim().startsWith(label));
+  const strong=cell?.querySelector('strong');if(strong)strong.textContent=value||'—';
+  cell?.querySelectorAll('.ai-chip,.ai-info').forEach(el=>el.remove());cell?.classList.remove('ai-cell');
+}
+function startManual(patient){
+  const [first,...rest]=patient.name.split(' '),last=rest.join(' ');
+  state.manual=true;state.manualPatient={first,middle:'',last,dob:patient.dob,gender:patient.gender||'',phone:patient.phone||patient.match?.phone||'',home:'',email:patient.match?.email||'',address:patient.match?.address||'',city:'',state:'WA',zip:'',county:'',mrn:patient.mrn||'New'};
+  Object.assign(state,{extractionComplete:true,patientResolved:true,patientLinked:!patient.isNew,knownPatient:patient.isNew?null:patient.id,mobile:true,provider:true,product:true,selected:''});
+  documents.splice(0,documents.length);aiResolvedFields.splice(0,aiResolvedFields.length);
+  // One empty prescription to type into.
+  replaceAll(prescriptions,[{id:'rx1',docId:'',source:'',date:'',main:true,manual:true,physician:{first:'',last:'',npi:'',specialty:'',enrollment:[]},icd:[],items:[],note:{text:'',signed:true}}]);
+  replaceAll(priorAuthList,[]);
+  if(patient.isNew)replaceAll(insurancePlans,[]);
+  // Patient details: from Signetic for an existing patient, from the form for a new one.
+  setReviewField('#demographics-section','First name',first);setReviewField('#demographics-section','Last name',last);
+  setReviewField('#demographics-section','Date of birth',patient.dob);
+  if(patient.gender)$('#genderInput').value=patient.gender;
+  if(patient.isNew){
+    ['Email','Home phone number','Street address','City','State/Province','ZIP code'].forEach(label=>setReviewField('#contact-section',label,''));
+    setReviewField('#contact-section','Mobile number',patient.phone);
+  }else if(patient.match){
+    setReviewField('#contact-section','Email',patient.match.email);setReviewField('#contact-section','Mobile number',patient.match.phone);
+  }
+  document.body.classList.add('manual-intake');
+  postIntakeRecommendation.patient=patient.name;postIntakeRecommendation.context=`${patient.isNew?'New':'Existing'} patient · Manual intake`;
+  $('#manualDialog').close();
+  renderInsurance(0);renderPrescriptions();renderPriorAuths();
+  setPhase('review');renderDocuments();updateProgress();
+  $('#workspace').classList.add('viewer-collapsed');
+  toast(`Manual intake for ${patient.name}. Add the prescription below.`);
+  setTimeout(()=>$('#prescription-section')?.scrollIntoView({behavior:'smooth',block:'start'}),300);
+}
+$('#manualStart').addEventListener('click',openManual);
+$$('[data-close-manual]').forEach(b=>b.addEventListener('click',()=>$('#manualDialog').close()));
+$('#manualSearch').addEventListener('input',event=>renderManualList(event.target.value));
+$('#manualList').addEventListener('click',event=>{const row=event.target.closest('[data-manual-patient]');if(!row)return;const p=manualPatients().find(x=>x.id===row.dataset.manualPatient);startManual({...p,gender:p.id==='ashlynn'?'Female':''});});
+$('#manualNewBtn').addEventListener('click',()=>{$('#manualPick').hidden=true;$('#manualNewForm').hidden=false;$('#manualNewForm').first.focus();});
+$('#manualBack').addEventListener('click',()=>{$('#manualPick').hidden=false;$('#manualNewForm').hidden=true;});
+$('#manualNewForm').addEventListener('submit',event=>{
+  event.preventDefault();const f=event.target;
+  if(!f.first.value.trim()||!f.last.value.trim()||!f.dob.value.trim()||!f.gender.value){$('#manualError').hidden=false;return;}
+  startManual({isNew:true,id:'new',name:`${f.first.value.trim()} ${f.last.value.trim()}`,dob:f.dob.value.trim(),gender:f.gender.value,phone:f.phone.value.trim(),mrn:'New'});
+});
+// Keep the review status current while the prescription is typed in.
+const refreshRxStatus=()=>setTimeout(()=>{prescriptions.forEach(setRxStatus);if(state.phase==='review')updateProgress();icons();},50);
+$('#prescriptions').addEventListener('click',refreshRxStatus);
+$('#prescriptions').addEventListener('change',refreshRxStatus);
 
 // Prototype navigator (proto-nav.js) deep links: ?screen=extract-both|extract-docs|review|complete
 (function(){

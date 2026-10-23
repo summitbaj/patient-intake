@@ -4,24 +4,30 @@
    Loaded by precheck.html, prepare-orders.html and existing-order.html (after scenario.js). */
 (function(){
   const issues=window.protoScenario==='issues';
-  // Happy path: a new patient with no orders, so every item becomes a new order.
-  const existingOrders=issues?[
+  // Ashlynn is an existing patient in both scenarios, so Fulfillment always shows a new order, a refill and an already-ordered item.
+  // Demo orders belong to Ashlynn Botosh (MRN PT-10482). Other patients, including new ones from a manual intake, have none.
+  const currentIntake=(()=>{try{return JSON.parse(sessionStorage.getItem('signeticIntakeFull'))||JSON.parse(sessionStorage.getItem('signeticIntakeOrder'));}catch(error){return null;}})();
+  const forDemoPatient=!currentIntake?.patient?.mrn||currentIntake.patient.mrn==='PT-10482';
+  const existingOrders=!forDemoPatient?[]:[
     {id:'ORD-1042',title:'CPAP and supplies',therapy:'pap',status:'Active',statusNote:'CPAP owned since 08/2021 · monthly resupply',editable:false,physician:'Sarah Kim',created:'08/12/2021',
       items:[
-        {code:'E0601',name:'CPAP device',refillable:false,note:'Owned · capped rental ended 08/2022'},
-        {code:'A7030',name:'Full face mask',refillable:true,limit:'1 per 3 months',lastFilled:'09/02/2026',nextEligible:'12/02/2026',due:false},
-        {code:'A7031',name:'Full face mask cushion',refillable:true,limit:'1 per month',lastFilled:'09/02/2026',nextEligible:'10/02/2026',due:true},
-        {code:'A7035',name:'Headgear',refillable:true,limit:'1 per 6 months',lastFilled:'03/20/2026',nextEligible:'09/20/2026',due:true},
-        {code:'A7037',name:'Tubing',refillable:true,limit:'1 per 3 months',lastFilled:'06/30/2026',nextEligible:'09/30/2026',due:true},
-        {code:'A7038',name:'Disposable filters',refillable:true,limit:'2 per month',lastFilled:'09/02/2026',nextEligible:'10/02/2026',due:true}
+        {code:'E0601',name:'CPAP device',refillable:false,note:'Owned · capped rental ended 08/2022',acquisition:'owned',dates:'Delivered 08/12/2021 · rental completed 08/2022'},
+        {code:'A7030',name:'Full face mask',acquisition:'purchase',refillable:true,limit:'1 per 3 months',lastFilled:'09/02/2026',nextEligible:'12/02/2026',due:false},
+        {code:'A7031',name:'Full face mask cushion',acquisition:'purchase',refillable:true,limit:'1 per month',lastFilled:'09/02/2026',nextEligible:'10/02/2026',due:true},
+        {code:'A7035',name:'Headgear',acquisition:'purchase',refillable:true,limit:'1 per 6 months',lastFilled:'03/20/2026',nextEligible:'09/20/2026',due:true},
+        {code:'A7037',name:'Tubing',acquisition:'purchase',refillable:true,limit:'1 per 3 months',lastFilled:'06/30/2026',nextEligible:'09/30/2026',due:true},
+        {code:'A7038',name:'Disposable filters',acquisition:'purchase',refillable:true,limit:'2 per month',lastFilled:'09/02/2026',nextEligible:'10/02/2026',due:true}
       ]},
     {id:'ORD-0987',title:'PAP supplies (secondary payer)',therapy:'pap',status:'Active',statusNote:'Aetna resupply · every 6 months',editable:false,physician:'Sarah Kim',created:'01/18/2024',
-      items:[{code:'A7035',name:'Headgear',refillable:true,limit:'1 per 6 months',lastFilled:'02/11/2026',nextEligible:'08/11/2026',due:true}]},
+      items:[{code:'A7035',name:'Headgear',acquisition:'purchase',refillable:true,limit:'1 per 6 months',lastFilled:'09/11/2026',nextEligible:'03/11/2027',due:false},
+               {code:'A7034',name:'Nasal mask',acquisition:'purchase',refillable:false,note:'Purchased once · switched to full face mask',dates:'Purchased 01/18/2024'}]},
     {id:'ORD-1050',title:'Home oxygen concentrator',therapy:'oxygen',status:'Open',statusNote:'Created 10/13/2026 · not shipped',editable:true,physician:'Michael Reyes',created:'10/13/2026',
-      items:[{code:'E1390',name:'Oxygen concentrator, single delivery port',refillable:false,note:'Awaiting delivery'}]},
+      items:[{code:'E1390',name:'Oxygen concentrator, single delivery port',refillable:false,note:'Awaiting delivery',acquisition:'pending',dates:'Ordered 10/13/2026 · not delivered'}]},
     {id:'ORD-0901',title:'Nebulizer',therapy:'other',status:'Closed',statusNote:'Delivered and billed 02/2025',editable:false,physician:'Michael Reyes',created:'02/04/2025',
-      items:[{code:'E0570',name:'Nebulizer with compressor',refillable:false}]}
-  ]:[];
+      items:[{code:'E0570',name:'Nebulizer with compressor',refillable:false,acquisition:'purchase',dates:'Purchased 02/04/2025'}]},
+    {id:'ORD-0755',title:'Home oxygen (prior episode)',therapy:'oxygen',status:'Closed',statusNote:'Rental ended 02/2024',editable:false,physician:'Michael Reyes',created:'03/02/2023',
+      items:[{code:'E0439',name:'Stationary liquid oxygen system',refillable:false,acquisition:'rental-past',note:'Past rental',dates:'Rented 03/2023 – 02/2024 · 11 months'}]}
+  ];
 
   const therapyOf=code=>/^(E0601|E0562|A70)/.test(code)?'pap':/^(E139|E043|A46)/.test(code)?'oxygen':'other';
   const codesOf=item=>item.lines.map(line=>line.code).filter(Boolean);
@@ -58,9 +64,10 @@
     if(o.alreadyOn)return {route:'hold',target:'',why:`Already on ${o.alreadyOn.id} (${o.alreadyOn.status.toLowerCase()}, not shipped). Ordering it again would duplicate it.`};
     if(o.refill.length===1)return {route:'refill',target:o.refill[0].id,why:`Refillable on ${o.refill[0].id} and due now.`};
     if(o.refill.length>1)return {route:'refill',target:'',why:`Refillable and due on ${o.refill.length} orders. Choose which one to refill.`};
-    if(o.addSuggested.length===1)return {route:'add',target:o.addSuggested[0].id,why:`${o.addSuggested[0].id} is an open ${o.addSuggested[0].title.toLowerCase()} order that hasn’t shipped and doesn’t include ${item.bundle?'these supplies':'this item'}.`};
     const owned=lineMatches(codes[0]).find(m=>!m.item.refillable);
     if(owned)return {route:'new',target:'',why:`${codes[0]} is on ${owned.order.id} but isn’t a refillable item, so the ${item.bundle?'whole bundle goes':'item goes'} on a new order.`};
+    const notDue=codes.map(code=>lineMatches(code).find(m=>m.item.refillable&&!m.item.due)).find(Boolean);
+    if(notDue)return {route:'new',target:'',why:`Refillable on ${notDue.order.id} but not due until ${notDue.item.nextEligible}, so it goes on a new order.`};
     return {route:'new',target:'',why:codes.some(code=>lineMatches(code).length)?`Not refillable as prescribed, so it goes on a new order.`:'Nothing like this is on file for the patient.'};
   }
 
@@ -68,7 +75,8 @@
   const PLAN_KEY='signeticOrderPlan',ACTION_KEY='signeticOrderAction';
   const read=(key,fallback)=>{try{return JSON.parse(sessionStorage.getItem(key))||fallback;}catch(error){return fallback;}};
   const write=(key,value)=>{try{sessionStorage.setItem(key,JSON.stringify(value));}catch(error){}};
-  const getPlan=()=>read(PLAN_KEY,{routes:{},confirmed:false,done:[]});
+  const PLAN_VERSION=4;
+  const getPlan=()=>{const p=read(PLAN_KEY,null);return p&&p.v===PLAN_VERSION?p:{v:PLAN_VERSION,routes:{},confirmed:false,done:[]};};
   const savePlan=plan=>write(PLAN_KEY,plan);
   function markActionDone(id){const plan=getPlan();if(!plan.done.includes(id))plan.done.push(id);savePlan(plan);}
   // The action currently open in a Signetic screen (new order wizard, refill, add to order).

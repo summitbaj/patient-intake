@@ -356,3 +356,81 @@ a.footer-btn{text-decoration:none}
 .pc-loader-steps li.active .spinner{visibility:visible}
 .pc-loader-steps li.done .lucide{display:block;color:var(--green)}
 .pc-loader-steps li.done .spinner{display:none}
+
+/* Medical criteria: one row per LCD criterion with status and evidence */
+.pc-criteria{list-style:none;margin:var(--space-3) 0 var(--space-6);padding:0;display:grid;border:1px solid var(--line);border-radius:var(--fluent-corner-2);overflow:hidden}
+.pc-crit{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:var(--space-5);align-items:start;padding:12px 14px;border-top:1px solid var(--fluent-neutral-lighter);background:var(--white)}
+.pc-crit:first-child{border-top:0}
+.pc-crit-icon{width:16px;height:16px;margin-top:2px}
+.pc-crit.met .pc-crit-icon{color:var(--green)}
+.pc-crit.review .pc-crit-icon{color:var(--amber)}
+.pc-crit.missing .pc-crit-icon{color:var(--red)}
+.pc-crit.later .pc-crit-icon{color:var(--muted)}
+.pc-crit.missing{background:var(--red-soft)}
+.pc-crit.review{background:var(--amber-soft)}
+.pc-crit-copy{display:grid;gap:4px;min-width:0}
+.pc-crit-copy b{font-size:14px;font-weight:600;color:var(--ink,var(--text))}
+.pc-crit-rule{font-size:12px;line-height:1.45;color:var(--muted)}
+.pc-crit-evidence{margin:2px 0 0!important;font-size:13px;line-height:1.45;color:var(--text)}
+.pc-crit-evidence span{display:inline-block;margin-right:6px;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.pc-crit-action{display:flex;align-items:flex-start;gap:6px;margin:2px 0 0!important;font-size:13px;font-weight:600;color:var(--text)}
+.pc-crit-action .lucide{width:14px;height:14px;margin-top:3px;flex:none}
+.pc-crit-pill{white-space:nowrap}
+.section-status.neutral{background:var(--sunken);color:var(--muted)}
+.pc-lcd a{color:var(--primary);font-weight:600}
+@media(max-width:760px){.pc-crit{grid-template-columns:18px minmax(0,1fr)}.pc-crit-pill{grid-column:2;justify-self:start}}
+
+/* Same & similar source note, physician details, documents, payer coverage and eligibility */
+.pc-source-note{display:flex;gap:8px;align-items:flex-start;margin:var(--space-5) 0 0;padding:10px 12px;border-radius:var(--fluent-corner-2);background:var(--blue-wash);font-size:13px;line-height:1.5;color:var(--text)}
+.pc-source-note .lucide{width:15px;height:15px;color:var(--primary);flex:none;margin-top:2px}
+.pc-source-note a,.pc-lcd a{color:var(--primary);font-weight:600}
+.pc-kv .pc-kv-wide{grid-column:1/-1}
+.pc-kv.pc-kv-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.pc-link{border:0;background:none;padding:0;color:var(--primary);font:inherit;font-weight:600;cursor:pointer}
+.pc-link:hover{text-decoration:underline}
+.pk-sub .pc-link{font-size:inherit}
+.pc-rec{font-style:normal;font-size:10px;font-weight:600;color:var(--primary);background:var(--blue-soft);padding:1px 6px;border-radius:999px;margin-left:6px;white-space:nowrap}
+.pc-docs li.na{opacity:.7}
+.pc-docs li.na .lucide{color:var(--muted)}
+.pc-ec-dialog{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 64px);padding:0}
+.pc-ec{display:grid;gap:12px;padding:20px}
+.pc-ec .response-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.pc-ec .response-head h2{margin:2px 0;font-size:18px}
+.pc-ec .response-head p{margin:0;font-size:12px;color:var(--muted)}
+.pc-ec-plan{border:1px solid var(--line);border-radius:var(--fluent-corner-2);padding:12px 14px}
+.pc-ec-plan.not-eligible{background:var(--fluent-neutral-lighter-alt)}
+.pc-ec-plan h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 8px;font-size:14px}
+.pc-ec-plan h3 .section-status{margin-left:auto}
+.pc-ec-rank{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.section-status.success-visible{background:var(--green-soft);color:var(--green)}
+.pc-ec .response-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;margin:0}
+.pc-ec .response-list dt{font-size:12px;color:var(--muted)}
+.pc-ec .response-list dd{margin:0;font-size:13px}
+@media(max-width:560px){.pc-ec .response-list,.pc-kv.pc-kv-3{grid-template-columns:1fr}}
+/* Same & similar table */
+.pc-ss-wrap{overflow-x:auto;margin-top:var(--space-4);border:1px solid var(--line);border-radius:var(--fluent-corner-2)}
+.pc-ss{width:100%;border-collapse:collapse;font-size:13px}
+.pc-ss th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);padding:8px 10px;background:var(--fluent-neutral-lighter-alt);border-bottom:1px solid var(--line);white-space:nowrap}
+.pc-ss td{padding:8px 10px;border-bottom:1px solid var(--fluent-neutral-lighter);vertical-align:top}
+.pc-ss tr:last-child td{border-bottom:0}
+.pc-ss td small{display:block;font-size:11px;color:var(--muted)}
+.pc-ss td b{font-weight:600}
+.pc-ss-match{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.pc-ss-match.same{background:var(--blue-soft);color:var(--primary)}
+.pc-ss-match.similar{background:var(--sunken);color:var(--muted)}
+/* Payer coverage: primary payer first, other plans and Medicare reference de-emphasized */
+.pc-payer{border:1px solid var(--line);border-radius:var(--fluent-corner-2);margin-top:var(--space-4);overflow:hidden}
+.pc-payer-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--fluent-neutral-lighter-alt);border-bottom:1px solid var(--line)}
+.pc-payer-name{display:grid;font-weight:600;font-size:14px}
+.pc-payer-name small{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.pc-rows{margin:0}
+.pc-rows>div{display:grid;grid-template-columns:170px minmax(0,1fr);gap:12px;padding:8px 14px;border-top:1px solid var(--fluent-neutral-lighter)}
+.pc-rows>div:first-child{border-top:0}
+.pc-rows dt{font-size:13px;color:var(--muted)}
+.pc-rows dd{margin:0;font-size:14px}
+.pc-muted{color:var(--muted);font-size:12px;margin-left:4px}
+.pc-payer-other,.pc-payer-ref{margin:var(--space-4) 0 0!important;font-size:12px!important;color:var(--muted)}
+.pcd-check-body>.pc-link{display:inline-block;margin-top:var(--space-4);font-size:13px}
+@media(max-width:560px){.pc-rows>div{grid-template-columns:1fr;gap:2px}}
+.pr-nocode{display:flex;align-items:center;gap:6px;margin:2px 0 6px;font-size:12px;color:var(--muted)}
+.pr-nocode .lucide{width:13px;height:13px}

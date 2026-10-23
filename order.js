@@ -248,6 +248,6 @@ goStep(steps.some(([id])=>id===startStep)?startStep:'patient');
   let action=null;try{action=JSON.parse(sessionStorage.getItem('signeticOrderAction'));}catch(error){}
   if(!action||action.route!=='new'||intake.fromAction!==action.id)return;
   const box=$('#orderFromIntake'),items=(intake.prescriptions[0]?.items||[]).map(it=>esc(it.name)).join(' · ');
-  box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From intake #${esc(intake.id)} · New order for ${esc(action.rxTitle)}</b>${items}</span><a class="footer-btn" href="prepare-orders.html?done=${encodeURIComponent(action.id)}">Done, back to order actions</a>`;
+  box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From intake #${esc(intake.id)} · New order for ${esc(action.rxTitle)}</b>${items}</span><a class="footer-btn" href="prepare-orders.html?done=${encodeURIComponent(action.id)}">Done, back to Fulfillment</a>`;
   box.hidden=false;icons();
 })();

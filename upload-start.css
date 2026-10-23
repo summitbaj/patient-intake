@@ -102,3 +102,32 @@ body.phase-upload #cancelUpload{display:none!important}
   .us-hero h2{font-size:24px}
   .us-footer-note{display:none}
 }
+
+/* Manual intake: entry on the start screen and the patient picker dialog */
+.us-manual{display:flex;align-items:center;gap:12px;margin-top:12px;padding:14px 16px;border:1px dashed var(--line-strong,var(--line));border-radius:var(--radius);background:var(--white,var(--fluent-white))}
+.us-manual>div{flex:1;min-width:0}
+.us-manual h3{margin:0;font-size:14px}
+.us-manual p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.manual-dialog{width:min(560px,calc(100vw - 32px));padding:0}
+.manual-wrap{display:grid;gap:14px;padding:20px}
+.manual-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.manual-head h2{margin:0;font-size:18px}
+.manual-head p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+.manual-search{margin:0}
+.manual-list{display:grid;gap:4px;max-height:280px;overflow:auto;margin-top:8px}
+.manual-row{display:grid;grid-template-columns:32px minmax(0,1fr) 16px;align-items:center;gap:10px;width:100%;padding:8px 10px;border:1px solid transparent;border-radius:var(--fluent-corner-2);background:transparent;text-align:left;font:inherit;color:var(--text);cursor:pointer}
+.manual-row:hover{background:var(--sunken);border-color:var(--line)}
+.manual-row .avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--blue-soft);color:var(--primary);font-size:12px;font-weight:600}
+.manual-row b{display:block;font-weight:600}
+.manual-row small{font-size:12px;color:var(--muted)}
+.manual-row .lucide{width:16px;height:16px;color:var(--muted)}
+.manual-new{display:flex;align-items:center;gap:8px;width:100%;margin-top:10px;padding:10px 12px;border:1px dashed var(--line-strong,var(--line));border-radius:var(--fluent-corner-2);background:transparent;font:inherit;font-weight:600;color:var(--primary);cursor:pointer}
+.manual-new .lucide{width:16px;height:16px}
+.manual-new-form{display:grid;gap:12px}
+.manual-sub{margin:0;font-weight:600}
+.manual-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.manual-grid label{display:grid;gap:4px;font-size:12px;font-weight:600}
+.manual-grid .input{width:100%;max-width:none;font-weight:400}
+.manual-error{margin:0;font-size:12px;color:var(--red)}
+.manual-actions{display:flex;justify-content:flex-end;gap:8px}
+@media(max-width:560px){.manual-grid{grid-template-columns:1fr}.us-manual{flex-wrap:wrap}}

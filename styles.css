@@ -1678,3 +1678,34 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 /* Prescription title: the source file name sits to the right of the title */
 .rx-card .card-header h3{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .rx-card .card-header h3 .rx-source{font-size:12px;font-weight:400;padding:0}
+
+/* Item edit panel: item name, qty, frequency and HCPCS codes */
+.item-edit{display:grid;gap:16px;padding:16px 20px 18px;background:var(--blue-wash);border-top:1px solid var(--fluent-neutral-lighter);border-radius:0 0 12px 12px}
+.item-edit-fields{display:grid;grid-template-columns:minmax(0,1fr) 88px minmax(160px,220px);gap:12px}
+.item-edit-field{display:grid;gap:4px;min-width:0}
+.item-edit-field>span,.item-edit-label{font-size:12px;font-weight:600;color:var(--text)}
+.item-edit-field .input{width:100%;max-width:none;min-height:32px;font-size:14px;background:var(--white)}
+.item-edit-codes{display:grid;gap:6px}
+.item-edit-lines{display:grid;border:1px solid var(--line);border-radius:var(--fluent-corner-2);background:var(--white);overflow:hidden}
+.item-edit .hcpcs-row.editing{grid-template-columns:72px minmax(0,1fr) 28px;padding:8px 12px;border-top:1px solid var(--fluent-neutral-lighter)}
+.item-edit .hcpcs-row.editing:first-child{border-top:0}
+.item-edit-empty{margin:0;padding:10px 12px;font-size:12px;color:var(--red)}
+.inline-add.hcpcs-search.compact{margin:2px 0 0;padding:4px 4px 4px 12px;background:var(--white)}
+.inline-add.hcpcs-search.compact .input{font-size:13px;padding:4px 0}
+.inline-add.hcpcs-search.compact .add-item-btn{min-height:30px;padding:0 12px}
+.item-edit-actions{display:flex;justify-content:flex-end}
+.item-edit-actions .small-btn{min-height:32px;padding:0 16px}
+@media(max-width:760px){.item-edit-fields{grid-template-columns:1fr 1fr}.item-edit-name{grid-column:1/-1}}
+.rx-item:has(.item-edit){overflow:visible}
+/* HCPCS code source: AI selected vs added by the user */
+.hcpcs-desc{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.code-source{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;line-height:18px;white-space:nowrap}
+.code-source .lucide{width:12px;height:12px}
+.code-source.ai{background:var(--ai-soft,var(--fluent-theme-lighter-alt));color:var(--ai,var(--primary))}
+.code-source.manual{background:var(--sunken);color:var(--muted)}
+.ai-suggest-create{border-top:1px solid var(--fluent-neutral-lighter);border-radius:0;margin-top:4px}
+.ai-suggest-create strong{display:inline-flex;align-items:center;gap:6px;color:var(--primary)}
+.ai-suggest-create .lucide{width:14px;height:14px}
+.ai-suggest-row .hcpcs-badge.bundle{white-space:nowrap}
+.rx-card:has(.ai-suggest:not([hidden])),.data-group:has(.ai-suggest:not([hidden])){overflow:visible}
+.section-status.neutral{background:var(--sunken);color:var(--muted)}

@@ -29,16 +29,182 @@ const hasDoc=pattern=>(intake.documents||[]).some(name=>pattern.test(name));
 const stated=v=>v!==undefined&&v!==null&&v!==''&&v!=='—'&&!/not on prescription/i.test(String(v));
 
 const C={pass:'pass',warn:'warn',fail:'fail'};
-// Same & similar against the patient's existing Signetic orders (orders-data.js). Evidence only: the route is chosen in Prepare orders.
+// ---------- Same & similar source, physician, documents, payer coverage ----------
+const plans=()=>(intake.insurance||[]);
+const isMedicare=plan=>/medicare/i.test(`${plan.type||''} ${plan.name||''}`);
+const activePlans=()=>plans().filter(p=>!/inactive/i.test(p.status||''));
+// Same & similar only sees Signetic orders. Medicare history is checked in the DME MAC portal (Washington: Jurisdiction D, Noridian).
+function sameSourceNote(){
+  const medicare=plans().some(isMedicare);
+  return `<div class="pc-source-note"><i data-lucide="info"></i><span><b>From Signetic records only.</b> Equipment the patient got from other suppliers isn’t included.${medicare?` Check Medicare same-or-similar history before dispensing: <a href="https://www.noridianmedicareportal.com/" target="_blank" rel="noopener">Noridian Medicare Portal</a> (Jurisdiction D, which covers ${esc(intake.patient?.state||'WA')}). Other jurisdictions use <a href="https://www.cgsmedicare.com/mycgs/" target="_blank" rel="noopener">myCGS</a>.`:' Check the payer’s portal for claims from other suppliers.'}</span></div>`;
+}
+function physicianCheck(rx){
+  const p=rx.physicianInfo||{},name=[p.first,p.last].filter(Boolean).join(' ')||rx.physician||'',npi=p.npi||rx.npi||'';
+  const yn=v=>v?'Yes':'No',found=Boolean(npi),dmeOk=p.dme!==false;
+  const status=!found?C.warn:!dmeOk?C.fail:C.pass;
+  return {key:'physician',label:'Ordering physician',status,
+    summary:!found?'Ordering physician not verified':!dmeOk?`Dr. ${esc(p.last||name)} isn’t enrolled to order DME`:`Dr. ${esc(p.last||name)} · NPI ${esc(npi)} · enrolled for DME`,
+    action:!found?'Add the ordering physician from the NPI registry in the intake.':!dmeOk?'Medicare won’t pay for DME ordered by this physician. Ask for an order from an enrolled physician.':'',
+    body:`<dl class="pc-kv"><div><dt>First name</dt><dd>${esc(p.first||'—')}</dd></div><div><dt>Last name</dt><dd>${esc(p.last||'—')}</dd></div><div><dt>NPI</dt><dd>${esc(npi||'Not provided')}</dd></div><div><dt>Specialty</dt><dd>${esc(p.specialty||rx.specialty||'—')}</dd></div><div class="pc-kv-wide"><dt>Address</dt><dd>${esc(p.address||'—')}</dd></div></dl>
+      <h5>Medicare enrollment (PECOS)</h5><dl class="pc-kv pc-kv-3"><div><dt>DME</dt><dd>${yn(p.dme)}</dd></div><div><dt>PMD</dt><dd>${yn(p.pmd)}</dd></div><div><dt>PARTB</dt><dd>${yn(p.partb)}</dd></div></dl>`};
+}
+function documentsCheck(code,rx,item){
+  let docs=item.docs?item.docs.map(d=>({...d})):[
+    {name:'Standard written order (SWO)',status:rx.source||'Added manually',found:true},
+    {name:'Face-to-face clinical evaluation',status:'Face-to-Face Notes.pdf',found:true},
+    {name:'Prior authorization',status:paFor(code)?`On file · ${paFor(code).number} · ${paFor(code).payer}`:'Not required for these codes',found:Boolean(paFor(code)),na:!paFor(code)}];
+  // Happy path: the oxygen test is on file.
+  if(happy)docs=docs.map(d=>/oxygen qualifying/i.test(d.name)&&!d.found?{...d,found:true,status:'Overnight Oximetry.pdf'}:d);
+  const needed=docs.filter(d=>!d.na),missingReq=needed.filter(d=>!d.found&&!d.recommended),missingRec=needed.filter(d=>!d.found&&d.recommended);
+  const have=needed.length-missingReq.length-missingRec.length;
+  return {key:'documents',label:'Required documents',status:missingReq.length?C.fail:missingRec.length?C.warn:C.pass,
+    summary:`${have} of ${needed.length} on file${missingReq.length||missingRec.length?` · ${[...missingReq,...missingRec].map(d=>d.name.replace(/ \(.*\)$/,'')).join(', ')} not found`:''}`,
+    action:missingReq.length||missingRec.length?`Upload the ${[...missingReq,...missingRec].map(d=>d.name.toLowerCase().replace(/ \(.*\)$/,'')).join(' and ')} to the intake.`:'',
+    body:`<ul class="pc-docs">${docs.map(d=>`<li class="${d.na?'na':d.found?'ok':'bad'}"><i data-lucide="${d.na?'file-minus':d.found?'file-check':'file-x'}"></i><span><b>${esc(d.name)}${d.recommended?` <em class="pc-rec">Recommended by Medicare · ${esc(d.recommended)}</em>`:''}</b><small>${esc(d.status)}</small></span></li>`).join('')}</ul>`};
+}
+// What the payer covers for a code (demo rules) and the Medicare allowable (demo DMEPOS fee schedule amounts).
+const coverageFor=code=>code==='E0601'?'13-month capped rental':code==='E0562'?'Capped rental, billed with E0601':code==='E1390'?'Monthly rental, 36-month cap':oxygenSupply.test(code)?'Included in the E1390 rental':'Purchase';
+const medicareAllowable={...allowable,A4615:'Included in E1390 rental',A4616:'Included in E1390 rental'};
+function ecSummary(plan){const ec=plan?.eligibility;if(!ec)return 'Eligibility not checked';return `${ec.active?'Active':'Inactive'} · ${ec.service} ${ec.eligible?'covered':'not covered'} · checked ${ec.checkedAt.split(' · ')[0]}`;}
+function payerCheck(code){
+  const list=activePlans(),primary=list[0]||primaryPlan(),ec=primary.eligibility,pa=paFor(code);
+  const medicarePrimary=isMedicare(primary),rental=/^(E0601|E0562|E1390)$/.test(code);
+  let status=C.pass,summary=`${primary.name} · ${rental?'covered · rental':'covered · purchase'}`,action='';
+  if(!ec){status=C.warn;summary='Eligibility not checked';action='Check eligibility for DME in the intake.';}
+  else if(!ec.eligible){status=C.fail;summary=`${primary.name} · ${ec.service} not covered`;action='Check the patient’s coverage before ordering.';}
+  else if(oxygenSupply.test(code)&&!happy){status=C.fail;summary='Included in the E1390 rental';action='Don’t bill separately. Supply it with the concentrator at no charge.';}
+  else if(oxygenSupply.test(code)){summary='Covered with the E1390 rental';}
+  else if(code==='E1390'&&!happy){status=C.warn;summary='Covered once medically qualified';action='Coverage depends on the qualifying oxygen test.';}
+  const dedMet=ec?(ec.deductible===ec.deductibleMet?`Met (${esc(ec.deductible)})`:`${esc(ec.deductibleMet)} of ${esc(ec.deductible)} met`):'—';
+  const rows=[
+    [`Coverage for ${code}`,coverageFor(code)],
+    ['Benefit',ec?esc(ec.benefit):'—'],
+    ['Deductible',dedMet],
+    ['Allowable',medicarePrimary?`${medicareAllowable[code]||'See fee schedule'} <span class="pc-muted">Medicare fee schedule</span>`:'Per payer contract'],
+    ['Prior authorization',pa?`${esc(pa.number)} · ${esc(pa.from)} – ${esc(pa.to)}`:'Not on file']
+  ];
+  const others=list.slice(1).map(p=>`${esc(p.rank||'Other')}: ${esc(p.name)} · ${p.eligibility?.eligible?'active for DME':'not covered'}`);
+  const ecPill=ec?`<span class="section-status ${ec.eligible?'success-visible':'danger'}">${ec.eligible?'Active · DME covered':'DME not covered'}</span>`:'<span class="section-status warning">Not checked</span>';
+  return {key:'payer',label:'Payer coverage',status,summary,action,
+    body:`<div class="pc-payer"><div class="pc-payer-head"><span class="pc-payer-name"><small>Primary</small>${esc(primary.name)}</span>${ecPill}</div>
+      <dl class="pc-rows">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>
+      ${others.length?`<p class="pc-payer-other">${others.join('<br>')}</p>`:''}
+      ${!medicarePrimary&&medicareAllowable[code]?`<p class="pc-payer-ref">Medicare allowable for reference: ${medicareAllowable[code]}</p>`:''}
+      <button type="button" class="pc-link" data-eligibility>View EC response</button>`};
+}
+// Eligibility responses (one per plan), opened from the page header or any payer coverage check.
+function openEligibility(){
+  let dlg=$('#pcEligibility');
+  if(!dlg){dlg=document.createElement('dialog');dlg.id='pcEligibility';dlg.className='confirm-dialog response-dialog pc-ec-dialog';document.body.appendChild(dlg);
+    dlg.addEventListener('click',e=>{if(e.target===dlg||e.target.closest('[data-ec-close]'))dlg.close();});}
+  dlg.innerHTML=`<div class="pc-ec"><header class="response-head"><div><span class="eyebrow">Eligibility check · DME</span><h2>Coverage for ${esc(intake.patient.first)} ${esc(intake.patient.last)}</h2><p>From the intake review. Checked once per plan, not per item.</p></div><button class="icon-btn" data-ec-close aria-label="Close"><i data-lucide="x"></i></button></header>
+    ${plans().map(p=>{const ec=p.eligibility;return `<section class="pc-ec-plan ${ec?.eligible?'eligible':'not-eligible'}"><h3><span class="pc-ec-rank">${esc(p.rank||'')}</span> ${esc(p.name)}<span class="section-status ${ec?.eligible?'success-visible':'danger'}">${ec?(ec.eligible?'Active · DME covered':'Not covered'):'Not checked'}</span></h3>
+      ${ec?`<dl class="response-list">${[['Benefit',ec.benefit],['Member ID',p.memberId||'—'],['Plan dates',ec.planDates],['Deductible',`${ec.deductible} · ${ec.deductibleMet} met`],['Out-of-pocket maximum',ec.oop],['Network',ec.network],['Payer',ec.payer],['Trace number',ec.trace],['Checked',ec.checkedAt]].map(([l,v])=>`<div><dt>${l}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>${ec.other?`<p class="pc-note"><b>Other insurance found:</b> ${esc(ec.other.name)} · ${esc(ec.other.memberId)} · ${esc(ec.other.dates)}. Not on this intake.</p>`:''}`:'<p class="pc-note">Eligibility wasn’t checked for this plan.</p>'}</section>`;}).join('')}</div>`;
+  icons();dlg.showModal();
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-eligibility]')){e.preventDefault();openEligibility();}});
+// Same & similar against the patient's existing Signetic orders (orders-data.js). Evidence only: the route is chosen in Fulfillment.
 const orderApi=window.signeticOrders;
+// Same & similar: every same HCPCS code and similar item on the patient's Signetic orders, with how it was supplied.
+const similarGroups=[
+  ['E0601','E0470','E0471'],['E0562','E0561'],['A7030','A7034','A7027'],['A7031','A7032','A7033'],['A7037','A4604'],['A7038','A7039'],
+  ['E1390','E1391','E0424','E0439'],['E1392','E0431','E0434'],['A4615'],['A4616'],['E0570']
+];
+const similarTo=code=>(similarGroups.find(g=>g.includes(code))||[code]).filter(c=>c!==code);
+const acquisitionLabel={purchase:'Purchase',owned:'Capped rental · now owned','rental-active':'Active rental','rental-past':'Past rental',pending:'Ordered · not delivered'};
+function sameMatchesFor(code){
+  const orders=orderApi?.existingOrders||[],sim=similarTo(code);
+  return orders.flatMap(order=>order.items.filter(i=>i.code===code||sim.includes(i.code)).map(item=>({order,item,match:item.code===code?'same':'similar'})))
+    .sort((a,b)=>(a.match==='same'?0:1)-(b.match==='same'?0:1));
+}
 function sameCheck(code,matches){
-  const rows=matches.map(({order,item})=>`<div><dt>${esc(order.id)} · ${esc(order.title)}</dt><dd>${esc(order.status)}${item.refillable?` · refillable · last filled ${esc(item.lastFilled)} · ${item.due?'due now':`next ${esc(item.nextEligible)}`}`:` · ${esc(item.note||'not refillable')}`}</dd></div>`).join('');
-  const body=`<dl class="pc-kv pc-kv-one">${rows}</dl><p class="pc-note">From the patient’s existing orders. You choose how to order each item in Prepare orders.</p>`;
-  const refillable=matches.filter(m=>m.item.refillable),open=matches.find(m=>!m.item.refillable&&m.order.editable),owned=matches.find(m=>!m.item.refillable&&!m.order.editable);
-  if(open)return {key:'same',label:'Same & similar',status:C.warn,summary:`Already on ${open.order.id} (${open.order.status.toLowerCase()}, not shipped)`,action:'Don’t order it again. Hold this item in Prepare orders.',body};
-  if(refillable.length&&!refillable.some(m=>m.item.due)){const m=refillable[0];return {key:'same',label:'Same & similar',status:C.warn,summary:`Last filled ${m.item.lastFilled} · next due ${m.item.nextEligible}`,action:`${m.item.limit} allowed. Hold it until it’s due, or record a replacement reason.`,body};}
-  if(refillable.length)return {key:'same',label:'Same & similar',status:C.pass,summary:refillable.length>1?`Refillable and due on ${refillable.length} orders`:`Refillable on ${refillable[0].order.id} · due now`,body};
-  return {key:'same',label:'Same & similar',status:C.pass,summary:`On ${owned.order.id} · ${owned.item.note||'not refillable'}`,body};
+  const type=m=>acquisitionLabel[m.item.acquisition]||(m.item.refillable?'Purchase':'—');
+  const detail=m=>m.item.refillable?`Last filled ${m.item.lastFilled} · ${m.item.limit} · ${m.item.due?'due now':`next ${m.item.nextEligible}`}`:(m.item.dates||m.item.note||'');
+  const rows=matches.map(m=>`<tr><td><span class="pc-ss-match ${m.match}">${m.match==='same'?'Same':'Similar'}</span></td><td><b>${esc(m.item.code)}</b> ${esc(m.item.name)}</td><td>${esc(type(m))}</td><td>${esc(m.order.id)} · ${esc(m.order.status)}<small>${esc(m.order.title)}</small></td><td>${esc(detail(m))}</td></tr>`).join('');
+  const body=`<div class="pc-ss-wrap"><table class="pc-ss"><thead><tr><th>Match</th><th>Item</th><th>Type</th><th>Order</th><th>Details</th></tr></thead><tbody>${rows}</tbody></table></div>${sameSourceNote()}`;
+  const same=matches.filter(m=>m.match==='same'),similar=matches.filter(m=>m.match==='similar');
+  const counts=[same.length?`${same.length} same`:'',similar.length?`${similar.length} similar`:''].filter(Boolean).join(' · ');
+  const pending=matches.find(m=>m.item.acquisition==='pending'),active=matches.find(m=>m.item.acquisition==='rental-active');
+  const refill=same.filter(m=>m.item.refillable),notDue=refill.length&&!refill.some(m=>m.item.due)?refill[0]:null;
+  if(pending)return {key:'same',label:'Same & similar',status:C.warn,summary:`${counts} in Signetic · ${pending.item.code} already ordered on ${pending.order.id}, not delivered`,action:'Don’t order it again. Hold this item in Prepare orders.',body};
+  if(active)return {key:'same',label:'Same & similar',status:C.warn,summary:`${counts} in Signetic · active rental of ${active.item.code} on ${active.order.id}`,action:'The patient already rents similar equipment. Confirm it’s being replaced before ordering.',body};
+  if(notDue)return {key:'same',label:'Same & similar',status:C.warn,summary:`${counts} in Signetic · next ${code} due ${notDue.item.nextEligible}`,action:`${notDue.item.limit} allowed. Hold it until it’s due, or record a replacement reason.`,body};
+  return {key:'same',label:'Same & similar',status:C.pass,summary:`${counts} in Signetic · nothing blocks this order`,body};
+}
+// ---------- Medical criteria (LCD checklists, demo evidence) ----------
+// Status per criterion: met · review (needs a look) · missing (not found) · later (checked after setup).
+const critPill={met:['success','Met'],review:['warning','Review'],missing:['danger','Not found'],later:['neutral','After setup'],pending:['neutral','Waiting on test']};
+const critIcon={met:'circle-check',review:'triangle-alert',missing:'circle-x',later:'clock',pending:'hourglass'};
+const notYet=c=>c.status==='later'||c.status==='pending';
+const lcdLink=id=>`https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDid=${id.replace(/\D/g,'')}`;
+function criteriaHtml(groups){
+  return groups.map(g=>`<h5>${g.title}</h5>${g.note?`<p class="pc-note">${g.note}</p>`:''}<ol class="pc-criteria">${g.items.map(c=>{const [cls,label]=critPill[c.status];return `<li class="pc-crit ${c.status}"><i data-lucide="${critIcon[c.status]}" class="pc-crit-icon"></i><div class="pc-crit-copy"><b>${c.title}</b>${c.rule?`<small class="pc-crit-rule">${c.rule}</small>`:''}${c.evidence?`<p class="pc-crit-evidence"><span>${c.status==='missing'?'Looked in':'Evidence'}</span>${c.evidence}</p>`:''}${c.action?`<p class="pc-crit-action"><i data-lucide="arrow-right"></i>${c.action}</p>`:''}</div><span class="section-status ${cls} pc-crit-pill">${label}</span></li>`;}).join('')}</ol>`).join('');
+}
+function addDays(date,days){const [m,d,y]=date.split('/').map(Number),dt=new Date(y,m-1,d+days);return `${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}/${dt.getFullYear()}`;}
+// PAP device: LCD L33718 (initial 12-week trial, then continued coverage).
+function papCriteria(){
+  const start='10/15/2026';
+  return [
+    {title:'Initial coverage · 12-week trial',items:[
+      happy
+        ?{status:'met',title:'Clinical evaluation before the sleep test',rule:'In-person or Medicare-approved telehealth visit before the test, with sleep history, a physical exam and the Epworth Sleepiness Scale or another validated inventory.',evidence:'Referral.pdf · Dr. Sarah Kim · 09/24/2026 · snoring, witnessed apneas, Epworth 14, BMI 33.1'}
+        :{status:'review',title:'Clinical evaluation before the sleep test',rule:'In-person or Medicare-approved telehealth visit before the test, with sleep history, a physical exam and the Epworth Sleepiness Scale or another validated inventory.',evidence:'Face-to-Face Notes.pdf · 10/12/2026 · Epworth 14. This visit is after the sleep test (10/08/2026).',action:'Find the evaluation dated on or before 10/08/2026 and add it to the intake.'},
+      {status:'met',title:'Qualifying sleep test',rule:'AHI or RDI ≥ 15 events/hour with at least 30 events, or 5–14 events/hour with at least 10 events plus excessive daytime sleepiness, impaired cognition, mood disorder, insomnia, hypertension, ischemic heart disease or history of stroke.',evidence:'Home sleep test (Type III) · 10/08/2026 · AHI 18.4 events/hour · 114 events over 6.2 hours'},
+      {status:'met',title:'Diagnosis supports PAP therapy',rule:'Obstructive sleep apnea is on the order.',evidence:'G47.33 Obstructive sleep apnea (adult) · primary'},
+      {status:'met',title:'Standard written order for the device and accessories',rule:'Patient, order date, item description, quantity, practitioner name or NPI and signature.',evidence:'Prescription.pdf · Dr. Sarah Kim · NPI 1629384756 · signed 10/12/2026'},
+      {status:'later',title:'Patient instructed on use and care',rule:'The supplier documents that the patient or caregiver was shown how to use and care for the equipment.',evidence:'Record it at the setup visit.'}
+    ]},
+    {title:'Continued coverage · after the trial',note:`Therapy starts ${start}. The re-evaluation window is day 31 to day 90.`,items:[
+      {status:'later',title:'Clinical re-evaluation shows benefit',rule:'Treating practitioner visit between day 31 and day 90 documenting improved symptoms.',evidence:`Window: ${addDays(start,30)} – ${addDays(start,89)}`},
+      {status:'later',title:'Adherence to therapy',rule:'Use for at least 4 hours a night on 70% of nights (21 of 30 consecutive nights) during the trial, reviewed by the practitioner.',evidence:'Track from the device data after setup.'}
+    ]}
+  ];
+}
+// Oxygen: LCD L33797 (Group I and II).
+function oxygenCriteria(){
+  const test=happy
+    ?{status:'met',title:'Qualifying blood gas study',rule:'Group I: SpO2 ≤ 88% or PO2 ≤ 55 mm Hg at rest, during exercise, or during sleep (sleep only qualifies when awake SpO2 ≥ 89%). Group II: SpO2 89% or PO2 56–59 mm Hg plus edema from heart failure, pulmonary hypertension or hematocrit > 56%.',evidence:'Overnight Oximetry.pdf · 10/09/2026 · awake SpO2 93% · SpO2 ≤ 88% for 41 minutes during sleep · Group I (sleep)'}
+    :{status:'missing',title:'Qualifying blood gas study',rule:'Group I: SpO2 ≤ 88% or PO2 ≤ 55 mm Hg at rest, during exercise, or during sleep (sleep only qualifies when awake SpO2 ≥ 89%). Group II: SpO2 89% or PO2 56–59 mm Hg plus edema from heart failure, pulmonary hypertension or hematocrit > 56%.',evidence:'All 6 uploaded documents. The physician note (Oxygen Prescription.jpg) mentions overnight oximetry, but the test report isn’t uploaded.',action:'Upload the overnight oximetry report.'};
+  return [
+    {title:'Group I or II qualification',items:[
+      happy
+        ?{status:'met',title:'Test ordered and reviewed by the treating practitioner',rule:'The treating practitioner ordered the test at the time of need and evaluated the results.',evidence:'Oxygen Prescription.jpg · Dr. Michael Reyes · 10/13/2026 · results reviewed in the note'}
+        :{status:'review',title:'Test ordered and reviewed by the treating practitioner',rule:'The treating practitioner ordered the test at the time of need and evaluated the results.',evidence:'Oxygen Prescription.jpg · Dr. Michael Reyes refers to the results, but they can’t be checked without the report.'},
+      test,
+      happy
+        ?{status:'met',title:'Test done by a qualified provider',rule:'Performed by the treating practitioner or a qualified lab or testing provider, not the oxygen supplier.',evidence:'Overnight Oximetry.pdf · Pacific Sleep Diagnostics (IDTF)'}
+        :{status:'missing',title:'Test done by a qualified provider',rule:'Performed by the treating practitioner or a qualified lab or testing provider, not the oxygen supplier.',evidence:'Needs the test report.'},
+      {status:'met',title:'Home oxygen will improve the condition',rule:'The medical record shows oxygen at home is expected to improve the patient’s condition.',evidence:'Oxygen Prescription.jpg · “Prescribe stationary oxygen concentrator at 2 L/min during sleep” · reassess in 90 days'},
+      {status:'met',title:'Diagnosis supports oxygen',rule:'A diagnosis of hypoxemia or a related condition, and none of the non-covered conditions (e.g. angina or dyspnea without hypoxemia).',evidence:'R09.02 Hypoxemia · primary'}
+    ]},
+    {title:'What this covers',items:[
+      {status:happy?'met':'pending',title:'Use during sleep only',rule:'A sleep-only qualifying test covers oxygen during sleep. A portable system needs a test at rest or during exercise.',evidence:'Prescribed 2 L/min during sleep · stationary concentrator (E1390) matches'}
+    ]}
+  ];
+}
+function medicalCheck(code,icdList){
+  const icd=`<h5>ICD-10 codes on the prescription</h5><ul class="pc-icd">${icdList}</ul>`;
+  const source=(id,name)=>`<p class="pc-note pc-lcd">Source: Medicare LCD ${id} · ${name} · <a href="${lcdLink(id)}" target="_blank" rel="noopener">Read the full LCD</a></p>`;
+  const result=(groups,lcd,name)=>{
+    const all=groups.flatMap(g=>g.items),now=all.filter(c=>!notYet(c));
+    const met=now.filter(c=>c.status==='met').length,missing=now.filter(c=>c.status==='missing'),review=now.filter(c=>c.status==='review');
+    const first=missing[0]||review[0];
+    return {key:'medical',label:'Medical criteria',status:missing.length?C.fail:review.length?C.warn:C.pass,
+      summary:`${met} of ${now.length} criteria met${first?` · ${first.status==='missing'?'Not found':'Review'}: ${first.title}`:''}`,
+      action:first?.action||'',
+      body:`${criteriaHtml(groups)}${icd}${source(lcd,name)}`};
+  };
+  if(code==='E0601')return result(papCriteria(),'L33718','Positive Airway Pressure (PAP) Devices for the Treatment of Obstructive Sleep Apnea');
+  if(code==='E1390')return result(oxygenCriteria(),'L33797','Oxygen and Oxygen Equipment');
+  // Accessories follow the main equipment's qualification.
+  const pap=papCodes.test(code),parentCode=pap?'E0601':'E1390',parent=pap?papCriteria():oxygenCriteria();
+  const parentNow=parent.flatMap(g=>g.items).filter(c=>!notYet(c)),parentOk=parentNow.every(c=>c.status==='met');
+  const groups=[{title:'Accessory coverage',items:[
+    {status:parentOk?'met':parentNow.some(c=>c.status==='missing')?'missing':'review',title:`${parentCode} meets its coverage criteria`,rule:pap?'PAP accessories and the heated humidifier are covered only when the PAP device is covered.':'Oxygen accessories are covered only with covered oxygen equipment.',evidence:`${parentNow.filter(c=>c.status==='met').length} of ${parentNow.length} ${parentCode} criteria met · see ${parentCode} for details`,action:parentOk?'':`Resolve the ${parentCode} medical criteria first.`},
+    pap?{status:'met',title:'Used with the PAP device',rule:'Item is used with a covered E0601 device.',evidence:'Prescribed with E0601 on Prescription 1'}
+       :{status:'met',title:'Used with the oxygen equipment',rule:'Item is used with covered oxygen equipment.',evidence:'Prescribed with E1390 on Prescription 2'}
+  ]}];
+  return result(groups,pap?'L33718':'L33797',pap?'Positive Airway Pressure (PAP) Devices for the Treatment of Obstructive Sleep Apnea':'Oxygen and Oxygen Equipment');
 }
 // Happy path (scenario.js): the oxygen qualifying test is on file, so every code qualifies.
 const happy=window.protoScenario==='happy';
@@ -46,22 +212,8 @@ function evaluate(line,rx,item){
   const code=line.code,checks=[];
   const physicianOk=Boolean(rx.npi);
   const icdList=(rx.icd||[]).map(c=>`<li><i data-lucide="check"></i><b>${c.code}</b> ${esc(c.description)}${c.primary?' <em>Primary</em>':''}</li>`).join('');
-  // 1. Medical criteria
-  if(code==='E0601'){
-    checks.push({key:'medical',label:'Medical criteria',status:C.pass,summary:'AHI 18.4 meets ≥ 15 threshold',
-      body:`<h5>ICD-10 codes</h5><ul class="pc-icd">${icdList}</ul>
-      <details class="pc-more"><summary>Medicare criteria · LCD L33718</summary><div><p><b>Initial coverage (12 weeks)</b> for obstructive sleep apnea when:</p><ol><li>An in-person clinical evaluation happens before the sleep test.</li><li>A qualifying sleep test shows AHI/RDI ≥ 15 events/hour (minimum 30 events), or AHI/RDI 5–14 with documented symptoms or conditions such as excessive daytime sleepiness, hypertension or ischemic heart disease.</li><li>The beneficiary or caregiver is instructed on proper use.</li></ol><p><b>Continued coverage beyond 3 months</b> needs a clinical re-evaluation between days 31 and 91 showing improved symptoms and adherence of ≥ 4 hours/night on 70% of nights in a consecutive 30-day period.</p><p><b>Coding:</b> append modifier KX when criteria are met.</p></div></details>`});
-  }else if(papCodes.test(code)){
-    checks.push({key:'medical',label:'Medical criteria',status:C.pass,summary:'Follows E0601 qualification',body:`<p>PAP accessories are covered when the PAP device (E0601) meets coverage criteria.</p><h5>ICD-10 codes</h5><ul class="pc-icd">${icdList}</ul>`});
-  }else if(code==='E1390'&&happy){
-    checks.push({key:'medical',label:'Medical criteria',status:C.pass,summary:'Overnight SpO2 86% meets ≤ 88% threshold',
-      body:`<h5>ICD-10 codes</h5><ul class="pc-icd">${icdList}</ul><h5>Qualifying test</h5><dl class="pc-kv"><div><dt>Test</dt><dd>Overnight oximetry · 10/09/2026</dd></div><div><dt>Result</dt><dd>SpO2 ≤ 88% for 41 minutes during sleep</dd></div></dl>`});
-  }else if(code==='E1390'){
-    checks.push({key:'medical',label:'Medical criteria',status:C.fail,summary:'No qualifying oxygen test found',action:'Upload oximetry or blood gas results from within 30 days before the order.',
-      body:`<h5>ICD-10 codes</h5><ul class="pc-icd">${icdList}</ul><details class="pc-more" open><summary>Medicare criteria · LCD L33797</summary><div><p>Home oxygen is covered when a qualifying test (arterial blood gas or oximetry) taken within 30 days before the initial order shows, for example, SpO2 ≤ 88% at rest, during exercise, or during sleep for at least 5 minutes, along with a qualifying diagnosis.</p></div></details>`});
-  }else{
-    checks.push({key:'medical',label:'Medical criteria',status:C.pass,summary:'Follows E1390 qualification',body:'<p>Oxygen accessories follow the qualification of the oxygen equipment.</p>'});
-  }
+  // 1. Medical criteria: each LCD criterion with its status and the evidence found in the intake documents.
+  checks.push(medicalCheck(code,icdList));
   // 2. Quantity & frequency come from the prescribed product, only when the prescription states them.
   const limit=supplyLimits[code],qty=stated(item.qty)?item.qty:'',freq=stated(item.frequency)?item.frequency:'';
   const missingDose=!happy&&!qty&&!freq;
@@ -69,42 +221,17 @@ function evaluate(line,rx,item){
     summary:missingDose?'Not on the prescription':limit?`Medicare allows ${limit}`:'As prescribed',
     action:missingDose?'Confirm quantity and frequency with the physician before dispensing.':'',
     body:`<dl class="pc-kv"><div><dt>On the prescription</dt><dd>${[qty?`Qty ${esc(qty)}`:'',esc(freq)].filter(Boolean).join(' · ')||'Not stated'}</dd></div><div><dt>Medicare allows</dt><dd>${esc(limit||(code==='E0601'?'1 device · 13-month capped rental':code==='E1390'?'1 concentrator · 36-month rental cap':'As prescribed'))}</dd></div></dl>`});
-  // 3. Same & similar
-  const sameMatches=orderApi?orderApi.lineMatches(code):[];
-  if(sameMatches.length)checks.push(sameCheck(code,sameMatches));
-  else checks.push({key:'same',label:'Same & similar',status:C.pass,summary:papCodes.test(code)&&code.startsWith('E')?'No active equipment in last 5 years':'No duplicate in current period',
-    body:`<dl class="pc-kv"><div><dt>Previous ${code} found</dt><dd>No</dd></div><div><dt>Active rental</dt><dd>No</dd></div><div><dt>Similar equipment</dt><dd>None identified</dd></div></dl><p class="pc-note">Checked against Signetic records. For Medicare, confirm in the payer portal.</p>`});
-  // 4. Physician enrollment
-  const doc=(rx.physician||'').trim();
-  checks.push({key:'physician',label:'Physician enrollment',status:physicianOk?C.pass:C.warn,summary:physicianOk?`Dr. ${doc.split(' ').pop()} is PECOS active`:'Ordering physician not verified',action:physicianOk?'':'Add the ordering physician from the NPI registry in the intake.',
-    body:`<dl class="pc-kv"><div><dt>Physician</dt><dd>${doc?`Dr. ${esc(doc)}`:'Not added'}</dd></div><div><dt>NPI</dt><dd>${esc(rx.npi||'Not provided')}</dd></div><div><dt>PECOS</dt><dd>${physicianOk?'Active':'Not verified'}</dd></div><div><dt>Enrolled for</dt><dd>DME · Part B</dd></div></dl>`});
-  // 5. Documents
-  const docs=[{name:'Standard written order',ok:true,file:rx.source||'Added manually'}];
-  if(code==='E0601'||code==='E1390')docs.push({name:'Face-to-face evaluation',ok:true,file:code==='E0601'?'Face-to-Face Notes.pdf':(rx.source||'Oxygen Prescription.jpg')});
-  if(code==='E0601')docs.push({name:'Sleep study',ok:true,file:hasDoc(/sleep/i)?'Sleep Study.pdf':'Sleep Study · Aug 2022.pdf'});
-  if(code==='E1390')docs.push(happy?{name:'Oxygen qualifying test',ok:true,file:'Overnight Oximetry.pdf'}:{name:'Oxygen qualifying test',ok:false,file:'Not found in uploads'});
-  const pa=paFor(code);if(pa)docs.push({name:'Prior authorization',ok:true,file:`${pa.number} · ${pa.payer}`});
-  const missing=docs.filter(d=>!d.ok).length;
-  checks.push({key:'documents',label:'Documents',status:missing?C.fail:C.pass,
-    summary:missing?`${missing} required document missing`:`${docs.length} of ${docs.length} on file`,
-    action:missing?'Upload the oxygen qualifying test results.':'',
-    body:`<ul class="pc-docs">${docs.map(d=>`<li class="${d.ok?'ok':'bad'}"><i data-lucide="${d.ok?'file-check':'file-x'}"></i><span><b>${d.name}</b><small>${esc(d.file)}</small></span></li>`).join('')}</ul>`});
-  // 6. Payer coverage
-  const plan=primaryPlan();
-  if(oxygenSupply.test(code)&&happy){
-    checks.push({key:'payer',label:'Payer coverage',status:C.pass,summary:'Covered with the E1390 rental',
-      body:`<p>${esc(plan.name)} covers oxygen accessories such as cannulas and tubing as part of the monthly oxygen concentrator (E1390) rental.</p>`});
-  }else if(oxygenSupply.test(code)){
-    checks.push({key:'payer',label:'Payer coverage',status:C.fail,summary:'Included in E1390 rental',action:'Don’t bill separately. Supply it with the concentrator at no charge.',
-      body:`<p>${esc(plan.name)} includes oxygen accessories such as cannulas and tubing in the monthly payment for the oxygen concentrator (E1390). They aren’t payable as separate items.</p>`});
-  }else if(code==='E1390'&&!happy){
-    checks.push({key:'payer',label:'Payer coverage',status:C.warn,summary:'Covered once medically qualified',action:'Coverage depends on the qualifying oxygen test.',
-      body:`<dl class="pc-kv"><div><dt>Coverage</dt><dd>${esc(plan.name)} · monthly rental, 36-month cap</dd></div><div><dt>Allowable</dt><dd>${allowable.E1390}</dd></div><div><dt>Prior authorization</dt><dd>${pa?`${esc(pa.number)} · ${esc(pa.from)} – ${esc(pa.to)}`:'Not on file'}</dd></div></dl>`});
-  }else{
-    const rental=code==='E0601'||code==='E0562'||code==='E1390';
-    checks.push({key:'payer',label:'Payer coverage',status:C.pass,summary:rental?'Covered · capped rental':'Covered · purchase',
-      body:`<dl class="pc-kv"><div><dt>Coverage</dt><dd>${esc(plan.name)} · ${code==='E0601'?'13-month capped rental':code==='E0562'?'rental billed with E0601':code==='E1390'?'monthly rental, 36-month cap':'purchase'}</dd></div><div><dt>Allowable</dt><dd>${allowable[code]||'See fee schedule'}</dd></div><div><dt>Patient responsibility</dt><dd>20% coinsurance after deductible</dd></div>${pa?`<div><dt>Prior authorization</dt><dd>${esc(pa.number)} · ${esc(pa.from)} – ${esc(pa.to)}</dd></div>`:''}</dl>`});
-  }
+  // 3. Same & similar (Signetic records only)
+  const sameMatches=sameMatchesFor(code);
+  if(sameMatches.length){const c=sameCheck(code,sameMatches);if(happy){c.status=C.pass;c.action='';}checks.push(c);}
+  else checks.push({key:'same',label:'Same & similar',status:C.pass,summary:'No match in Signetic records',
+    body:`<dl class="pc-kv"><div><dt>Previous ${code} in Signetic</dt><dd>No</dd></div><div><dt>Active rental in Signetic</dt><dd>No</dd></div><div><dt>Similar equipment in Signetic</dt><dd>None identified</dd></div></dl>${sameSourceNote()}`});
+  // 4. Ordering physician: the same details as the intake review (NPI registry and PECOS enrollment).
+  checks.push(physicianCheck(rx));
+  // 5. Required documents: the same list as the intake review for this item.
+  checks.push(documentsCheck(code,rx,item));
+  // 6. Payer coverage: from the eligibility check (EC) done in the intake. EC is per plan, not per item.
+  checks.push(payerCheck(code));
   const status=checks.some(c=>c.status===C.fail)?'fail':checks.some(c=>c.status===C.warn)?'warn':'pass';
   const recommended=code==='E0601'?[{name:'Chinstrap (A7036)',why:'Consider if the patient breathes through the mouth.'},{name:'Non-disposable filter (A7039)',why:'Often dispensed with the device; 1 per 6 months.'}]:[];
   return {...line,checks,status,recommended};
@@ -155,6 +282,7 @@ function renderList(){
       </div>
       ${exp?`<div class="pr-acc-body">${rx.items.map(item=>`<div class="pr-item">
         <p class="pr-item-name"><span>${esc(item.name)}</span><span class="pill ai-kind" title="Identified by AI"><i data-lucide="sparkles"></i> ${item.bundle?`Bundle · ${item.lines.length}`:'Single'}</span></p>
+        ${item.lines.length?'':'<p class="pr-nocode"><i data-lucide="info"></i> No HCPCS code yet. Add one in the review to pre-check this item.</p>'}
         ${item.lines.map(l=>{const n=issueCount(l),rev=ui.reviewed.has(l.id);return `<button class="pr-code ${l.status} ${ui.selected===l.id?'active':''}" data-code="${l.id}" aria-current="${ui.selected===l.id}"><i data-lucide="${rev?'check':statusIcon[l.status]}" class="st ${rev?'rev':''}"></i><span class="pr-code-copy"><b>${l.code}</b><span>${esc(l.description)}</span><small>${rev?'Reviewed':n?`${n} of ${l.checks.length} checks need attention`:`All ${l.checks.length} checks passed`}</small>${matchNote(l.code)}</span></button>`;}).join('')}
       </div>`).join('')}
       </div>`:''}
@@ -188,9 +316,9 @@ function renderFooter(){
   const rx=rxList[ui.rx],ls=rx.items.flatMap(i=>i.lines),bad=ls.filter(l=>l.status!=='pass').length;
   $('#pkFooterStatus').className=`pk-footer-status ${bad?'todo':'done'}`;
   $('#pkFooterStatus').innerHTML=`<span class="pk-status-icon"><i data-lucide="${bad?'list-checks':'check'}"></i></span><span><b>${bad?`${plural(bad,'code')} flagged`:'All codes qualified'}</b><span class="v2-next">in ${esc(rx.title)}</span></span>`;
-  const label=fromOrder?'Save to order':prepareOrders?'Prepare orders':'Create order';
+  const label=fromOrder?'Save to order':'Start fulfillment';
   $('#pcCreateOrder').innerHTML=`${label} <i data-lucide="arrow-right"></i>`;
-  $('#pcCreateOrder').title=prepareOrders&&!fromOrder?'Choose how each prescribed item is ordered':`${label} for ${rx.title}`;
+  $('#pcCreateOrder').title=fromOrder?`${label} for ${rx.title}`:'Turn the prescriptions into orders, refills and appointments';
 }
 
 function render(){renderList();renderDetail();renderFooter();icons();}
@@ -232,7 +360,7 @@ function openPrepareOrders(){
   try{sessionStorage.setItem('signeticIntakeFull',JSON.stringify(intake));sessionStorage.setItem('signeticPrecheckStatus',JSON.stringify(status));sessionStorage.removeItem('signeticOrderPlan');}catch(error){}
   location.href='prepare-orders.html';
 }
-$('#pcCreateOrder').addEventListener('click',()=>prepareOrders&&!fromOrder?openPrepareOrders():createOrderFor(ui.rx));
+$('#pcCreateOrder').addEventListener('click',()=>!fromOrder?openPrepareOrders():createOrderFor(ui.rx));
 document.addEventListener('keydown',event=>{
   if(event.target.matches('input,textarea,select'))return;
   const ls=lines,i=ui.selected;
@@ -242,7 +370,7 @@ document.addEventListener('keydown',event=>{
 
 // Header + back links
 $('#pkTitle').innerHTML=`<span class="title-muted">Pre-check for</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>`;
-$('#pkPatient').textContent=`${primaryPlan().name} · DOB ${intake.patient.dob} · From intake #${intake.id}`;
+$('#pkPatient').innerHTML=`${esc((activePlans()[0]||primaryPlan()).name)} · DOB ${esc(intake.patient.dob)} · From intake #${esc(intake.id)} · <button type="button" class="pc-link" data-eligibility>View EC response</button>`;
 // Back to the live intake page, which restores the saved session.
 const backTo=fromOrder?'dme-order.html?step=products':'index.html';
 $('#pcBack').href=backTo;
