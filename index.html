@@ -67,7 +67,7 @@
             </label>
             <section class="us-uploads" id="uploadList" aria-labelledby="uploadListTitle" hidden>
               <header><strong id="uploadListTitle">Uploaded documents</strong><span id="uploadListCount">0 documents</span></header>
-              <div class="us-upload-list" id="uploadQueue"></div>
+              <div class="us-upload-list file-list list" id="uploadQueue"></div>
             </section>
           </div>
           <div class="us-or" role="separator"><span>or</span></div>
@@ -97,37 +97,36 @@
       <button class="review-collapsed-tab" id="expandReview" aria-label="Open review list" title="Open review list"><i data-lucide="panel-left-open"></i><span>Review</span><b id="railCount" hidden>0</b></button>
       <div class="viewer-tabs side-tabs" role="tablist" aria-label="Review sidebar">
         <button role="tab" id="tabReview" data-side-tab="review" aria-selected="true" aria-controls="reviewList"><i data-lucide="list-checks"></i> Review <b id="reviewTabCount">0</b></button>
-        <button role="tab" id="tabNext" data-side-tab="next" aria-selected="false" aria-controls="nextPanel"><i data-lucide="circle-arrow-right"></i> Next Action</button>
         <button class="icon-btn collapse-btn" id="collapseSources" aria-label="Close review list" title="Close review list"><i data-lucide="panel-left-close"></i></button>
       </div>
       <div class="source-content review-list" id="reviewList" role="tabpanel" aria-labelledby="tabReview">
         <div class="review-list-head"><strong id="reviewPopoverTitle">Items to review</strong><span id="reviewPopoverSub" hidden></span></div>
         <div id="reviewItems"></div>
-      </div>
-      <div class="source-content next-panel" id="nextPanel" role="tabpanel" aria-labelledby="tabNext" hidden>
-        <div id="nextStatus" aria-live="polite"></div>
-        <div class="next-head"><strong id="handoffPatient">Ashlynn Botosh</strong><small id="handoffContext">Existing patient · New PAP setup</small></div>
-        <section class="next-lock" id="nextLock" hidden><i data-lucide="lock"></i><span id="nextLockText"></span><button class="text-btn" data-side-tab="review">Review</button></section>
-        <section class="next-action" aria-labelledby="nextActionTitle">
-          <span class="recommendation-label"><i data-lucide="sparkles"></i> Recommended next</span>
-          <h3 id="nextActionTitle"></h3>
-          <p id="nextActionReason"></p>
-          <button class="primary-action next-action-primary" id="recommendedAction" data-post-action></button>
-        </section>
-        <section class="precheck-result" id="precheckResult" aria-labelledby="precheckTitle" hidden></section>
-        <section class="other-actions" aria-labelledby="otherActionsTitle"><h3 id="otherActionsTitle">Other Actions</h3><div id="otherActionButtons"></div></section>
-        <div class="next-insights" id="nextInsights">
-          <section class="next-block"><h3><i data-lucide="sparkles"></i> AI Intake Summary</h3><strong id="summaryTitle">New PAP therapy intake</strong><p id="handoffSummary"></p></section>
-          <section class="next-block"><h3>Recommended Services</h3><ul id="recommendedServices"></ul></section>
-          <section class="next-block"><h3>Recommended DME Items</h3><ul id="recommendedDme"></ul></section>
-          <p class="handoff-note" id="handoffNote"></p>
+        <div class="next-panel" id="nextPanel" hidden>
+          <div id="nextStatus" aria-live="polite"></div>
+          <div class="next-head"><strong id="handoffPatient">Ashlynn Botosh</strong><small id="handoffContext">Existing patient · New PAP setup</small></div>
+          <section class="next-lock" id="nextLock" hidden><i data-lucide="lock"></i><span id="nextLockText"></span><button class="text-btn" data-side-tab="review">Review</button></section>
+          <section class="next-action" aria-labelledby="nextActionTitle">
+            <span class="recommendation-label"><i data-lucide="sparkles"></i> Recommended next</span>
+            <h3 id="nextActionTitle"></h3>
+            <p id="nextActionReason"></p>
+            <button class="primary-action next-action-primary" id="recommendedAction" data-post-action></button>
+          </section>
+          <section class="precheck-result" id="precheckResult" aria-labelledby="precheckTitle" hidden></section>
+          <section class="other-actions" aria-labelledby="otherActionsTitle"><h3 id="otherActionsTitle">Other Actions</h3><div id="otherActionButtons"></div></section>
+          <div class="next-insights" id="nextInsights">
+              <section class="next-block"><h3>Recommended Services</h3><ul id="recommendedServices"></ul></section>
+            <section class="next-block"><h3>Recommended DME Items</h3><ul id="recommendedDme"></ul></section>
+            <p class="handoff-note" id="handoffNote"></p>
+          </div>
+          <p class="next-insights-locked" id="nextInsightsLocked" hidden><i data-lucide="sparkles"></i><span>The AI summary and recommended services and DME items appear once the required review is complete.</span></p>
         </div>
-        <p class="next-insights-locked" id="nextInsightsLocked" hidden><i data-lucide="sparkles"></i><span>The AI summary and recommended services and DME items appear once the required review is complete.</span></p>
       </div>
     </aside>
     <button class="source-scrim" id="sourceScrim" aria-label="Close review list" hidden></button>
 
     <section class="review-area" aria-label="AI extraction review">
+      <section class="summary-card" id="intakeSummaryCard" aria-labelledby="summaryTitle" hidden><span class="summary-icon"><i data-lucide="sparkles"></i></span><div><span class="eyebrow">AI intake summary</span><h3 id="summaryTitle">New PAP therapy intake</h3><p id="handoffSummary"></p></div></section>
       <section class="review-card" id="demographics-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="user-round"></i></span><div><h3>Patient Demographics</h3><p id="demoMeta">4 of 5 fields complete</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
         <div class="data-group"><div class="compact-fields">
@@ -149,17 +148,6 @@
 
       <section class="review-card" id="insurance-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
-        <div class="eligibility-bar">
-          <div class="eligibility-picker">
-            <span class="eligibility-label" id="serviceTypeLabel">Service type</span>
-            <div class="service-select">
-              <button class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
-              <div class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></div>
-            </div>
-            <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check Eligibility</button>
-          </div>
-          <span class="eligibility-meta" id="eligibilityMeta"></span>
-        </div>
         <div class="insurance-workspace">
           <aside class="plan-list" aria-label="Insurance coverage order"><p class="plan-list-head"><span>Coverage order</span><span class="pill info" id="orderSource"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="planList" role="list"></div><div class="order-hint" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add Another Plan</button></aside>
           <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
@@ -168,6 +156,19 @@
             <div class="insurance-fields" id="insuranceFields"></div>
           </div>
         </div>
+        <div class="coverage-confirm" id="coverageConfirm"></div>
+        <div class="service-suggest" id="serviceSuggest">
+          <span class="step-num">2</span>
+          <div class="suggest-copy"><span id="serviceSuggestText"></span><span class="eligibility-meta" id="eligibilityMeta"></span></div>
+          <div class="service-select">
+            <span class="sr-only" id="serviceTypeLabel">Service type</span>
+            <button class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
+            <div class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></div>
+          </div>
+          <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check Eligibility</button>
+        </div>
+        <div class="hold-banner" id="holdBanner" hidden></div>
+        <div class="elig-summary" id="eligSummary" hidden></div>
       </section>
 
       <div id="prescriptions"></div>
@@ -227,12 +228,7 @@
           <div class="process-steps" id="processSteps">Extracting data</div>
         </div>
 
-        <div class="files-toolbar">
-          <div class="seg" role="group" aria-label="Filter files">
-            <button data-file-filter="all" aria-pressed="true">All <b id="cntAll">0</b></button>
-            <button data-file-filter="uploaded" aria-pressed="false">Uploaded <b id="cntUploaded">0</b></button>
-            <button data-file-filter="existing" aria-pressed="false">Existing <b id="cntExisting">0</b></button>
-          </div>
+        <div class="files-toolbar is-view-only">
           <div class="seg icon-seg" role="group" aria-label="File view">
             <button data-file-view="list" aria-pressed="true" aria-label="List view" title="List view"><i data-lucide="list"></i></button>
             <button data-file-view="grid" aria-pressed="false" aria-label="Gallery view" title="Gallery view"><i data-lucide="layout-grid"></i></button>

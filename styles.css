@@ -399,6 +399,11 @@ body.nav-collapsed .nav-toggle{justify-content:center;padding:0}
 .eligibility-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-4) var(--space-8);padding:var(--space-6) var(--space-8);border-bottom:1px solid var(--line);background:var(--white)}
 .eligibility-picker{display:flex;align-items:center;gap:var(--space-5)}
 .eligibility-label{font-size:14px;font-weight:600;color:var(--text)}
+.service-suggest{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4) var(--space-6);padding:var(--space-6) var(--space-8);background:var(--blue-50,#eff6fc);border-top:1px solid var(--line);font-size:13px}
+.service-suggest>i,.service-suggest>svg{flex:none;color:var(--brand,#0f6cbd)}
+.suggest-copy{flex:1;min-width:240px;display:flex;flex-direction:column;gap:2px}
+.service-suggest .service-menu{top:auto;bottom:calc(100% + 4px);left:auto;right:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .eligibility-meta{font-size:12px;color:var(--muted)}
 .service-select{position:relative}
 .service-trigger{min-width:200px;height:34px;display:grid;grid-template-columns:16px minmax(0,1fr) 14px;align-items:center;gap:var(--space-4);padding:0 var(--space-5);border:1px solid var(--line-strong);border-radius:var(--fluent-corner-2);background:var(--white);color:var(--text);font-size:14px;font-weight:600;text-align:left;cursor:pointer}
@@ -1712,3 +1717,73 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 
 /* Icon containers are circles everywhere, whatever the corner-radius theme */
 :root body :is(.section-icon,.rx-item-icon,.record-card-icon,.rec-icon,.file-main .doc-icon:not(.format-badge),.po-card-icon,.us-record-icon){border-radius:50%!important}
+
+.file-group-title{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-5) 0 var(--space-2);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.file-group-title:first-child{margin-top:0}
+.file-group-title b{font-weight:600;padding:0 6px;border-radius:999px;background:var(--sunken)}
+.file-list.grid .file-group-title{grid-column:1/-1}
+
+/* Files panel: card rows, status chip and date line */
+.file-list.list{gap:var(--space-3)}
+.file-list.list .file-item{background:var(--white);border:1px solid var(--line);padding:var(--space-2) var(--space-5) var(--space-2) var(--space-2)}
+.file-list.list .file-item:hover{border-color:var(--blue-line);background:var(--white)}
+.file-list.list .file-item.active{background:var(--blue-soft);border-color:var(--blue-line)}
+.file-list.list .file-main{padding:var(--space-3) var(--space-4)}
+.file-list.list .file-main .doc-info{gap:3px}
+.file-list.list .file-main .doc-info strong{font-size:13px}
+.file-meta-row{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-2) var(--space-5);overflow:visible}
+.file-meta-row .file-status{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;background:var(--sunken);font-size:11px;font-weight:600;color:var(--muted)}
+.file-meta-row .file-status.ok{background:#e7f4e8;color:var(--green)}
+.file-meta-row .file-status.warn{background:#fff4ce;color:#8a5a00}
+.file-meta-row .file-date{display:inline-flex;align-items:center;gap:4px;font-size:11px}
+.file-meta-row .file-date .lucide{width:12px;height:12px}
+.file-group-title{padding-bottom:var(--space-3);border-bottom:1px solid var(--line);font-size:11px;margin-top:var(--space-8)}
+.file-group-title:first-child{margin-top:0}
+
+/* Next action now lives at the bottom of the Review tab */
+.next-panel[hidden]{display:none!important}
+.review-list>.next-panel{border-top:1px solid var(--line);margin-top:var(--space-4);scroll-margin-top:var(--space-4)}
+
+/* AI intake summary at the top of the review area */
+.summary-card{display:grid;grid-template-columns:32px minmax(0,1fr);gap:var(--space-6);margin-bottom:14px;padding:var(--space-8);border:1px solid var(--blue-line);border-radius:var(--fluent-corner-2);background:var(--blue-wash,var(--blue-soft))}
+.summary-card[hidden]{display:none}
+.summary-icon{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--white);color:var(--primary)}
+.summary-icon .lucide{width:16px;height:16px}
+.summary-card .eyebrow{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--primary)}
+.summary-card h3{margin:2px 0 4px;font-size:16px;color:var(--ink)}
+.summary-card p{margin:0;font-size:13px;line-height:1.55;color:var(--text)}
+
+/* Row text must size to its content (the generic .doc-info pill fixes height at 28px) */
+.file-item .file-main .doc-info{height:auto;min-height:0;padding:0;line-height:1.35;align-content:center}
+.file-item .file-main .doc-info strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.us-upload-list .file-item{min-height:56px}
+
+/* Upload dates only make sense once the review screen shows files from different times */
+.workspace:not(.phase-review) .file-date{display:none!important}
+
+/* Insurance steps: confirm the plan list, verify, then read the result */
+.step-num{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:#fff;font-size:12px;font-weight:600}
+.step-num.done{background:var(--green)}
+.step-num .lucide{width:14px;height:14px}
+.coverage-confirm{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4) var(--space-6);padding:var(--space-6) var(--space-8);border-top:1px solid var(--line);font-size:13px;background:var(--amber-soft)}
+.coverage-confirm.is-done{background:var(--white)}
+.coverage-confirm .suggest-copy{flex:1;min-width:240px}
+.coverage-confirm .small-btn .lucide,.hold-banner .small-btn .lucide{width:13px;height:13px}
+.service-suggest.is-locked{opacity:.6}
+.service-suggest.is-locked .service-trigger{cursor:not-allowed}
+.hold-banner{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-4) var(--space-6);padding:var(--space-6) var(--space-8);border-top:1px solid var(--line);background:var(--amber-soft);font-size:13px}
+.hold-banner[hidden],.elig-summary[hidden]{display:none}
+.hold-banner>.lucide{width:18px;height:18px;color:var(--amber);flex:none}
+.hold-banner .suggest-copy{flex:1;min-width:240px}
+.elig-summary{padding:var(--space-7) var(--space-8);border-top:1px solid var(--line);background:var(--white)}
+.elig-summary>header{display:flex;align-items:center;gap:var(--space-5);margin-bottom:var(--space-5)}
+.elig-summary>header strong{font-size:14px;color:var(--ink)}
+.elig-summary ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--space-5)}
+.elig-summary li{display:grid;grid-template-columns:18px minmax(0,1fr);gap:var(--space-4);font-size:12px;color:var(--muted);line-height:1.45}
+.elig-summary li b{display:block;font-size:13px;color:var(--text)}
+.elig-summary li .lucide{width:16px;height:16px;margin-top:1px}
+.elig-summary li.ok .lucide{color:var(--green)}.elig-summary li.warn .lucide{color:var(--amber)}.elig-summary li.bad .lucide{color:var(--red)}
+.plan-note{display:flex;align-items:flex-start;gap:4px;font-size:11px;line-height:1.35;color:var(--muted)}
+.plan-note .lucide{width:12px;height:12px;flex:none;margin-top:1px}
+.plan-note.ok .lucide{color:var(--green)}.plan-note.warn{color:var(--amber);font-weight:600}.plan-note.warn .lucide{color:var(--amber)}
+.found-actions{display:flex;flex-wrap:wrap;gap:var(--space-3)}
