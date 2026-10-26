@@ -95,10 +95,10 @@ function itemRow(entry,cards,card){
 // Plain-language copy per card.
 function cardCopy(card){
   const order=card.target&&card.kind!=='new'?api.orderById(card.target):null;
-  if(card.kind==='new')return {icon:'file-plus',title:card.label,sub:card.entries.length>1?`These ${card.entries.length} items go on one new order.`:'This item goes on a new order.',button:'Create order'};
-  if(card.kind==='refill'&&!card.target)return {icon:'refresh-cw',title:'Refill',sub:'This item can be refilled on more than one order. Pick one.',button:'Open refill'};
-  if(card.kind==='refill')return {icon:'refresh-cw',title:`Refill ${order.id}`,sub:`Already on ${order.id} (${order.title}) and due now.`,button:'Open refill'};
-  if(card.kind==='add')return {icon:'list-plus',title:`Add to ${order.id}`,sub:`${order.id} hasn’t shipped yet. These items will be added to it.`,button:'Open order'};
+  if(card.kind==='new')return {icon:'file-plus',title:card.label,sub:card.entries.length>1?`These ${card.entries.length} items go on one new order.`:'This item goes on a new order.',button:'Create Order'};
+  if(card.kind==='refill'&&!card.target)return {icon:'refresh-cw',title:'Refill',sub:'This item can be refilled on more than one order. Pick one.',button:'Open Refill'};
+  if(card.kind==='refill')return {icon:'refresh-cw',title:`Refill ${order.id}`,sub:`Already on ${order.id} (${order.title}) and due now.`,button:'Open Refill'};
+  if(card.kind==='add')return {icon:'list-plus',title:`Add to ${order.id}`,sub:`${order.id} hasn’t shipped yet. These items will be added to it.`,button:'Open Order'};
   if(card.kind==='hold')return {icon:'copy-check',title:'Already ordered',sub:'These are already on an order that hasn’t shipped. They won’t be ordered again. Nothing to do.'};
   return {icon:'pause',title:'Not ordering now',sub:'These stay on the intake. You can order them later.'};
 }
@@ -169,7 +169,7 @@ function openCard(id){
 }
 
 // Back goes to the pre-check when it was run, otherwise to the intake.
-if(!precheckStatus){$('#poBack').href='index.html';$('#poBack').innerHTML='<i data-lucide="arrow-left"></i> Back to intake';}
+if(!precheckStatus){$('#poBack').href='index.html';$('#poBack').innerHTML='<i data-lucide="arrow-left"></i> Back to Intake';}
 
 document.addEventListener('click',event=>{
   const open=event.target.closest('[data-open-card]');if(open){openCard(open.dataset.openCard);return;}

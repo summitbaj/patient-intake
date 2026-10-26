@@ -158,13 +158,13 @@ function detailsTab(){
     <div class="d-chips">${rx.icd.map(c=>`<span class="d-chip" title="${esc(c.description)}"><b>${c.code}</b> ${esc(c.description)}${c.primary?' <em>Primary</em>':''}</span>`).join('')}</div>
     ${rx.items.map(item=>`<div class="d-item"><b>${esc(item.name)}${item.bundle?' <span class="pill neutral">Bundle</span>':''}</b>${item.lines.map(line=>`<div class="d-line"><span class="code-chip-sm">${line.code}</span><span>${esc(line.description)}</span><small>Qty ${line.qty} · ${esc(line.frequency)}</small></div>`).join('')}</div>`).join('')}
   </section>`).join('')}
-  <section class="drawer-section"><h3>Prior authorizations</h3>${intake.priorAuths.length?intake.priorAuths.map(pa=>`<div class="d-row"><span class="code-chip-sm">${pa.code}</span><span><b>${esc(pa.number)}</b><small>${esc(pa.payer)} · ${esc(pa.from||'—')} – ${esc(pa.to||'—')}</small></span></div>`).join(''):'<p class="d-meta">None on file</p>'}</section>
+  <section class="drawer-section"><h3>Prior Authorizations</h3>${intake.priorAuths.length?intake.priorAuths.map(pa=>`<div class="d-row"><span class="code-chip-sm">${pa.code}</span><span><b>${esc(pa.number)}</b><small>${esc(pa.payer)} · ${esc(pa.from||'—')} – ${esc(pa.to||'—')}</small></span></div>`).join(''):'<p class="d-meta">None on file</p>'}</section>
   <section class="drawer-section"><h3>Documents</h3><ul class="d-docs">${intake.documents.map(name=>`<li><i data-lucide="file-text"></i> ${esc(name)}</li>`).join('')}</ul></section>
-  ${intake.note?`<section class="drawer-section"><h3>Clinical note</h3><p class="d-note">${esc(intake.note)}</p></section>`:''}`;
+  ${intake.note?`<section class="drawer-section"><h3>Clinical Note</h3><p class="d-note">${esc(intake.note)}</p></section>`:''}`;
 }
 function precheckTab(){
   const pc=intake.precheck;
-  if(!pc)return `<div class="drawer-empty"><i data-lucide="shield-question"></i><h3>Pre-check wasn’t run</h3><p>This order was created without a pre-check. Run one to confirm payer eligibility, coverage criteria and documentation.</p><a class="footer-btn primary" href="precheck.html?from=order"><i data-lucide="shield-check"></i> Run pre-check</a></div>`;
+  if(!pc)return `<div class="drawer-empty"><i data-lucide="shield-question"></i><h3>Pre-Check Wasn’t Run</h3><p>This order was created without a pre-check. Run one to confirm payer eligibility, coverage criteria and documentation.</p><a class="footer-btn primary" href="precheck.html?from=order"><i data-lucide="shield-check"></i> Run Pre-Check</a></div>`;
   const warn=pc.results.some(r=>r.status!=='pass');
   return `<div class="pc-summary ${warn?'warn':'pass'}"><i data-lucide="${warn?'shield-alert':'shield-check'}"></i><span><b>${esc(pc.summary)}</b><small>Run ${esc(pc.at)} during intake ${esc(intake.id)}</small></span></div>
     <a class="open-precheck" href="precheck.html?from=order"><i data-lucide="external-link"></i> Open full pre-check</a>
@@ -248,6 +248,6 @@ goStep(steps.some(([id])=>id===startStep)?startStep:'patient');
   let action=null;try{action=JSON.parse(sessionStorage.getItem('signeticOrderAction'));}catch(error){}
   if(!action||action.route!=='new'||intake.fromAction!==action.id)return;
   const box=$('#orderFromIntake'),items=(intake.prescriptions[0]?.items||[]).map(it=>esc(it.name)).join(' · ');
-  box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From intake #${esc(intake.id)} · New order for ${esc(action.rxTitle)}</b>${items}</span><a class="footer-btn" href="prepare-orders.html?done=${encodeURIComponent(action.id)}">Done, back to Fulfillment</a>`;
+  box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From intake #${esc(intake.id)} · New order for ${esc(action.rxTitle)}</b>${items}</span><a class="footer-btn" href="prepare-orders.html?done=${encodeURIComponent(action.id)}">Done, Back to Fulfillment</a>`;
   box.hidden=false;icons();
 })();

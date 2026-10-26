@@ -2,19 +2,20 @@
 .upload-start{display:none}
 .workspace.phase-upload .upload-start{display:flex;flex-direction:column;height:100%;background:var(--white,var(--fluent-white));border-radius:inherit}
 .workspace.phase-upload .action-panel{display:none!important}
+body.phase-upload{--body-pad:16px;--body-pad-y:16px}
 body.phase-upload #cancelUpload{display:none!important}
-.us-scroll{flex:1;min-height:0;overflow-y:auto;padding:32px clamp(16px,4vw,56px)}
-.us-hero{text-align:center;max-width:680px;margin:0 auto 32px}
+.us-scroll{flex:1;min-height:0;overflow-y:auto;padding:20px}
+.us-hero{text-align:center;max-width:680px;margin:0 auto 20px}
 .us-hero-icon{width:52px;height:52px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;color:var(--fluent-white);background:var(--ai-grad,var(--blue));box-shadow:0 0 0 8px var(--blue-soft),0 8px 22px -6px rgba(109,74,255,.45)}
 .us-hero-icon .lucide{width:24px;height:24px}
-.us-hero h2{margin:0 0 8px;font-size:28px;line-height:1.2;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.us-hero h2{margin:0 0 8px;font-size:20px;line-height:1.2;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
 .us-hero p{margin:0;font-size:14px;line-height:1.6;color:var(--muted)}
 .us-grid{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:28px;align-items:start;max-width:1100px;margin:0 auto}
 .us-col{min-width:0}
 .us-or{align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--muted);font-size:14px}
 .us-or::before,.us-or::after{content:"";flex:1;width:1px;background:var(--line)}
 
-.us-drop{min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:32px 24px;text-align:center;border:1.5px dashed var(--blue-line);border-radius:var(--radius);background:var(--sunken);color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
+.us-drop{min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:32px 24px;text-align:center;border:1.5px dashed var(--blue-line);border-radius:var(--radius);background:var(--fluent-neutral-lighter-alt);color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
 .us-drop:hover,.us-drop.over{border-color:var(--blue);background:var(--blue-soft)}
 .us-drop-icon{width:72px;height:72px;margin-bottom:18px;border-radius:50%;display:grid;place-items:center;background:var(--white,var(--fluent-white));color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-line)}
 .us-drop-icon .lucide{width:28px;height:28px}
@@ -40,20 +41,20 @@ body.phase-upload #cancelUpload{display:none!important}
 .us-upload .format-badge,.us-doc .format-badge{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:var(--fluent-corner-2);font-size:10px;font-weight:600;letter-spacing:.04em}
 .us-doc .format-badge{width:28px;height:28px;font-size:10px}
 
-.us-record{padding:24px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white,var(--fluent-white));box-shadow:var(--shadow)}
+.us-record{padding:20px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white,var(--fluent-white))}
 .us-record-head{display:flex;gap:14px;align-items:flex-start}
-.us-record-icon{width:44px;height:44px;flex:none;border-radius:var(--radius-sm);display:grid;place-items:center;background:var(--blue-soft);color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-line)}
+.us-record-icon{width:44px;height:44px;flex:none;border-radius:50%;display:grid;place-items:center;background:var(--blue-soft);color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue-line)}
 .us-record-icon .lucide{width:20px;height:20px}
 .us-record-head h3{margin:0;font-size:16px;font-weight:600;color:var(--ink)}
 .us-record-head p{margin:4px 0 0;font-size:14px;line-height:1.5;color:var(--muted)}
-.us-search{display:flex;align-items:center;gap:10px;height:44px;margin:20px 0 18px;padding:0 14px;border-radius:var(--radius-sm);background:var(--sunken);color:var(--muted)}
+.us-search{display:flex;align-items:center;gap:10px;height:38px;margin:16px 0;padding:0 14px;border-radius:var(--radius-sm);background:var(--sunken);color:var(--muted)}
 .us-search[hidden]{display:none}
 .us-search:focus-within{box-shadow:var(--ring)}
 .us-search .lucide{width:17px;height:17px;flex:none}
 .us-search input{flex:1;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:14px;color:var(--text)}
-.us-label{display:block;margin:0 0 10px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.us-label{display:block;margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .us-label[hidden]{display:none}
-.us-patients{display:grid;gap:10px}
+.us-patients{display:grid;gap:8px}
 .us-patients[hidden]{display:none}
 .us-patient{border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--white,var(--fluent-white));transition:border-color .15s}
 .us-patient:hover,.us-patient.open{border-color:var(--blue-line)}
@@ -87,7 +88,7 @@ body.phase-upload #cancelUpload{display:none!important}
 .us-linked-tag .lucide{width:13px;height:13px}
 .us-linked-row .us-avatar{background:var(--white,var(--fluent-white))}
 
-.us-footer{flex:none;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px clamp(16px,3vw,28px);border-top:1px solid var(--line);background:var(--white,var(--fluent-white))}
+.us-footer{flex:none;display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:var(--white,var(--fluent-white))}
 .us-footer-note{margin-right:auto;display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
 .us-footer-note b{color:var(--ink);font-weight:600}
 .us-footer-note .lucide{width:16px;height:16px;color:var(--blue)}
@@ -99,7 +100,7 @@ body.phase-upload #cancelUpload{display:none!important}
   .us-or{flex-direction:row;align-self:auto}
   .us-or::before,.us-or::after{height:1px;width:auto}
   .us-drop{min-height:240px}
-  .us-hero h2{font-size:24px}
+  .us-hero h2{font-size:20px}
   .us-footer-note{display:none}
 }
 
@@ -131,3 +132,90 @@ body.phase-upload #cancelUpload{display:none!important}
 .manual-error{margin:0;font-size:12px;color:var(--red)}
 .manual-actions{display:flex;justify-content:flex-end;gap:8px}
 @media(max-width:560px){.manual-grid{grid-template-columns:1fr}.us-manual{flex-wrap:wrap}}
+
+/* Before anything is uploaded, the drop zone grows to fill the screen, leaving 20px (the scroll padding) above the footer */
+@media(min-width:901px){
+  .us-scroll{display:flex;flex-direction:column}
+  .us-hero{flex:none}
+  .us-grid{flex:1;width:100%}
+  .us-col:first-child{align-self:stretch;display:flex;flex-direction:column}
+  .us-col:first-child .us-drop{flex:1}
+  .us-col:first-child:has(.us-uploads:not([hidden])) .us-drop{flex:none}
+}
+
+/* Once files are added, the drop zone shrinks so the uploaded list shows right under it */
+.us-col:has(.us-uploads:not([hidden])) .us-drop{min-height:0;padding:20px 24px}
+.us-col:has(.us-uploads:not([hidden])) .us-drop-icon{width:48px;height:48px;margin-bottom:8px}
+.us-col:has(.us-uploads:not([hidden])) .us-drop-icon .lucide{width:22px;height:22px}
+.us-col:has(.us-uploads:not([hidden])) .us-browse{margin-top:12px;min-height:36px}
+.us-col:has(.us-uploads:not([hidden])) .us-uploads{margin-top:16px}
+.us-drop{transition:border-color .15s,background .15s,min-height .6s ease,flex-grow .6s ease,padding .6s ease}
+.us-drop-icon{transition:width .6s ease,height .6s ease,margin .6s ease}
+.us-browse{transition:margin .6s ease,min-height .6s ease}
+#manualStart{box-shadow:none}
+
+/* Confirm-before-upload modal: each step is a card, and each patient or document inside it is its own card */
+.resolve-dialog{padding:20px}
+.resolve-head h2{margin-top:4px}
+.resolve-dialog .extraction-issues .extraction-issue{border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-top:12px;background:var(--white,var(--fluent-white))}
+.resolve-dialog .extraction-issues .extraction-issue:not(.is-resolved){border-color:var(--line)}
+.resolve-dialog .extraction-issues .issue-title{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.resolve-dialog .extraction-issues .issue-number{flex:none}
+.resolve-dialog .extraction-issues .issue-title>div{flex:1;min-width:0;display:grid;gap:2px}
+.resolve-dialog .extraction-issues .issue-title>b{display:none}
+.resolve-dialog .extraction-issue.is-resolved .issue-title,.resolve-dialog #documentIssue.is-locked .issue-title{margin-bottom:0}
+.resolve-dialog #documentIssue.is-locked{background:var(--fluent-neutral-lighter-alt)}
+.resolve-dialog #extractionPatientMatches,.resolve-dialog #extractionDocumentMatches{margin-left:0;display:grid;gap:12px}
+.resolve-dialog #extractionPatientMatches .issue-resolved{margin:12px 0 0 44px}
+
+.resolve-dialog .extraction-issues .extract-patient{display:grid;grid-template-columns:40px minmax(0,1fr);column-gap:16px;align-items:start;margin:0;padding:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white,var(--fluent-white))}
+.resolve-dialog .extraction-issues .extract-patient.best{border-color:var(--blue-line);background:var(--white,var(--fluent-white))}
+.resolve-dialog .extraction-issues .extract-patient:hover{border-color:var(--blue-line);background:var(--white,var(--fluent-white))}
+.resolve-dialog .extraction-issues .extract-patient .avatar{width:40px;height:40px;font-size:14px}
+.resolve-dialog .extraction-issues .extract-patient>.ep-body{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:4px;min-width:0}
+.resolve-dialog .extraction-issues .extract-patient .ep-body strong{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:16px;font-weight:600;color:var(--ink)}
+.resolve-dialog .extraction-issues .extract-patient .ep-body small{margin:0;font-size:14px;color:var(--muted)}
+.resolve-dialog .extraction-issues .extract-patient .best-tag{margin-left:auto;font-size:12px;padding:2px 10px}
+.resolve-dialog .ep-reason{display:flex;align-items:center;gap:8px;margin:4px 0 0;font-size:14px;line-height:1.4;color:var(--text)}
+.resolve-dialog .ep-reason .lucide{width:16px;height:16px;flex:none;color:var(--primary)}
+.resolve-dialog .ep-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px}
+.resolve-dialog .ep-actions .small-btn{min-height:36px;padding:0 20px;font-size:14px}
+.resolve-dialog .extraction-issues .extract-patient .extract-patient-details{grid-column:auto;margin-top:12px;padding-top:12px}
+
+.resolve-dialog .extraction-issues .create-new-patient{width:100%;margin:12px 0 0;display:grid;grid-template-columns:40px minmax(0,1fr) 16px;gap:16px;padding:16px 20px;border:1px dashed var(--line-strong,var(--line));border-radius:var(--radius)}
+.resolve-dialog .extraction-issues .create-new-patient>.lucide:first-child{width:40px;height:40px;padding:10px}
+.resolve-dialog .extraction-issues .create-new-patient strong{font-size:16px}
+.resolve-dialog .extraction-issues .create-new-patient small{font-size:14px}
+
+.resolve-dialog .extraction-issues .extract-document{display:grid;grid-template-columns:40px minmax(0,1fr);column-gap:16px;row-gap:0;align-items:start;margin:0;padding:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white,var(--fluent-white))}
+.resolve-dialog .extraction-issues .extract-document:hover{border-color:var(--blue-line)}
+.resolve-dialog .extraction-issues .extract-document.resolved{border-color:var(--fluent-success-background);background:var(--white,var(--fluent-white))}
+.resolve-dialog .extraction-issues .extract-document>.lucide{width:40px;height:40px;margin:0;padding:10px;border-radius:50%;background:var(--blue-soft);color:var(--primary)}
+.resolve-dialog .extraction-issues .extract-document>.ed-body{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:4px;min-width:0}
+.resolve-dialog .extraction-issues .extract-document .ed-body strong{margin:0;font-size:16px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.resolve-dialog .extraction-issues .extract-document .ed-body small{margin:0;font-size:14px;color:var(--muted)}
+.resolve-dialog .extraction-issues .extract-document .ep-reason{display:flex;align-items:center;gap:8px;margin:4px 0 0;font-size:14px;line-height:1.4;color:var(--text)}
+.resolve-dialog .extraction-issues .extract-document .extract-document-actions{grid-column:auto;display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-end;gap:8px;margin:8px 0 0}
+.resolve-dialog .extraction-issues .extract-document-actions .small-btn{min-height:36px;padding:0 20px;font-size:14px}
+.resolve-dialog .extraction-issues .issue-number{position:relative;display:grid;place-items:center;line-height:1}
+.resolve-dialog .extraction-issue.is-resolved .issue-number::after{content:"";position:absolute;inset:0;margin:auto;width:14px;height:14px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center/contain no-repeat}
+.resolve-dialog #extractionPatientMatches .issue-resolved{grid-template-columns:minmax(0,1fr) auto}
+.resolve-dialog #extractionPatientMatches .issue-resolved>.lucide{display:none}
+.resolve-dialog .extraction-issues .create-new-patient[hidden]{display:none}
+/* Once a patient is chosen, step 1 collapses to the green tick beside the chosen name */
+.resolve-dialog #patientIssue.is-resolved{display:grid;grid-template-columns:32px minmax(0,1fr);column-gap:12px;align-items:center}
+.resolve-dialog #patientIssue.is-resolved .issue-title{margin:0}
+.resolve-dialog #patientIssue.is-resolved .issue-title>div{display:none}
+.resolve-dialog #patientIssue.is-resolved #extractionPatientMatches .issue-resolved{margin:0;padding:0}
+.resolve-dialog .ep-actions .text-btn{padding:0 8px;font-size:14px}
+.resolve-dialog .extraction-issues .extract-patient-details dt,.resolve-dialog .extraction-issues .extract-patient-details dd{font-size:12px}
+.resolve-dialog .extraction-issues .extract-document .issue-resolved strong{font-size:12px;font-weight:600}
+
+/* Upload → review: one quiet cross-fade of the whole page instead of panes moving in different directions */
+#documentViewer,.review-area,.source-panel{view-transition-name:none}
+::view-transition-old(root){animation:.18s ease-out both vt-fade-out}
+::view-transition-new(root){animation:.32s .06s ease-out both vt-fade-in}
+
+/* Review list header sits on a subtle grey band */
+.review-list .review-list-head{background:var(--fluent-neutral-lighter-alt);border-bottom:1px solid var(--line)}
+.workspace.phase-review .review-area{padding:16px}

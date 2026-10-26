@@ -123,7 +123,7 @@
   --fluent-depth-8:0 3.2px 7.2px 0 rgba(0,0,0,.132),0 .6px 1.8px 0 rgba(0,0,0,.108);
   --fluent-depth-16:0 6.4px 14.4px 0 rgba(0,0,0,.132),0 1.2px 3.6px 0 rgba(0,0,0,.108);
   --fluent-depth-64:0 25.6px 57.6px 0 rgba(0,0,0,.22),0 4.8px 14.4px 0 rgba(0,0,0,.18);
-  --fluent-corner-2:2px;
+  --fluent-corner-2:4px;
   --fluent-corner-4:4px;
   --fluent-corner-6:6px;
   --fluent-corner-circular:9999px;

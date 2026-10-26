@@ -45,7 +45,7 @@
     </div>
   </nav>
 
-  <header class="shell-commands page-header"><h1 class="page-title" id="pageTitle">New patient intake</h1><div class="header-notice" id="reviewGuidance" aria-live="polite"></div><div class="header-actions"></div></header>
+  <header class="shell-commands page-header"><h1 class="page-title" id="pageTitle">New Patient Intake</h1><div class="header-notice" id="reviewGuidance" aria-live="polite"></div><div class="header-actions"></div></header>
 
   <div class="app-body">
 
@@ -54,7 +54,7 @@
       <div class="us-scroll">
         <header class="us-hero">
           <span class="us-hero-icon"><i data-lucide="sparkles"></i></span>
-          <h2 id="startTitle">Upload patient documents</h2>
+          <h2 id="startTitle">Upload Patient Documents</h2>
           <p id="startLead">Add prescriptions, insurance cards, referrals, and clinical records. Nothing is processed until you select Extract.</p>
         </header>
         <div class="us-grid">
@@ -73,7 +73,7 @@
           <div class="us-or" role="separator"><span>or</span></div>
           <div class="us-col">
             <section class="us-record" id="recordCard" aria-labelledby="recordCardTitle">
-              <header class="us-record-head"><span class="us-record-icon"><i data-lucide="users"></i></span><div><h3 id="recordCardTitle">Pull from a patient’s record</h3><p id="recordCardLead">Patients waiting in the intake queue. Pick documents straight from their record.</p></div></header>
+              <header class="us-record-head"><span class="us-record-icon"><i data-lucide="users"></i></span><div><h3 id="recordCardTitle">Pull from a Patient’s Record</h3><p id="recordCardLead">Patients waiting in the intake queue. Pick documents straight from their record.</p></div></header>
               <div class="us-linked" id="linkedPatient" hidden></div>
               <label class="us-search" id="patientSearch"><i data-lucide="search"></i><input id="patientSearchInput" type="text" placeholder="Find another patient by name or ID" aria-label="Find another patient" autocomplete="off"></label>
               <span class="us-label" id="recordListLabel">In the intake queue</span>
@@ -81,8 +81,8 @@
             </section>
             <section class="us-manual" aria-labelledby="manualTitle">
               <span class="us-record-icon"><i data-lucide="keyboard"></i></span>
-              <div><h3 id="manualTitle">No documents?</h3><p>Pick the patient, then type the prescription yourself.</p></div>
-              <button class="footer-btn" id="manualStart" type="button">Enter manually</button>
+              <div><h3 id="manualTitle">No Documents?</h3><p>Pick the patient, then type the prescription yourself.</p></div>
+              <button class="footer-btn" id="manualStart" type="button">Enter Manually</button>
             </section>
           </div>
         </div>
@@ -97,7 +97,7 @@
       <button class="review-collapsed-tab" id="expandReview" aria-label="Open review list" title="Open review list"><i data-lucide="panel-left-open"></i><span>Review</span><b id="railCount" hidden>0</b></button>
       <div class="viewer-tabs side-tabs" role="tablist" aria-label="Review sidebar">
         <button role="tab" id="tabReview" data-side-tab="review" aria-selected="true" aria-controls="reviewList"><i data-lucide="list-checks"></i> Review <b id="reviewTabCount">0</b></button>
-        <button role="tab" id="tabNext" data-side-tab="next" aria-selected="false" aria-controls="nextPanel"><i data-lucide="circle-arrow-right"></i> Next action</button>
+        <button role="tab" id="tabNext" data-side-tab="next" aria-selected="false" aria-controls="nextPanel"><i data-lucide="circle-arrow-right"></i> Next Action</button>
         <button class="icon-btn collapse-btn" id="collapseSources" aria-label="Close review list" title="Close review list"><i data-lucide="panel-left-close"></i></button>
       </div>
       <div class="source-content review-list" id="reviewList" role="tabpanel" aria-labelledby="tabReview">
@@ -115,11 +115,11 @@
           <button class="primary-action next-action-primary" id="recommendedAction" data-post-action></button>
         </section>
         <section class="precheck-result" id="precheckResult" aria-labelledby="precheckTitle" hidden></section>
-        <section class="other-actions" aria-labelledby="otherActionsTitle"><h3 id="otherActionsTitle">Other actions</h3><div id="otherActionButtons"></div></section>
+        <section class="other-actions" aria-labelledby="otherActionsTitle"><h3 id="otherActionsTitle">Other Actions</h3><div id="otherActionButtons"></div></section>
         <div class="next-insights" id="nextInsights">
-          <section class="next-block"><h3><i data-lucide="sparkles"></i> AI intake summary</h3><strong id="summaryTitle">New PAP therapy intake</strong><p id="handoffSummary"></p></section>
-          <section class="next-block"><h3>Recommended services</h3><ul id="recommendedServices"></ul></section>
-          <section class="next-block"><h3>Recommended DME items</h3><ul id="recommendedDme"></ul></section>
+          <section class="next-block"><h3><i data-lucide="sparkles"></i> AI Intake Summary</h3><strong id="summaryTitle">New PAP therapy intake</strong><p id="handoffSummary"></p></section>
+          <section class="next-block"><h3>Recommended Services</h3><ul id="recommendedServices"></ul></section>
+          <section class="next-block"><h3>Recommended DME Items</h3><ul id="recommendedDme"></ul></section>
           <p class="handoff-note" id="handoffNote"></p>
         </div>
         <p class="next-insights-locked" id="nextInsightsLocked" hidden><i data-lucide="sparkles"></i><span>The AI summary and recommended services and DME items appear once the required review is complete.</span></p>
@@ -129,7 +129,7 @@
 
     <section class="review-area" aria-label="AI extraction review">
       <section class="review-card" id="demographics-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="user-round"></i></span><div><h3>Patient demographics</h3><p id="demoMeta">4 of 5 fields complete</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="user-round"></i></span><div><h3>Patient Demographics</h3><p id="demoMeta">4 of 5 fields complete</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
         <div class="data-group"><div class="compact-fields">
           <div><span>First name<i class="req" title="Required" aria-label="required">*</i></span><strong>Ashlynn</strong></div><div><span>Middle name</span><strong>—</strong></div>
           <div><span>Last name<i class="req" title="Required" aria-label="required">*</i></span><strong>Botosh</strong></div><div class="missing-cell" id="genderField"><label class="cell-label" for="genderInput">Gender<i class="req" title="Required" aria-label="required">*</i><em class="miss-chip" id="genderHint">Not found</em></label><select class="input inline-input" id="genderInput" aria-label="Gender"><option value="">Select gender</option><option>Female</option><option>Male</option><option>Other</option><option>Unknown</option></select></div>
@@ -138,7 +138,7 @@
       </section>
 
       <section class="review-card" id="contact-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="contact"></i></span><div><h3>Contact information</h3><p>7 of 8 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="contact"></i></span><div><h3>Contact Information</h3><p>7 of 8 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
         <div class="data-group"><div class="compact-fields">
           <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved mobile number" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div><span>Home phone number</span><strong>(206) 555-0142</strong></div>
           <div class="wide"><span>Street address</span><strong>1234 Healthways Blvd, Suite 200</strong></div>
@@ -148,7 +148,7 @@
       </section>
 
       <section class="review-card" id="insurance-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
         <div class="eligibility-bar">
           <div class="eligibility-picker">
             <span class="eligibility-label" id="serviceTypeLabel">Service type</span>
@@ -156,12 +156,12 @@
               <button class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
               <div class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></div>
             </div>
-            <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check eligibility</button>
+            <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check Eligibility</button>
           </div>
           <span class="eligibility-meta" id="eligibilityMeta"></span>
         </div>
         <div class="insurance-workspace">
-          <aside class="plan-list" aria-label="Insurance coverage order"><p class="plan-list-head"><span>Coverage order</span><span class="pill info" id="orderSource"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="planList" role="list"></div><div class="order-hint" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add another plan</button></aside>
+          <aside class="plan-list" aria-label="Insurance coverage order"><p class="plan-list-head"><span>Coverage order</span><span class="pill info" id="orderSource"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="planList" role="list"></div><div class="order-hint" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add Another Plan</button></aside>
           <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
             <p class="plan-discovered" id="planDiscovered" hidden></p>
             <p class="plan-ai-note" id="planAiNote" hidden></p>
@@ -171,15 +171,15 @@
       </section>
 
       <div id="prescriptions"></div>
-      <button class="add-prescription" id="addPrescription"><i data-lucide="plus"></i> Add prescription</button>
+      <button class="add-prescription" id="addPrescription"><i data-lucide="plus"></i> Add Prescription</button>
       <datalist id="hcpcsOptions"></datalist>
       <datalist id="icdOptions"></datalist>
 
       <section class="review-card" id="prior-auth-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="file-check"></i></span><div><h3>Prior authorization</h3><p id="priorAuthMeta">2 authorizations</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="file-check"></i></span><div><h3>Prior Authorization</h3><p id="priorAuthMeta">2 authorizations</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
         <div class="pa-list" id="priorAuthList"></div>
         <div class="pa-add">
-          <button class="text-btn" id="addPriorAuthToggle"><i data-lucide="plus"></i> Add prior authorization</button>
+          <button class="text-btn" id="addPriorAuthToggle"><i data-lucide="plus"></i> Add Prior Authorization</button>
           <form class="pa-form" id="priorAuthForm" hidden novalidate>
             <div class="pa-form-grid">
               <label><span>HCPCS <em>*</em></span><input class="input" name="code" list="hcpcsOptions" maxlength="5" placeholder="e.g. E0601" required></label>
@@ -191,13 +191,13 @@
               <label class="wide"><span>Dispensing frequency</span><input class="input" name="frequency" placeholder="e.g. Monthly rental · 13 months"></label>
             </div>
             <p class="form-error" id="priorAuthError" hidden>Fill in HCPCS, authorization number and payer.</p>
-            <div class="pa-form-actions"><button class="small-btn" type="button" id="cancelPriorAuth">Cancel</button><button class="small-btn primary" type="submit">Add authorization</button></div>
+            <div class="pa-form-actions"><button class="small-btn" type="button" id="cancelPriorAuth">Cancel</button><button class="small-btn primary" type="submit">Add Authorization</button></div>
           </form>
         </div>
       </section>
 
       <section class="completion-card" id="completionCard" hidden>
-        <span class="completion-icon"><i data-lucide="check"></i></span><div><span class="eyebrow">Ready to complete</span><h3>Intake review complete</h3><p>Patient linked, insurance verified, prescription attached, and documents stored.</p><div class="completion-list"><span><i data-lucide="check"></i> Patient linked</span><span><i data-lucide="check"></i> Insurance verified</span><span><i data-lucide="check"></i> Documents stored</span></div></div>
+        <span class="completion-icon"><i data-lucide="check"></i></span><div><span class="eyebrow">Ready to complete</span><h3>Intake Review Complete</h3><p>Patient linked, insurance verified, prescription attached, and documents stored.</p><div class="completion-list"><span><i data-lucide="check"></i> Patient linked</span><span><i data-lucide="check"></i> Insurance verified</span><span><i data-lucide="check"></i> Documents stored</span></div></div>
       </section>
 
     </section>
@@ -212,8 +212,8 @@
           <button class="icon-btn" id="collapseViewer" aria-label="Collapse documents panel" title="Collapse"><i data-lucide="panel-right-close"></i></button>
         </div>
         <section class="viewer-files" id="viewerFiles" role="tabpanel" aria-labelledby="tabFiles">
-        <header class="upload-intro"><div><h2>Upload patient documents</h2><p>Add prescriptions, insurance cards, referrals and clinical records, then extract.</p></div><button class="footer-btn primary extract-btn" id="extractDocuments" disabled><i data-lucide="sparkles"></i><span>Extract<span class="extract-more">&nbsp;documents</span></span></button></header>
-        <div class="reextract-bar" id="reextractBar" hidden><span><b id="reextractCount">New documents</b><small>Existing files aren’t affected.</small></span><button class="footer-btn primary extract-btn is-ready" id="reextractBtn"><i data-lucide="sparkles"></i> Extract new</button></div>
+        <header class="upload-intro"><div><h2>Upload Patient Documents</h2><p>Add prescriptions, insurance cards, referrals and clinical records, then extract.</p></div><button class="footer-btn primary extract-btn" id="extractDocuments" disabled><i data-lucide="sparkles"></i><span>Extract<span class="extract-more">&nbsp;documents</span></span></button></header>
+        <div class="reextract-bar" id="reextractBar" hidden><span><b id="reextractCount">New documents</b><small>Existing files aren’t affected.</small></span><button class="footer-btn primary extract-btn is-ready" id="reextractBtn"><i data-lucide="sparkles"></i> Extract New</button></div>
         <label class="drop-zone" id="dropZone" for="fileInput">
           <input id="fileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg" hidden>
           <span class="drop-icon"><i data-lucide="plus"></i></span>
@@ -241,7 +241,7 @@
         <div class="file-list list" id="fileList"></div>
 
         <section class="finding-section" id="duplicateCard" hidden><div class="finding-heading"><i data-lucide="copy-check"></i><div><strong>Document matches handled</strong><span>AI resolved similar content and exact copies automatically.</span></div></div><div id="duplicateFindings"></div></section>
-        <section class="finding-section" id="matchCard" hidden><div class="finding-heading"><i data-lucide="users"></i><div><strong>Possible patient matches</strong><span>Compare details before linking this intake.</span></div></div><div id="patientMatches"></div><button class="text-btn create-patient" data-match-new>Create a new patient instead</button></section>
+        <section class="finding-section" id="matchCard" hidden><div class="finding-heading"><i data-lucide="users"></i><div><strong>Possible patient matches</strong><span>Compare details before linking this intake.</span></div></div><div id="patientMatches"></div><button class="text-btn create-patient" data-match-new>Create a New Patient Instead</button></section>
         </section>
         <section class="viewer-preview" id="viewerPreview" role="tabpanel" aria-labelledby="tabPreview" hidden>
           <div class="preview-toolbar"><button class="text-btn back-to-files" id="backToFiles"><i data-lucide="arrow-left"></i> Files</button><div><i data-lucide="file-text"></i><span id="previewName">Referral.pdf</span><small id="previewMeta">Page 1 of 2</small></div><button class="icon-btn" id="openFullView" aria-label="Open in full screen" title="Full screen"><i data-lucide="maximize-2"></i></button></div>
@@ -252,7 +252,7 @@
     </aside>
     <footer class="us-footer review-footer" id="reviewFooter" aria-label="Intake actions">
       <button class="footer-btn upload-cancel" id="cancelUpload"><i data-lucide="x"></i> Cancel</button>
-      <button class="footer-btn" id="cancelIntake"><i data-lucide="x"></i> Cancel intake</button>
+      <button class="footer-btn" id="cancelIntake"><i data-lucide="x"></i> Cancel Intake</button>
     </footer>
   </main>
   </div>
@@ -295,7 +295,7 @@
       <p id="gateBody">You can only do this once you finish all the mandatory reviews.</p>
       <div class="confirm-actions">
         <button class="footer-btn" value="close">Close</button>
-        <button class="footer-btn primary" value="review" autofocus>Go to review</button>
+        <button class="footer-btn primary" value="review" autofocus>Go to Review</button>
       </div>
     </form>
   </dialog>
@@ -306,7 +306,7 @@
       <p id="cancelIntakeBody">All extracted information and any changes you made will be discarded. A cancelled intake can’t be resumed later. To try again, you’ll need to start a new intake.</p>
       <div class="confirm-actions">
         <button class="footer-btn" value="keep" autofocus>Keep working</button>
-        <button class="footer-btn danger" value="cancel">Cancel intake</button>
+        <button class="footer-btn danger" value="cancel">Cancel Intake</button>
       </div>
     </form>
   </dialog>
@@ -321,7 +321,7 @@
 
   <dialog class="confirm-dialog add-plan-dialog" id="addPlanDialog" aria-labelledby="addPlanTitle">
     <form id="addPlanForm" novalidate>
-      <header class="response-head"><div><span class="eyebrow">Insurance</span><h2 id="addPlanTitle">Add another plan</h2><p>Enter the details from the patient’s insurance card. You can check eligibility after saving.</p></div><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
+      <header class="response-head"><div><span class="eyebrow">Insurance</span><h2 id="addPlanTitle">Add Another Plan</h2><p>Enter the details from the patient’s insurance card. You can check eligibility after saving.</p></div><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
 
       <button type="button" class="card-scan" id="scanCard"><i data-lucide="scan-line"></i><span><strong>Upload insurance card</strong><small>AI fills in the fields for you to review</small></span></button>
 
@@ -338,7 +338,7 @@
       </div>
       <p class="form-error" id="addPlanError" hidden>Fill in the required fields marked with *.</p>
       <label class="check-row"><input type="checkbox" name="checkNow" checked> Check eligibility after adding</label>
-      <div class="confirm-actions"><button class="footer-btn" type="button" data-close-add-plan>Cancel</button><button class="footer-btn primary" type="submit">Add plan</button></div>
+      <div class="confirm-actions"><button class="footer-btn" type="button" data-close-add-plan>Cancel</button><button class="footer-btn primary" type="submit">Add Plan</button></div>
     </form>
   </dialog>
 
@@ -358,9 +358,9 @@
         <span class="dv-zoom" id="dvZoom" aria-live="polite">100%</span>
         <button class="icon-btn" data-dv="in" aria-label="Zoom in" title="Zoom in (+)"><i data-lucide="zoom-in"></i></button>
         <span class="dv-sep" aria-hidden="true"></span>
-        <button class="footer-btn" data-dv="width"><i data-lucide="move-horizontal"></i> Fit width</button>
-        <button class="footer-btn" data-dv="page"><i data-lucide="scan"></i> Fit page</button>
-        <button class="footer-btn" data-dv="actual">Actual size</button>
+        <button class="footer-btn" data-dv="width"><i data-lucide="move-horizontal"></i> Fit Width</button>
+        <button class="footer-btn" data-dv="page"><i data-lucide="scan"></i> Fit Page</button>
+        <button class="footer-btn" data-dv="actual">Actual Size</button>
       </div>
       <button class="icon-btn" data-dv="close" aria-label="Close full screen" title="Close (Esc)"><i data-lucide="x"></i></button>
     </header>

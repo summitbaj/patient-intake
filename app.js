@@ -29,7 +29,7 @@ const existingFiles=[
   {id:'existing-sleep',name:'Sleep Study · Aug 2022.pdf',meta:'Not extracted yet',icon:'file-chart-column',extracted:false,used:false}
 ];
 const patientMatches=[
-  {id:'ashlynn',initials:'AB',name:'Ashlynn Botosh',confidence:94,dob:'03/15/1978',address:'1234 Healthways Blvd, Suite 200, Seattle, WA 98101',phone:'(415) 220-8841',email:'ashlynn.botosh@email.com',payer:'Aetna',memberId:'W284719305',mrn:'PT-10482',reason:''},
+  {id:'ashlynn',initials:'AB',name:'Ashlynn Botosh',confidence:94,dob:'03/15/1978',address:'1234 Healthways Blvd, Suite 200, Seattle, WA 98101',phone:'(415) 220-8841',email:'ashlynn.botosh@email.com',payer:'Aetna',memberId:'W284719305',mrn:'PT-10482',reason:'Name, DOB, address, and phone match'},
   {id:'ashlyn',initials:'AB',name:'Ashlyn Botosh',confidence:81,dob:'03/15/1978',address:'1184 Healthway Blvd, Seattle, WA 98101',phone:'(415) 220-8891',email:'a.botosh@email.com',payer:'Aetna',memberId:'W284719377',mrn:'PT-08731',reason:'Similar name, same DOB, and nearby address'},
   {id:'ashley',initials:'AR',name:'Ashley Brown',confidence:68,dob:'03/16/1978',address:'202 Elm Street, Bellevue, WA 98004',phone:'(206) 555-0188',email:'ashley.brown@email.com',payer:'Premera Blue Cross',memberId:'PRM550018842',mrn:'PT-06319',reason:'Similar name and DOB from insurance document'}
 ];
@@ -241,7 +241,7 @@ function renderExtractionPatientMatches(){
   setIssueHead();if(issuePlan.findings.length&&!$('#documentIssue').hidden)setDocLock(true);
   $('#patientIssue').classList.remove('is-resolved');
   $('#patientIssue .issue-title>b').textContent='Required';
-  $('#extractionPatientMatches').innerHTML=patientMatches.map((patient,index)=>`<article class="extract-patient ${index===0?'best':''}" id="extract-patient-${patient.id}"><span class="avatar">${patient.initials}</span><span class="ep-info"><strong>${patient.name}${index===0?'<em class="best-tag">Best match</em>':''}</strong><small>DOB ${patient.dob} · ${patient.mrn}</small><button class="text-btn" data-extract-patient-details="${patient.id}" aria-expanded="false">View details</button></span><button class="small-btn ${index===0?'primary':''}" data-extract-patient="${patient.id}">Select</button><section class="extract-patient-details" hidden><dl><div><dt>Address</dt><dd>${patient.address}</dd></div><div><dt>Phone</dt><dd>${patient.phone}</dd></div><div><dt>Email</dt><dd>${patient.email}</dd></div><div><dt>Primary insurance</dt><dd>${patient.payer}</dd></div><div><dt>Member ID</dt><dd>${patient.memberId}</dd></div></dl></section></article>`).join('');
+  $('#extractionPatientMatches').innerHTML=patientMatches.map((patient,index)=>`<article class="extract-patient ${index===0?'best':''}" id="extract-patient-${patient.id}"><span class="avatar">${patient.initials}</span><div class="ep-body"><strong>${patient.name}${index===0?'<em class="best-tag">Best match</em>':''}</strong><small>DOB ${patient.dob} · ${patient.mrn}</small>${patient.reason?`<p class="ep-reason"><i data-lucide="sparkles"></i>${patient.reason}</p>`:''}<section class="extract-patient-details" hidden><dl><div><dt>Address</dt><dd>${patient.address}</dd></div><div><dt>Phone</dt><dd>${patient.phone}</dd></div><div><dt>Email</dt><dd>${patient.email}</dd></div><div><dt>Primary insurance</dt><dd>${patient.payer}</dd></div><div><dt>Member ID</dt><dd>${patient.memberId}</dd></div></dl></section><div class="ep-actions"><button class="text-btn" data-extract-patient-details="${patient.id}" aria-expanded="false">View Details</button><button class="small-btn ${index===0?'primary':''}" data-extract-patient="${patient.id}">Select Patient</button></div></div></article>`).join('');
   $('.create-new-patient').hidden=false;
   icons();
 }
@@ -284,7 +284,7 @@ function renderExtractionIssues(){
   setIssueHead();
   $('#documentIssueNumber').textContent=needsPatient?'2':'1';
   setDocLock(false);
-  $('#extractionDocumentMatches').innerHTML=findings.map(item=>`<article class="extract-document" id="extract-${item.id}"><i data-lucide="file-text"></i><span class="ed-info"><strong>${item.upload}</strong><span class="ed-reason">${item.reason}</span><small>On file: ${item.existing}</small></span><span class="extract-document-actions">${item.kind==='exact'?`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="existing">Use existing</button><button class="small-btn" data-extract-document="${item.id}" data-decision="upload">Keep new copy</button>`:`<button class="small-btn primary" data-extract-document="${item.id}" data-decision="replace">Replace existing</button><button class="small-btn" data-extract-document="${item.id}" data-decision="new">Keep both</button>`}</span></article>`).join('');
+  $('#extractionDocumentMatches').innerHTML=findings.map(item=>`<article class="extract-document" id="extract-${item.id}"><i data-lucide="file-text"></i><div class="ed-body"><strong>${item.upload}</strong><small>On file: ${item.existing}</small><p class="ep-reason"><i data-lucide="sparkles"></i>${item.reason}</p><span class="extract-document-actions">${item.kind==='exact'?`<button class="small-btn" data-extract-document="${item.id}" data-decision="upload">Keep New Copy</button><button class="small-btn primary" data-extract-document="${item.id}" data-decision="existing">Use Existing</button>`:`<button class="small-btn" data-extract-document="${item.id}" data-decision="new">Keep Both</button><button class="small-btn primary" data-extract-document="${item.id}" data-decision="replace">Replace Existing</button>`}</span></div></article>`).join('');
   icons();
 }
 
@@ -300,7 +300,7 @@ function setPhase(phase){
   workspace.classList.add(`phase-${phase}`);
   body.classList.add(`phase-${phase}`);
   document.dispatchEvent(new Event('intake:change'));
-  $('#pageTitle').innerHTML=phase==='review'?`<span class="title-muted">Review</span> <span class="title-name">${postIntakeRecommendation.patient}</span><span class="title-muted">’s intake</span>`:'New patient intake';
+  $('#pageTitle').innerHTML=phase==='review'?`<span class="title-muted">Review</span> <span class="title-name">${postIntakeRecommendation.patient}</span><span class="title-muted">’s intake</span>`:'New Patient Intake';
   renderFileList();
   if(phase==='review'){
     syncExistingPatientFiles();
@@ -324,6 +324,9 @@ function syncExistingPatientFiles(){
   renderViewerGallery();
 }
 
+// Button labels read in Title Case; action names stay as-is because they double as keys
+const minorWords=new Set(['a','an','the','and','or','to','of','in','on','for','by','at','with','as']);
+function buttonCase(text){return text.split(' ').map((word,i)=>i&&minorWords.has(word)?word:word.split('-').map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join('-')).join(' ');}
 function renderPostIntake(){
   const recommendation=postIntakeRecommendation;
   $('#handoffPatient').textContent=recommendation.patient;
@@ -333,9 +336,9 @@ function renderPostIntake(){
   $('#handoffSummary').textContent=summary.lead;
   $('#nextActionTitle').textContent=recommendation.action;
   $('#nextActionReason').textContent=recommendation.reason;
-  $('#recommendedAction').innerHTML=`<i data-lucide="arrow-right"></i> ${recommendation.action}`;
+  $('#recommendedAction').innerHTML=`<i data-lucide="arrow-right"></i> ${buttonCase(recommendation.action)}`;
   $('#recommendedAction').dataset.postAction=recommendation.action;
-  $('#otherActionButtons').innerHTML=recommendation.alternatives.map(action=>`<button class="secondary-action compact" data-post-action="${action}">${action}</button>`).join('');
+  $('#otherActionButtons').innerHTML=recommendation.alternatives.map(action=>`<button class="secondary-action compact" data-post-action="${action}">${buttonCase(action)}</button>`).join('');
   const recommendationItems=items=>items.map(item=>`<li><span class="recommendation-mark"><i data-lucide="sparkles"></i></span><span><b>${item.name}</b><small>${item.reason}</small></span></li>`).join('');
   $('#recommendedServices').innerHTML=recommendationItems(recommendation.services);
   $('#recommendedDme').innerHTML=recommendationItems(recommendation.dme);
@@ -407,7 +410,7 @@ function renderDuplicateFindings(){
 }
 
 function renderPatientMatches(){
-  $('#patientMatches').innerHTML=patientMatches.map((patient,index)=>`<article class="patient-match" id="patient-${patient.id}"><div class="patient-summary"><span class="avatar">${patient.initials}</span><div><strong>${patient.name}</strong><span>DOB ${patient.dob} · ${patient.mrn}</span></div><b>${patient.confidence}%</b></div>${patient.reason?`<p>${patient.reason}</p>`:''}<div class="patient-details" hidden><dl><div><dt>Address</dt><dd>${patient.address}</dd></div><div><dt>Phone</dt><dd>${patient.phone}</dd></div><div><dt>Patient ID</dt><dd>${patient.mrn}</dd></div></dl></div><div class="inline-actions"><button class="small-btn ${index===0?'primary':''}" data-link-patient="${patient.id}">Link patient</button><button class="text-btn" data-patient-details="${patient.id}" aria-expanded="false">View details</button></div></article>`).join('');
+  $('#patientMatches').innerHTML=patientMatches.map((patient,index)=>`<article class="patient-match" id="patient-${patient.id}"><div class="patient-summary"><span class="avatar">${patient.initials}</span><div><strong>${patient.name}</strong><span>DOB ${patient.dob} · ${patient.mrn}</span></div><b>${patient.confidence}%</b></div>${patient.reason?`<p>${patient.reason}</p>`:''}<div class="patient-details" hidden><dl><div><dt>Address</dt><dd>${patient.address}</dd></div><div><dt>Phone</dt><dd>${patient.phone}</dd></div><div><dt>Patient ID</dt><dd>${patient.mrn}</dd></div></dl></div><div class="inline-actions"><button class="small-btn ${index===0?'primary':''}" data-link-patient="${patient.id}">Link Patient</button><button class="text-btn" data-patient-details="${patient.id}" aria-expanded="false">View Details</button></div></article>`).join('');
   icons();
 }
 
@@ -422,7 +425,7 @@ function setSourceDrawer(open,force=false){
 
 const wait=milliseconds=>new Promise(resolve=>setTimeout(resolve,milliseconds));
 function patientInitials(name){return name.split(' ').map(part=>part[0]).join('').slice(0,2).toUpperCase();}
-// The full-width files pane shrinks into the right sidebar while the review list and form slide in.
+// Upload → review cross-fades the page (see upload-start.css).
 function openReview(){
   const go=()=>setPhase('review');
   if(document.startViewTransition&&!matchMedia('(prefers-reduced-motion: reduce)').matches)document.startViewTransition(go);else go();
@@ -534,7 +537,7 @@ function renderOrderHint(){
   const changes=insurancePlans.filter((plan,index)=>plan.systemRank!==planRank(index)).length;
   $('#orderSource').className=`pill ${usingAi?'info':'neutral'}`;
   $('#orderSource').innerHTML=usingAi?'<i data-lucide="sparkles"></i> AI sorted':usingSystem?'System order':'Custom order';
-  $('#orderNotice').innerHTML=`<span>${changes?`${changes} ${changes===1?'change':'changes'} from system. `:''}Drag to reorder.</span>${usingAi?(allInSystem?'<button class="text-btn" data-order="system">Use system order</button>':''):'<button class="text-btn" data-order="ai">Reset to AI order</button>'}`;
+  $('#orderNotice').innerHTML=`<span>${changes?`${changes} ${changes===1?'change':'changes'} from system. `:''}Drag to reorder.</span>${usingAi?(allInSystem?'<button class="text-btn" data-order="system">Use System Order</button>':''):'<button class="text-btn" data-order="ai">Reset to AI Order</button>'}`;
   $('#insuranceMeta').textContent=`${insurancePlans.length} coverage plans${changes?' · order updated from system':''}`;
 }
 function renderEligibilityResponse(index){
@@ -574,12 +577,12 @@ function renderInsurance(index=state.currentPlan){
   $('#planPills').innerHTML=`<div class="cov-strip">${st?`<span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>`:'<span class="cov-chip neutral">Status not checked</span>'}${servicePill(plan)}</div><span class="cov-checked"><i data-lucide="calendar-check"></i> ${plan.check?`Eligibility checked ${plan.check.at}`:'Eligibility not checked yet'}</span>`;
   const found=$('#planDiscovered');
   found.hidden=!(plan.check&&plan.otherCoverage&&!state.checkingPlan);
-  found.innerHTML=found.hidden?'':`<i data-lucide="search-check"></i><span><b>Other insurance found during the eligibility check</b>${plan.otherCoverage.name} · ${plan.otherCoverage.note}</span><button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View response</button>`;
+  found.innerHTML=found.hidden?'':`<i data-lucide="search-check"></i><span><b>Other insurance found during the eligibility check</b>${plan.otherCoverage.name} · ${plan.otherCoverage.note}</span><button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View Response</button>`;
   const note=$('#planAiNote');
   note.hidden=plan.systemRank===plan.aiRank;
   note.innerHTML=note.hidden?'':`<i data-lucide="sparkles"></i><span><b>AI set this as ${plan.aiRank.toLowerCase()}</b>${plan.systemRank?` (system: ${plan.systemRank.toLowerCase()})`:' (not in system yet)'}. ${plan.aiReason}</span><button class="source-link" data-doc="${plan.docId}"><i data-lucide="scan-text"></i> ${plan.source}</button>`;
   const hasResponse=Boolean(plan.check)&&!state.checkingPlan;
-  $('#planActions').innerHTML=`${hasResponse?`<button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View response</button>`:''}<button class="small-btn" data-plan-check ${state.checkingPlan?'disabled':''}>${state.checkingPlan?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check eligibility'}</button>`;
+  $('#planActions').innerHTML=`${hasResponse?`<button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View Response</button>`:''}<button class="small-btn" data-plan-check ${state.checkingPlan?'disabled':''}>${state.checkingPlan?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check Eligibility'}</button>`;
   $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>`<label class="ins-field"><span>${label}</span><input class="ins-input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value.replace(/"/g,'&quot;')}" placeholder="Not provided" aria-label="${label}" autocomplete="off"></label>`).join('');
   renderEligibility();
 }
@@ -592,7 +595,7 @@ function renderEligibility(){
   const button=$('#checkEligibility');
   button.disabled=allChecked||state.checkingEligibility;
   button.classList.toggle('primary',!allChecked&&!state.checkingEligibility);
-  button.innerHTML=state.checkingEligibility?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check eligibility';
+  button.innerHTML=state.checkingEligibility?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check Eligibility';
   $('#eligibilityMeta').textContent=state.checkingEligibility?`Checking ${type.id} eligibility for all plans…`:allChecked?'':`Not checked for ${type.id} on every plan · check all plans here or one plan at a time`;
   icons();
 }
@@ -678,8 +681,8 @@ function renderGuidance(){
   const required=reviewItems().filter(item=>item.severity==='missing').length;
   box.className=`header-notice ${required?'is-required':'is-clear'}`;
   box.innerHTML=required
-    ?`<span class="notice-icon"><i data-lucide="list-checks"></i><b>${required}</b></span><span class="notice-copy"><strong>${requiredTitle(required)}</strong><small>${requiredHint}</small></span><button type="button" class="notice-btn" data-guidance-review>Review now <i data-lucide="arrow-right"></i></button>`
-    :`<span class="notice-icon"><i data-lucide="check"></i></span><span class="notice-copy"><strong>All required items reviewed</strong><small>Nice work. You can move on to the next action.</small></span><button type="button" class="notice-btn" data-guidance-next>Next action <i data-lucide="arrow-right"></i></button>`;
+    ?`<span class="notice-icon"><i data-lucide="list-checks"></i><b>${required}</b></span><span class="notice-copy"><strong>${requiredTitle(required)}</strong><small>${requiredHint}</small></span><button type="button" class="notice-btn" data-guidance-review>Review Now <i data-lucide="arrow-right"></i></button>`
+    :`<span class="notice-icon"><i data-lucide="check"></i></span><span class="notice-copy"><strong>All required items reviewed</strong><small>Nice work. You can move on to the next action.</small></span><button type="button" class="notice-btn" data-guidance-next>Next Action <i data-lucide="arrow-right"></i></button>`;
   icons();
 }
 document.addEventListener('click',event=>{
@@ -687,7 +690,7 @@ document.addEventListener('click',event=>{
   if(event.target.closest('[data-guidance-next]')){setSourceDrawer(true,true);setSideTab('next');}
 });
 
-const refreshNoticeHtml=()=>`<div class="refresh-notice"><i data-lucide="refresh-cw"></i><span><b>There may be new updates</b><small>Your changes can affect the next action.</small></span><button type="button" class="footer-btn" data-refresh-next><i data-lucide="sparkles"></i> Refresh next action</button></div>`;
+const refreshNoticeHtml=()=>`<div class="refresh-notice"><i data-lucide="refresh-cw"></i><span><b>There may be new updates</b><small>Your changes can affect the next action.</small></span><button type="button" class="footer-btn" data-refresh-next><i data-lucide="sparkles"></i> Refresh Next Action</button></div>`;
 function renderNextStatus(){
   const box=$('#nextStatus');if(!box||state.refreshingNext)return;
   box.innerHTML=state.nextStale?refreshNoticeHtml():'';icons();
@@ -725,7 +728,7 @@ function renderReviewMenu(){
   $('#reviewPopoverSub').hidden=!count;$('#reviewPopoverSub').textContent=requiredHint;
   const row=item=>`<button class="review-item ${item.severity}" data-review-target="${item.id}"><span class="ri-dot" aria-hidden="true"></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span><i class="review-go" data-lucide="chevron-right"></i></button>`;
   const optionalRows=[...warnings,...aiItems.map(item=>({...item,severity:'ai',tag:'AI resolved'}))];
-  const done=`<div class="review-done"><i data-lucide="circle-check"></i><span><b>Required review complete</b><small>${optionalRows.length?'Optional items below are still worth a look.':'Nothing else needs your attention.'}</small></span><button class="footer-btn primary" data-side-tab="next"><i data-lucide="circle-arrow-right"></i> Next action</button></div>`
+  const done=`<div class="review-done"><i data-lucide="circle-check"></i><span><b>Required review complete</b><small>${optionalRows.length?'Optional items below are still worth a look.':'Nothing else needs your attention.'}</small></span><button class="footer-btn primary" data-side-tab="next"><i data-lucide="circle-arrow-right"></i> Next Action</button></div>`
     +(state.nextStale?refreshNoticeHtml():'');
   $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required</span>${required.map(row).join('')}</div>`:done)
     +(optionalRows.length?`<div class="review-group"><span class="review-group-title">Optional</span>${optionalRows.map(row).join('')}</div>`:'');
@@ -836,7 +839,7 @@ document.addEventListener('click',event=>{
     animateSteps(()=>{resolvePatientIssue(patient.name,`${patient.mrn} · Existing patient linked`);setIssueHead();$('#documentIssue').hidden=!issuePlan.findings.length;setDocLock(false);icons();});toast(`${patient.name} linked.`);checkExtractionReady();return;
   }
   if(target.dataset.changePatient!==undefined){state.patientResolved=false;state.patientLinked=false;syncExistingPatientFiles();animateSteps(renderExtractionPatientMatches);return;}
-  if(target.dataset.extractPatientDetails){const card=$(`#extract-patient-${target.dataset.extractPatientDetails}`),details=card.querySelector('.extract-patient-details'),open=details.hidden;details.hidden=!open;target.setAttribute('aria-expanded',open);target.textContent=open?'Hide details':'View details';return;}
+  if(target.dataset.extractPatientDetails){const card=$(`#extract-patient-${target.dataset.extractPatientDetails}`),details=card.querySelector('.extract-patient-details'),open=details.hidden;details.hidden=!open;target.setAttribute('aria-expanded',open);target.textContent=open?'Hide Details':'View Details';return;}
   if(target.dataset.extractNewPatient!==undefined){state.patientResolved=true;state.patientLinked=false;syncExistingPatientFiles();animateSteps(()=>{resolvePatientIssue('Create a new patient','No existing record will be linked');setIssueHead();$('#documentIssue').hidden=!issuePlan.findings.length;setDocLock(false);icons();});checkExtractionReady();return;}
   if(target.dataset.extractDocument){
     const id=target.dataset.extractDocument;state.documentResolutions.add(id);const card=$(`#extract-${id}`);card.classList.add('resolved');card.querySelector('.extract-document-actions').innerHTML=`<span class="issue-resolved"><i data-lucide="check"></i><span><strong>${target.dataset.decision==='existing'?'Using existing document':target.dataset.decision==='replace'?'Replacing existing document':target.dataset.decision==='upload'?'Keeping new copy':'Keeping both'}</strong></span></span>`;
@@ -860,7 +863,7 @@ document.addEventListener('click',event=>{
     file.used=!file.used;
     if(file.used&&!file.extracted){file.meta='Extracting for this intake…';renderExistingFiles();setTimeout(()=>{file.extracted=true;file.meta='Extracted for this intake';renderExistingFiles();toast(`${file.name} is ready for this intake`);},900);}else{renderExistingFiles();toast(file.used?`${file.name} added to this intake`:`${file.name} removed from this intake`);}return;
   }
-  if(target.dataset.patientDetails){const card=$(`#patient-${target.dataset.patientDetails}`),details=card.querySelector('.patient-details'),open=details.hidden;details.hidden=!open;target.setAttribute('aria-expanded',open);target.textContent=open?'Hide details':'View details';return;}
+  if(target.dataset.patientDetails){const card=$(`#patient-${target.dataset.patientDetails}`),details=card.querySelector('.patient-details'),open=details.hidden;details.hidden=!open;target.setAttribute('aria-expanded',open);target.textContent=open?'Hide Details':'View Details';return;}
   if(target.dataset.linkPatient){
     const patient=patientMatches.find(item=>item.id===target.dataset.linkPatient);state.patientLinked=true;
     $('#matchCard').hidden=true;syncExistingPatientFiles();
@@ -1235,7 +1238,7 @@ document.addEventListener('mousedown',event=>{$$('.phys-results:not([hidden])').
 document.addEventListener('keydown',event=>{if(event.key==='Escape')$$('.phys-results:not([hidden])').forEach(box=>box.hidden=true);});
 function icdHtml(rx){
   return `<div class="code-list">${rx.icd.map((item,i)=>`<span class="code-chip"><b>${item.code}</b><span>${item.description}</span>${item.primary?'<em>Primary</em>':''}<button type="button" class="chip-remove" data-remove-icd="${rx.id}" data-index="${i}" aria-label="Remove ${item.code}" title="Remove"><i data-lucide="x"></i></button></span>`).join('')||'<span class="empty-note">No ICD-10 codes yet</span>'}</div>
-    <form class="inline-add" data-add-icd="${rx.id}"><input class="input" name="code" list="icdOptions" placeholder="ICD-10 code or diagnosis" aria-label="Add ICD-10 code" autocomplete="off"><button class="small-btn" type="submit"><i data-lucide="plus"></i> Add ICD-10 code</button></form>`;
+    <form class="inline-add" data-add-icd="${rx.id}"><input class="input" name="code" list="icdOptions" placeholder="ICD-10 code or diagnosis" aria-label="Add ICD-10 code" autocomplete="off"><button class="small-btn" type="submit"><i data-lucide="plus"></i> Add ICD-10 Code</button></form>`;
 }
 // Bundle vs single item: decided by AI unless the user changed the item's codes.
 function kindPill(item){
@@ -1637,7 +1640,7 @@ function precheckSummary(results){const warnings=results.filter(r=>r.status==='w
 function renderPrecheck(){
   const results=state.precheck,section=$('#precheckResult');
   section.hidden=!results;if(!results)return;
-  section.innerHTML=`<header><span class="pill ${results.some(r=>r.status==='warn')?'warning':'success'}"><i data-lucide="${results.some(r=>r.status==='warn')?'triangle-alert':'circle-check'}"></i> ${precheckSummary(results)}</span><h3 id="precheckTitle">Pre-check results</h3><small>Run ${state.precheckAt}</small></header><ul>${results.map(r=>`<li class="${r.status}"><i data-lucide="${r.status==='pass'?'circle-check':'triangle-alert'}"></i><span><b>${r.title}</b><small>${r.detail}</small></span></li>`).join('')}</ul>`;
+  section.innerHTML=`<header><span class="pill ${results.some(r=>r.status==='warn')?'warning':'success'}"><i data-lucide="${results.some(r=>r.status==='warn')?'triangle-alert':'circle-check'}"></i> ${precheckSummary(results)}</span><h3 id="precheckTitle">Pre-Check Results</h3><small>Run ${state.precheckAt}</small></header><ul>${results.map(r=>`<li class="${r.status}"><i data-lucide="${r.status==='pass'?'circle-check':'triangle-alert'}"></i><span><b>${r.title}</b><small>${r.detail}</small></span></li>`).join('')}</ul>`;
   icons();
 }
 async function runPrecheck(button){
@@ -1648,7 +1651,7 @@ async function runPrecheck(button){
   $('#nextActionTitle').textContent='Start fulfillment';
   $('#nextActionReason').textContent=`Pre-check ${precheckSummary(state.precheck).toLowerCase()}. Start fulfillment to create the orders, refills and appointments.`;
   button.disabled=false;button.innerHTML='<i data-lucide="arrow-right"></i> Start fulfillment';button.dataset.postAction='Start fulfillment';
-  $('#otherActionButtons').innerHTML='<button class="secondary-action compact" data-post-action="Run pre-check again">Run pre-check again</button>';
+  $('#otherActionButtons').innerHTML='<button class="secondary-action compact" data-post-action="Run pre-check again">Run Pre-Check Again</button>';
   icons();toast(`Pre-check ${precheckSummary(state.precheck).toLowerCase()}`);
   $('#precheckResult').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -2099,7 +2102,7 @@ function openDupDialog(){
   const held=documents.filter(file=>file.needsDecision);
   if(!held.length){$('#dupDialog').close();return;}
   $('#dupTitle').textContent=held.length===1?'Confirm how to store this document':`Confirm how to store these ${held.length} documents`;
-  $('#dupList').innerHTML=held.map(file=>{const d=file.dup;return `<article class="extract-document" id="dup-${file.id}"><i data-lucide="file-text"></i><span class="ed-info"><strong>${file.name}</strong><span class="ed-reason">${d.reason}</span><small>On file: ${d.existing}</small></span><span class="extract-document-actions">${d.kind==='exact'?`<button class="small-btn primary" data-dup-file="${file.id}" data-dup-decision="existing">Use existing</button><button class="small-btn" data-dup-file="${file.id}" data-dup-decision="upload">Keep new copy</button>`:`<button class="small-btn primary" data-dup-file="${file.id}" data-dup-decision="replace">Replace existing</button><button class="small-btn" data-dup-file="${file.id}" data-dup-decision="new">Keep both</button>`}</span></article>`;}).join('');
+  $('#dupList').innerHTML=held.map(file=>{const d=file.dup;return `<article class="extract-document" id="dup-${file.id}"><i data-lucide="file-text"></i><div class="ed-body"><strong>${file.name}</strong><small>On file: ${d.existing}</small><p class="ep-reason"><i data-lucide="sparkles"></i>${d.reason}</p><span class="extract-document-actions">${d.kind==='exact'?`<button class="small-btn" data-dup-file="${file.id}" data-dup-decision="upload">Keep New Copy</button><button class="small-btn primary" data-dup-file="${file.id}" data-dup-decision="existing">Use Existing</button>`:`<button class="small-btn" data-dup-file="${file.id}" data-dup-decision="new">Keep Both</button><button class="small-btn primary" data-dup-file="${file.id}" data-dup-decision="replace">Replace Existing</button>`}</span></div></article>`;}).join('');
   if(!$('#dupDialog').open)$('#dupDialog').showModal();
   icons();
 }

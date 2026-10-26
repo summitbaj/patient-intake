@@ -67,7 +67,7 @@ body{background:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoot
 .nav-item,.nav-section{border-radius:var(--fluent-corner-2);margin:1px 6px;width:calc(100% - 12px);transition:background .12s,color .12s}
 .nav-section{font-weight:600;color:var(--label)}
 .nav-item.active{background:var(--fluent-white);color:var(--primary);font-weight:600;box-shadow:var(--shadow-xs),inset 0 0 0 1px var(--line)}
-.nav-item.active::before{content:"";position:absolute;left:-6px;top:7px;bottom:7px;width:3px;border-radius:0 3px 3px 0;background:var(--primary)}
+.nav-item.active::before{content:"";position:absolute;left:-6px;top:7px;bottom:7px;width:3px;border-radius:0 4px 4px 0;background:var(--primary)}
 
 .shell-commands{background:rgba(255,255,255,.86);backdrop-filter:saturate(1.4) blur(8px);-webkit-backdrop-filter:saturate(1.4) blur(8px)}
 .command-btn{border-radius:var(--fluent-corner-2)}
@@ -193,7 +193,7 @@ h2,h3{letter-spacing:-.011em}
 /* ---------- Tighter corners on containers ---------- */
 :root{--radius:var(--fluent-corner-2);--radius-lg:var(--fluent-corner-4)}
 body .workspace{border-radius:var(--fluent-corner-2)}
-body .page-footer{border-radius:0 0 8px 8px}
+body .page-footer{border-radius:0 0 4px 4px}
 body .review-card,body .rx-item,body .pa-card,body .completion-card,body .extraction-progress-card,
 body .record-card,body .upload-start-zone,body .review-area>.ai-review-guidance,body #nextPanel .next-action,
 body .confirm-dialog,body .extraction-issues .extraction-issue,body .insurance-workspace .plan-list .plan-item,
@@ -201,7 +201,7 @@ body .phys-card,body .phys-notfound,body .phys-hint.empty,body .add-prescription
 body .review-done,body .v2-recommend,body .response-other,body .ai-pop,body .file-item{border-radius:var(--fluent-corner-2)}
 body .phys-from,body .plan-discovered,body .plan-ai-note,body .ai-kind-note,body .note-message,
 body .section-icon,body .record-card-icon,body .record-row,body .record-patient,body .queue-patient{border-radius:var(--fluent-corner-2)}
-body .rx-item .hcpcs-rows{border-radius:0 0 6px 6px}
+body .rx-item .hcpcs-rows{border-radius:0 0 4px 4px}
 
 /* Review banner stays visible while scrolling (overrides position:relative above) */
 body .review-area>.ai-review-guidance{position:sticky;top:var(--shell-top);z-index:15;box-shadow:0 6px 14px -10px rgba(15,31,61,.28)}

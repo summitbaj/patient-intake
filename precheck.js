@@ -90,7 +90,7 @@ function payerCheck(code){
       <dl class="pc-rows">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>
       ${others.length?`<p class="pc-payer-other">${others.join('<br>')}</p>`:''}
       ${!medicarePrimary&&medicareAllowable[code]?`<p class="pc-payer-ref">Medicare allowable for reference: ${medicareAllowable[code]}</p>`:''}
-      <button type="button" class="pc-link" data-eligibility>View EC response</button>`};
+      <button type="button" class="pc-link" data-eligibility>View EC Response</button>`};
 }
 // Eligibility responses (one per plan), opened from the page header or any payer coverage check.
 function openEligibility(){
@@ -299,14 +299,14 @@ function renderDetail(){
   const issues=line.checks.filter(c=>c.status!=='pass');
   const dose=[stated(line.item.qty)?`Qty ${esc(line.item.qty)}`:'',stated(line.item.frequency)?esc(line.item.frequency):''].filter(Boolean).join(' · ');
   box.innerHTML=`
-    <button class="text-btn pr-back" data-back-list><i data-lucide="arrow-left"></i> All codes</button>
+    <button class="text-btn pr-back" data-back-list><i data-lucide="arrow-left"></i> All Codes</button>
     <header class="pcd-head">
       <div><span class="pcd-rx">${esc(rxList[ui.rx].title)} · ${esc(line.item.name)}${dose?` · ${dose}`:''}</span><h2><span class="pcd-code">${line.code}</span> ${esc(line.description)}</h2></div>
       <span class="pc-status ${line.status}"><i data-lucide="${statusIcon[line.status]}"></i> ${statusText[line.status]}</span>
     </header>
     ${issues.length?`<section class="pcd-todo ${line.status}"><h3><i data-lucide="${statusIcon[line.status]}"></i> ${issues.length} of ${line.checks.length} checks ${line.status==='fail'?'aren’t met':'need attention'}</h3><p>${line.status==='fail'?'This code doesn’t qualify yet.':'This code may qualify once reviewed.'} The checks below show what’s missing and how to fix it.</p></section>`:`<section class="pcd-todo pass"><h3><i data-lucide="circle-check"></i> All ${line.checks.length} checks passed</h3><p>Nothing to resolve for this code. Expand any check below to see the details.</p></section>`}
     <div class="pcd-checks">${line.checks.map(c=>{const open=c.status!=='pass'||ui.open.has(`${line.id}-${c.key}`);return `<section class="pcd-check ${c.status}" id="check-${c.key}"><button class="pcd-check-head" data-toggle="${c.key}" aria-expanded="${open}"><span class="section-icon"><i data-lucide="${checkIcon[c.key]||'list-checks'}"></i></span><span><b>${c.label}</b><small>${esc(c.summary)}</small></span><span class="section-status ${checkPill[c.status][0]}"><i data-lucide="${statusIcon[c.status]}"></i> ${checkPill[c.status][1]}</span><i data-lucide="chevron-down" class="chev"></i></button><div class="pcd-check-body" ${open?'':'hidden'}>${c.body}${c.action?`<p class="pcd-action"><i data-lucide="arrow-right"></i> ${esc(c.action)}</p>`:''}</div></section>`;}).join('')}</div>
-    ${line.recommended.length?`<section class="pcd-reco"><h3><i data-lucide="sparkles"></i> Other items to consider <span>AI suggestion · review required</span></h3><ul>${line.recommended.map(r=>`<li><b>${esc(r.name)}</b><small>${esc(r.why)}</small></li>`).join('')}</ul></section>`:''}
+    ${line.recommended.length?`<section class="pcd-reco"><h3><i data-lucide="sparkles"></i> Other Items to Consider <span>AI suggestion · review required</span></h3><ul>${line.recommended.map(r=>`<li><b>${esc(r.name)}</b><small>${esc(r.why)}</small></li>`).join('')}</ul></section>`:''}
     `;
   box.scrollTop=0;
 }
@@ -370,7 +370,7 @@ document.addEventListener('keydown',event=>{
 
 // Header + back links
 $('#pkTitle').innerHTML=`<span class="title-muted">Pre-check for</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>`;
-$('#pkPatient').innerHTML=`${esc((activePlans()[0]||primaryPlan()).name)} · DOB ${esc(intake.patient.dob)} · From intake #${esc(intake.id)} · <button type="button" class="pc-link" data-eligibility>View EC response</button>`;
+$('#pkPatient').innerHTML=`${esc((activePlans()[0]||primaryPlan()).name)} · DOB ${esc(intake.patient.dob)} · From intake #${esc(intake.id)} · <button type="button" class="pc-link" data-eligibility>View EC Response</button>`;
 // Back to the live intake page, which restores the saved session.
 const backTo=fromOrder?'dme-order.html?step=products':'index.html';
 $('#pcBack').href=backTo;
