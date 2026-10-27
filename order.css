@@ -1,4 +1,5 @@
 /* DME Order page — reuses tokens and shell from styles.css */
+body.order-page{--pill-radius:4px}
 .order-page .app-body{padding-bottom:var(--body-pad-y)}
 .order-shell{display:flex;flex-direction:column;min-height:calc(100vh - var(--shell-top) - var(--body-pad-y) * 2);background:var(--white);border:1px solid var(--line)}
 .order-header{display:flex;align-items:center;justify-content:space-between;gap:var(--space-6);padding:var(--space-6) var(--space-8);flex-wrap:wrap}
@@ -71,7 +72,7 @@
 .add-products-btn:hover{background:var(--fluent-primary-button-background-hovered)}
 .rx-hint{display:inline-flex;align-items:center;gap:6px;margin-top:var(--space-2);font-size:12px;color:var(--primary)}
 .rx-hint .lucide,.rx-progress .lucide{width:12px;height:12px}
-.code-chip-sm{display:inline-block;padding:2px 8px;border:1px solid var(--line-strong);border-radius:999px;background:var(--white);font-size:12px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
+.code-chip-sm{display:inline-block;padding:2px 8px;border:1px solid var(--line-strong);border-radius:var(--pill-radius,999px);background:var(--white);font-size:12px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap}
 .link-btn{border:0;background:transparent;padding:0;font:inherit;color:var(--primary);cursor:pointer}
 .link-btn:hover{text-decoration:underline}
 .products-table-card{padding:0;overflow:hidden}
@@ -97,7 +98,7 @@
 .pt-row .icon-btn .lucide{width:14px;height:14px}
 
 /* Header pre-check chip */
-.precheck-chip{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:999px;border:1px solid;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.precheck-chip{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:var(--pill-radius,999px);border:1px solid;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
 .precheck-chip .lucide{width:13px;height:13px}
 .precheck-chip.pass{background:var(--green-soft);border-color:var(--fluent-success-background);color:var(--green)}
 .precheck-chip.warn{background:var(--amber-soft);border-color:var(--amber-line);color:var(--amber)}
@@ -117,7 +118,7 @@
 .rx-chips header .link-btn{font-weight:400;font-size:12px}
 .rx-chips header small{font-size:12px;color:var(--muted)}
 .chip-row{display:flex;flex-wrap:wrap;gap:6px}
-.rx-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border:1px solid var(--line-strong);border-radius:999px;background:var(--white);font:inherit;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;font-variant-numeric:tabular-nums}
+.rx-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border:1px solid var(--line-strong);border-radius:var(--pill-radius,999px);background:var(--white);font:inherit;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;font-variant-numeric:tabular-nums}
 .rx-chip:hover{border-color:var(--primary);color:var(--primary)}
 .rx-chip.active{border-color:var(--primary);background:var(--primary);color:var(--white)}
 .rx-chip.added{border-color:var(--fluent-success-background);background:var(--green-soft);color:var(--green)}
@@ -162,7 +163,7 @@
 .drawer-tabs{display:flex;gap:var(--space-8);padding:0 var(--space-8);border-bottom:1px solid var(--line)}
 .drawer-tabs button{display:inline-flex;align-items:center;gap:6px;border:0;border-bottom:2px solid transparent;background:transparent;font:inherit;font-size:14px;padding:var(--space-5) 0;color:var(--muted);cursor:pointer}
 .drawer-tabs button[aria-selected="true"]{color:var(--text);font-weight:600;border-bottom-color:var(--primary)}
-.tab-badge{font-size:10px;font-weight:600;padding:0 6px;border-radius:999px;line-height:16px}
+.tab-badge{font-size:10px;font-weight:600;padding:0 6px;border-radius:var(--pill-radius,999px);line-height:16px}
 .tab-badge.pass{background:var(--green-soft);color:var(--green)}
 .tab-badge.warn{background:var(--amber-soft);color:var(--amber)}
 .tab-badge.none{background:var(--fluent-neutral-lighter);color:var(--muted)}

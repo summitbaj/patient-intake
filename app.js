@@ -112,11 +112,11 @@ function renderFileList(){
   const row=({file,src})=>{
     const key=src==='existing'?`data-existing="${file.id}"`:`data-document="${file.id}"`;
     const trailing=src==='existing'
-      ?`<button class="use-existing ${file.used?'on':''}" data-use-existing="${file.id}" aria-pressed="${file.used}" title="${file.used?'Remove from this intake':'Use in this intake'}">${file.used?'<i data-lucide="minus"></i> Remove':'<i data-lucide="plus"></i> Add'}</button>`
+      ?`<button class="${file.used?'icon-btn trash-btn':'use-existing'}" data-use-existing="${file.id}" aria-pressed="${file.used}" aria-label="${file.used?'Remove from this intake':'Use in this intake'}" title="${file.used?'Remove from this intake':'Use in this intake'}">${file.used?'<i data-lucide="trash-2"></i>':'<i data-lucide="plus"></i> Add'}</button>`
       :file.uploading||file.processing?'<span class="file-state"><span class="spinner"></span></span>'
       :file.needsDecision?`<button class="use-existing extract-one" data-resolve-dup="${file.id}" title="Decide how to store this document"><i data-lucide="copy-check"></i> Resolve</button>`
       :file.pendingExtract?`<button class="use-existing extract-one" data-extract-one="${file.id}" title="Extract this document"><i data-lucide="sparkles"></i> Extract</button>`
-      :`<button type="button" class="use-existing on" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove"><i data-lucide="minus"></i> Remove</button>`;
+      :`<button type="button" class="icon-btn trash-btn" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove"><i data-lucide="trash-2"></i></button>`;
     if(!file.uploadedAt)file.uploadedAt=file.date||new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
     const uploadedOn=`Uploaded ${file.uploadedAt}`;
     const tag=file.needsDecision?'<em class="file-tag is-new">Needs decision</em>':file.pendingExtract?'<em class="file-tag is-new">New</em>':'';
@@ -176,9 +176,9 @@ function renderStartScreen(){
     const status=file.uploading?'<span class="file-status">Uploading…</span>':`<span>${meta}</span>`;
     const date=file.uploadedAt||file.date||today;
     const trailing=onFileRow
-      ?`<button class="use-existing ${inIntake?'on':''}" data-use-record="${file.id}" aria-pressed="${inIntake}" title="${inIntake?'Remove from this intake':'Use in this intake'}">${inIntake?'<i data-lucide="minus"></i> Remove':'<i data-lucide="plus"></i> Add'}</button>`
+      ?`<button class="${inIntake?'icon-btn trash-btn':'use-existing'}" data-use-record="${file.id}" aria-pressed="${inIntake}" aria-label="${inIntake?'Remove from this intake':'Use in this intake'}" title="${inIntake?'Remove from this intake':'Use in this intake'}">${inIntake?'<i data-lucide="trash-2"></i>':'<i data-lucide="plus"></i> Add'}</button>`
       :file.uploading?'<span class="file-state"><span class="spinner"></span></span>'
-      :`<button type="button" class="use-existing on" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove"><i data-lucide="minus"></i> Remove</button>`;
+      :`<button type="button" class="icon-btn trash-btn" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove"><i data-lucide="trash-2"></i></button>`;
     return `<div class="file-item ${onFileRow?'existing':'uploaded'}"><div class="file-main">${formatBadge(file.name)}<span class="doc-info"><strong>${file.name}</strong><span class="file-meta-row">${status}<span class="file-date"><i data-lucide="calendar"></i>${date}</span></span></span></div>${trailing}</div>`;
   };
   const group=(title,rows)=>rows.length?`<h4 class="file-group-title">${title} <b>${rows.length}</b></h4>${rows.join('')}`:'';
@@ -561,8 +561,8 @@ function otherNote(plan){
 function renderPlanList(){
   $('#planList').innerHTML=insurancePlans.map((plan,index)=>{
     const result=planResult(plan),checked=plan.check?.service===state.serviceType;
-    const diff=plan.userAdded?'Added by you':!plan.systemRank?'New · not in system':plan.systemRank!==planRank(index)?`Was ${plan.systemRank} in system`:'';
-    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${planRank(index)}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="pill rank">${planRank(index)}</span>${statusPill(plan)}</span>${diff?`<small class="plan-diff"><i data-lucide="${plan.systemRank?'arrow-left-right':'plus'}"></i> ${diff}</small>`:''}${otherNote(plan)}</span></button></div>`;
+    const diff=plan.userAdded?'Added by you':!plan.systemRank?'New · not in system':plan.systemRank!==planRank(index)?`${plan.systemRank} in system`:'';
+    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${planRank(index)}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${planRank(index)}</span>${statusPill(plan)}</span>${diff?`<small class="plan-diff"><i data-lucide="${plan.systemRank?'arrow-left-right':'plus'}"></i> ${diff}</small>`:''}${otherNote(plan)}</span></button></div>`;
   }).join('');
   renderOrderHint();
 }
@@ -1370,7 +1370,7 @@ function hcpcsSearchHtml(key,{placeholder,button,cls=''}){
 const codeSource=l=>l.ai?'<span class="code-source ai" title="AI selected this code from the prescription"><i data-lucide="sparkles"></i> AI selected</span>':'<span class="code-source manual" title="Added by you"><i data-lucide="user"></i> Added by you</span>';
 function itemEditHtml(rx,item,ref){
   const listId=`freq-${rx.id}-${item.id}`;
-  const lines=item.lines.filter(l=>l.code).map((l,i)=>`<div class="hcpcs-row editing"><span class="hcpcs-badge">${l.code}</span><span class="hcpcs-desc">${hcpcsCatalog[l.code]||'Code not in catalog · verify'}${l.code?codeSource(l):''}</span><button type="button" class="icon-btn" data-remove-line="${ref}|${item.lines.indexOf(l)}" aria-label="Remove ${l.code}" title="Remove ${l.code}"><i data-lucide="x"></i></button></div>`).join('');
+  const lines=item.lines.filter(l=>l.code).map((l,i)=>`<div class="hcpcs-row editing"><span class="hcpcs-badge">${l.code}</span><span class="hcpcs-desc">${hcpcsCatalog[l.code]||'Code not in catalog · verify'}${l.code?codeSource(l):''}</span><button type="button" class="icon-btn trash-btn" data-remove-line="${ref}|${item.lines.indexOf(l)}" aria-label="Remove ${l.code}" title="Remove ${l.code}"><i data-lucide="trash-2"></i></button></div>`).join('');
   return `<div class="item-edit">
     <div class="item-edit-fields">
       <label class="item-edit-field item-edit-name"><span>Item name</span><input class="input" data-item-field="name" data-item="${ref}" value="${escAttr(item.name)}" placeholder="Item name" autocomplete="off"></label>
@@ -1400,7 +1400,7 @@ function itemHtml(rx,item){
       </div>
       ${docsButton(ref,docs)}
       <button type="button" class="text-btn" data-edit-item="${ref}">${item.editing?'Done':'Edit'}</button>
-      <button type="button" class="icon-btn" data-remove-item="${ref}" aria-label="Remove item" title="Remove item"><i data-lucide="trash-2"></i></button>
+      <button type="button" class="icon-btn trash-btn" data-remove-item="${ref}" aria-label="Remove item" title="Remove item"><i data-lucide="trash-2"></i></button>
     </header>
     ${item.editing?itemEditHtml(rx,item,ref):open?`<div class="hcpcs-rows">${rows}</div>`:''}
   </article>`;
@@ -1694,7 +1694,7 @@ const priorAuthList=[
 ];
 function paCardHtml(pa){
   return `<article class="pa-card" id="pa-${pa.id}">
-    <header class="pa-head"><span class="hcpcs-badge">${pa.code}</span><div><strong>${hcpcsCatalog[pa.code]||'HCPCS '+pa.code}</strong><small>${pa.number} · ${pa.payer}</small></div>${pa.added?'<span class="pill neutral">Added by you</span>':''}<button type="button" class="icon-btn" data-remove-pa="${pa.id}" aria-label="Remove prior authorization" title="Remove"><i data-lucide="trash-2"></i></button></header>
+    <header class="pa-head"><span class="hcpcs-badge">${pa.code}</span><div><strong>${hcpcsCatalog[pa.code]||'HCPCS '+pa.code}</strong><small>${pa.number} · ${pa.payer}</small></div>${pa.added?'<span class="pill neutral">Added by you</span>':''}<button type="button" class="icon-btn trash-btn" data-remove-pa="${pa.id}" aria-label="Remove prior authorization" title="Remove"><i data-lucide="trash-2"></i></button></header>
     <div class="compact-fields"><div><span>Prior authorization number</span><strong>${pa.number}</strong></div><div><span>Payer</span><strong>${pa.payer}</strong></div><div><span>Effective date</span><strong>${pa.from||'—'} – ${pa.to||'—'}</strong></div><div><span>Quantity/Amount</span><strong>${pa.qty||'—'}</strong></div><div class="wide"><span>Dispensing frequency</span><strong>${pa.frequency||'—'}</strong></div></div>
   </article>`;
 }

@@ -65,7 +65,7 @@ body.phase-upload #cancelUpload{display:none!important}
 .us-who{display:grid;min-width:0}
 .us-who strong{font-size:14px;font-weight:600;color:var(--ink)}
 .us-who small{font-size:14px;color:var(--muted)}
-.us-count{padding:3px 10px;border-radius:999px;background:var(--sunken);font-size:14px;color:var(--muted)}
+.us-count{padding:3px 10px;border-radius:var(--pill-radius,999px);background:var(--sunken);font-size:14px;color:var(--muted)}
 .us-empty{margin:8px 0;font-size:14px;color:var(--muted);text-align:center}
 
 .us-docs{padding:6px 10px 12px;border-top:1px solid var(--line)}
@@ -84,7 +84,7 @@ body.phase-upload #cancelUpload{display:none!important}
 .us-linked{margin-top:20px}
 .us-linked[hidden]{display:none}
 .us-linked-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;align-items:center;gap:12px;margin-bottom:18px;padding:12px 14px;border:1px solid var(--blue-line);border-radius:var(--radius-sm);background:var(--blue-soft)}
-.us-linked-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:12px;font-style:normal;font-weight:600}
+.us-linked-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:var(--pill-radius,999px);background:var(--green-soft);color:var(--green);font-size:12px;font-style:normal;font-weight:600}
 .us-linked-tag .lucide{width:13px;height:13px}
 .us-linked-row .us-avatar{background:var(--white,var(--fluent-white))}
 
@@ -219,3 +219,24 @@ body.phase-upload #cancelUpload{display:none!important}
 /* Review list header sits on a subtle grey band */
 .review-list .review-list-head{background:var(--fluent-neutral-lighter-alt);border-bottom:1px solid var(--line)}
 .workspace.phase-review .review-area{padding:16px}
+
+/* Coverage order on insurance plans is plain text; Primary gets a star */
+.insurance-workspace .plan-item .plan-pills .plan-rank{display:inline-flex!important;flex-direction:row;white-space:nowrap;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text)}
+.insurance-workspace .plan-item .plan-rank .lucide{flex:none;width:14px;height:14px;color:#f7630c;fill:currentColor}
+/* Insurance follow-up steps sit inside the card as their own bordered cards, inset 16px */
+#insurance-section :is(.coverage-confirm,.service-suggest,.hold-banner,.elig-summary){margin:0 16px 8px;padding:12px;border:1px solid var(--line);border-radius:var(--radius)}
+#insurance-section .insurance-workspace+.coverage-confirm{margin-top:16px}
+/* Review section cards are flat: border only, no shadow at rest or on hover */
+.review-area .review-card,.review-area .review-card:hover{box-shadow:none}
+/* Buttons inside review cards share one medium size */
+.review-area .review-card :is(.small-btn,.footer-btn,#checkEligibility){height:28px;align-self:center;min-height:28px;min-width:0;padding:0 12px;gap:6px;font-size:13px;font-weight:600}
+.review-area .review-card :is(.small-btn,.footer-btn,#checkEligibility) .lucide{width:14px;height:14px}
+/* Step card actions stay on the right, including when they wrap below the text */
+#insurance-section :is(.coverage-confirm,.service-suggest,.hold-banner) .suggest-copy{flex:1 1 240px;min-width:0}
+#insurance-section :is(.coverage-confirm,.service-suggest,.hold-banner) .suggest-copy+*{margin-left:auto}
+/* Plan actions (Check Eligibility etc.) sit at the top right of the plan header */
+#insurance-section .insurance-workspace .plan-actions{flex:0 0 auto;margin-left:auto;justify-content:flex-end}
+/* Other-coverage banner: Add This Plan, Not Available and Put On Hold sit at the right edge */
+#insurance-section .plan-discovered>.found-actions{flex:0 0 auto;min-width:0;margin-left:auto;justify-content:flex-end}
+/* Steps 1, 2, 3… are one stack of matching cards: 8px apart, 16px from the card's bottom edge */
+#insurance-section{padding-bottom:8px}

@@ -54,7 +54,7 @@ a.footer-btn{text-decoration:none}
 .pr-tab.active{background:var(--fluent-white);border-color:var(--line);box-shadow:inset 0 2px 0 var(--primary);color:var(--ink)}
 .pr-tab-title{font-size:14px;font-weight:600;color:inherit}
 .pr-tab-sub{grid-column:1;font-size:12px;color:var(--muted)}
-.pr-tab-badge{grid-column:2;grid-row:1/span 2;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.pr-tab-badge{grid-column:2;grid-row:1/span 2;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--pill-radius,999px);font-size:12px;font-weight:600}
 .pr-tab-badge .lucide{width:12px;height:12px}
 .pr-tab-badge.todo{background:var(--amber-soft);color:var(--amber)}
 .pr-tab-badge.ok{background:var(--green-soft);color:var(--green)}
@@ -132,7 +132,7 @@ a.footer-btn{text-decoration:none}
 .pcd-rx{font-size:12px;color:var(--muted)}
 .pcd-head h2{margin:4px 0 0;font-size:16px;font-weight:600;color:var(--text);line-height:1.35}
 .pcd-code{display:inline-block;margin-right:4px;padding:1px 8px;border-radius:var(--fluent-corner-2);background:var(--ink);color:var(--white);font-size:14px;font-variant-numeric:tabular-nums}
-.pc-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pc-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--pill-radius,999px);font-size:12px;font-weight:600;white-space:nowrap}
 .pc-status .lucide{width:14px;height:14px}
 .pc-status.pass{background:var(--green-soft);color:var(--green)}.pc-status.warn{background:var(--amber-soft);color:var(--amber)}.pc-status.fail{background:var(--red-soft);color:var(--red)}
 
@@ -164,7 +164,7 @@ a.footer-btn{text-decoration:none}
 .pcd-check.pass .st{color:var(--green)}.pcd-check.warn .st{color:var(--amber)}.pcd-check.fail .st{color:var(--red)}
 .pcd-check-head .chev{width:14px;height:14px;color:var(--muted);transition:transform .15s}
 .pcd-check-head[aria-expanded="true"] .chev{transform:rotate(180deg)}
-.pc-mini{font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px}
+.pc-mini{font-size:12px;font-weight:600;padding:1px 8px;border-radius:var(--pill-radius,999px)}
 .pc-mini.pass{background:var(--green-soft);color:var(--green)}.pc-mini.warn{background:var(--amber-soft);color:var(--amber)}.pc-mini.fail{background:var(--red-soft);color:var(--red)}
 .pcd-check-body{padding:var(--space-2) var(--space-8) var(--space-6) calc(var(--space-6) + 18px + var(--space-5));font-size:14px;line-height:1.5;color:var(--text);border-top:1px solid var(--fluent-neutral-lighter)}
 .pcd-check-body p{margin:var(--space-4) 0}
@@ -172,7 +172,7 @@ a.footer-btn{text-decoration:none}
 .pc-icd{list-style:none;margin:0;padding:0;display:grid;gap:3px}
 .pc-icd li{display:flex;align-items:center;gap:6px;font-size:14px}
 .pc-icd .lucide{width:13px;height:13px;color:var(--green)}
-.pc-icd em{font-style:normal;font-size:10px;font-weight:600;color:var(--primary);background:var(--blue-soft);padding:0 6px;border-radius:999px}
+.pc-icd em{font-style:normal;font-size:10px;font-weight:600;color:var(--primary);background:var(--blue-soft);padding:0 6px;border-radius:var(--pill-radius,999px)}
 .pc-kv{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4) var(--space-8);margin:var(--space-4) 0 0}
 .pc-kv dt{font-size:12px;color:var(--muted)}
 .pc-kv dd{margin:0;font-size:14px}
@@ -218,7 +218,7 @@ a.footer-btn{text-decoration:none}
 .pr-acc-title{display:grid;gap:1px;min-width:0}
 .pr-acc-title b{font-size:14px;font-weight:600;color:var(--ink)}
 .pr-acc-title small{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pr-acc-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.pr-acc-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:var(--pill-radius,999px);font-size:12px;font-weight:600;white-space:nowrap}
 .pr-acc-badge .lucide{width:12px;height:12px}
 .pr-acc-badge.todo{background:var(--amber-soft);color:var(--amber)}
 .pr-acc-badge.ok{background:var(--green-soft);color:var(--green)}
@@ -389,7 +389,7 @@ a.footer-btn{text-decoration:none}
 .pc-link{border:0;background:none;padding:0;color:var(--primary);font:inherit;font-weight:600;cursor:pointer}
 .pc-link:hover{text-decoration:underline}
 .pk-sub .pc-link{font-size:inherit}
-.pc-rec{font-style:normal;font-size:10px;font-weight:600;color:var(--primary);background:var(--blue-soft);padding:1px 6px;border-radius:999px;margin-left:6px;white-space:nowrap}
+.pc-rec{font-style:normal;font-size:10px;font-weight:600;color:var(--primary);background:var(--blue-soft);padding:1px 6px;border-radius:var(--pill-radius,999px);margin-left:6px;white-space:nowrap}
 .pc-docs li.na{opacity:.7}
 .pc-docs li.na .lucide{color:var(--muted)}
 .pc-ec-dialog{width:min(640px,calc(100vw - 32px));max-height:calc(100vh - 64px);padding:0}
@@ -415,7 +415,7 @@ a.footer-btn{text-decoration:none}
 .pc-ss tr:last-child td{border-bottom:0}
 .pc-ss td small{display:block;font-size:11px;color:var(--muted)}
 .pc-ss td b{font-weight:600}
-.pc-ss-match{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px;white-space:nowrap}
+.pc-ss-match{display:inline-block;font-size:11px;font-weight:600;padding:1px 8px;border-radius:var(--pill-radius,999px);white-space:nowrap}
 .pc-ss-match.same{background:var(--blue-soft);color:var(--primary)}
 .pc-ss-match.similar{background:var(--sunken);color:var(--muted)}
 /* Payer coverage: primary payer first, other plans and Medicare reference de-emphasized */

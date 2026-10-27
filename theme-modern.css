@@ -5,6 +5,8 @@
    ========================================================================== */
 
 :root{
+  /* Tags and capsule buttons share the app-wide 4px corner; counters and circles stay round */
+  --pill-radius:4px;
   /* Brand + neutrals */
   --primary:var(--fluent-theme-primary);
   --blue:var(--fluent-theme-primary);
@@ -57,7 +59,7 @@ body{background:var(--bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoot
 .shell-ribbon{background:var(--fluent-black);border-bottom:1px solid rgba(255,255,255,.06)}
 .ribbon-logo{border-right-color:rgba(255,255,255,.25)}
 .ribbon-portal{color:rgba(255,255,255,.72);font-weight:400}
-.ribbon-env{font-size:12px;font-weight:600;letter-spacing:.14em;padding:4px 10px;border-radius:999px;background:rgba(251,191,36,.14);color:var(--fluent-yellow);border:1px solid rgba(251,191,36,.28)}
+.ribbon-env{font-size:12px;font-weight:600;letter-spacing:.14em;padding:4px 10px;border-radius:var(--pill-radius,999px);background:rgba(251,191,36,.14);color:var(--fluent-yellow);border:1px solid rgba(251,191,36,.28)}
 .ribbon-btn{border-radius:var(--fluent-corner-2);color:rgba(255,255,255,.82);transition:background .15s,color .15s}
 .ribbon-btn:hover{background:rgba(255,255,255,.08);color:var(--fluent-white)}
 .ribbon-avatar{border:0;background:var(--ai-grad);font-weight:600;box-shadow:0 var(--fluent-depth-4)}
@@ -105,7 +107,7 @@ h2,h3{letter-spacing:-.011em}
 .review-card:hover{box-shadow:var(--shadow)}
 .card-header{background:var(--fluent-white);border-bottom-color:var(--line)}
 .section-icon{border-radius:var(--fluent-corner-2);background:var(--blue-soft);color:var(--primary);box-shadow:inset 0 0 0 1px var(--blue-line)}
-.section-status{font-weight:600;padding:4px 10px;border-radius:999px}
+.section-status{font-weight:600;padding:4px 10px;border-radius:var(--pill-radius,999px)}
 .section-status.success{box-shadow:inset 0 0 0 1px var(--fluent-success-background)}
 .section-status.warning{box-shadow:inset 0 0 0 1px var(--fluent-warning-background)}
 .section-status.danger{box-shadow:inset 0 0 0 1px var(--fluent-warning-background)}
