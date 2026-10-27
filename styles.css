@@ -1793,3 +1793,12 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .icon-btn.trash-btn .lucide{width:16px;height:16px}
 .icon-btn.trash-btn:hover{background:var(--sunken);color:var(--fluent-error-text,var(--red))}
 .file-list.grid .trash-btn{position:absolute;top:6px;right:6px;background:var(--white)}
+/* Card dividers are a single 1px line: the header's border is the only line under it */
+.review-card>.card-header+.data-group,.review-card>.card-header+.data-group>.compact-fields:first-child,.review-card>.card-header+:is(.insurance-workspace,.field-grid,.compact-fields){border-top:0}
+/* …and the last row of fields tucks its bottom line under the card's own border */
+.review-card>.data-group:last-child>.compact-fields:last-child{margin-bottom:-1px}
+/* Card headers: tighter padding and gap, 14px icons */
+.review-card .card-header{min-height:0;padding-top:8px;padding-bottom:8px}
+.review-card .card-header>div{gap:8px}
+.review-card .card-header .section-icon{width:28px;height:28px;flex:none}
+.review-card .card-header .lucide{width:14px;height:14px}

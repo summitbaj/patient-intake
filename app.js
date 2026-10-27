@@ -815,7 +815,7 @@ function renderReviewMenu(){
   $('#reviewPopoverSub').hidden=!count;$('#reviewPopoverSub').textContent=requiredHint;
   const row=item=>`<button class="review-item ${item.severity}" data-review-target="${item.id}"><span class="ri-dot" aria-hidden="true"></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span><i class="review-go" data-lucide="chevron-right"></i></button>`;
   const optionalRows=[...warnings,...aiItems.map(item=>({...item,severity:'ai',tag:'AI resolved'}))];
-  const done=`<div class="review-done"><i data-lucide="circle-check"></i><span><b>Required review complete</b><small>${optionalRows.length?'Optional items below are still worth a look.':'Nothing else needs your attention.'}</small></span><button class="footer-btn primary" data-side-tab="next"><i data-lucide="circle-arrow-right"></i> Next Action</button></div>`
+  const done=`<div class="review-done"><i data-lucide="circle-check"></i><span><b>Required review complete</b><small>${optionalRows.length?'Optional items below are still worth a look.':'Nothing else needs your attention.'}</small></span><button class="footer-btn primary" data-side-tab="next"><i data-lucide="arrow-right"></i> Next Action</button></div>`
     +(state.nextStale?refreshNoticeHtml():'');
   $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required</span>${required.map(row).join('')}</div>`:done)
     +(optionalRows.length?`<div class="review-group"><span class="review-group-title">Optional</span>${optionalRows.map(row).join('')}</div>`:'');
