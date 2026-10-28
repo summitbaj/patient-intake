@@ -221,7 +221,7 @@ body.phase-upload #cancelUpload{display:none!important}
 .workspace.phase-review .review-area{padding:16px}
 
 /* Coverage order on insurance plans is plain text; Primary gets a star */
-.insurance-workspace .plan-item .plan-pills .plan-rank{display:inline-flex!important;flex-direction:row;white-space:nowrap;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text)}
+.insurance-workspace .plan-item .plan-pills .plan-rank{display:inline-flex!important;flex-direction:row;white-space:nowrap;align-items:center;gap:4px;font-size:12px;font-weight:400;color:var(--muted)}
 .insurance-workspace .plan-item .plan-rank .lucide{flex:none;width:14px;height:14px;color:#f7630c;fill:currentColor}
 /* Insurance follow-up steps sit inside the card as their own bordered cards, inset 16px */
 #insurance-section :is(.coverage-confirm,.service-suggest,.hold-banner,.elig-summary){margin:0 16px 8px;padding:12px;border:1px solid var(--line);border-radius:var(--radius)}

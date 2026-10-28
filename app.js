@@ -634,10 +634,11 @@ function renderPlanList(){
     const isNew=!plan.systemRank&&!plan.userAdded;
     const aiPlaced=plan.aiRank&&plan.aiReason;   // kept after reordering, so the user can still see what AI suggested
     // "Why primary?" is a small info icon beside the rank; the reason opens in a popover on demand.
-    const why=aiPlaced?`<span class="plan-why-btn" role="button" tabindex="0" data-plan-why="${plan.id}" aria-label="AI suggests ${plan.aiRank.toLowerCase()}. Why?" aria-haspopup="dialog" aria-expanded="${state.planWhyOpen===plan.id}" title="AI suggests ${plan.aiRank.toLowerCase()}"><i data-lucide="info"></i></span>`:'';
-    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${rank}${isNew?', new, not on file':''}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="pill rank">${rank}</span>${why}${plan.check?statusPill(plan)+serviceTag(plan):''}${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded?'<span class="plan-tag-new">Added by you</span>':''}</span>${fixes?`<small class="plan-ai-fix"><i data-lucide="sparkles"></i> ${fixes} ${fixes===1?'field':'fields'} AI resolved</small>`:''}${otherNote(plan)}</span></button></div>`;
+    const why=aiPlaced?`<span class="plan-why-btn" role="button" tabindex="0" data-plan-why="${plan.id}" aria-label="AI suggests ${plan.aiRank.toLowerCase()}. Why?" aria-expanded="${state.planWhyOpen===plan.id}"><i data-lucide="info"></i></span>`:'';
+    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${rank}${isNew?', new, not on file':''}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${rank}</span>${why}${plan.check?statusPill(plan)+serviceTag(plan):''}${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded?'<span class="plan-tag-new">Added by you</span>':''}</span>${fixes?`<small class="plan-ai-fix"><i data-lucide="sparkles"></i> ${fixes} ${fixes===1?'field':'fields'} AI resolved</small>`:''}${otherNote(plan)}</span></button></div>`;
   }).join('');
   renderOrderHint();
+  icons();   // the list can re-render on its own (e.g. a drop back in place), so it draws its own grip, star and info icons
 }
 // One-line footer under the list: reorder, see what's in the patient record today, or go back to AI's order.
 function renderOrderHint(){
@@ -645,7 +646,7 @@ function renderOrderHint(){
   const usingAi=sameOrder(current,ai),allInSystem=insurancePlans.every(plan=>plan.systemRank),usingSystem=allInSystem&&sameOrder(current,system);
   $('#orderSource').className=`pill ${usingAi?'info':'neutral'}`;
   $('#orderSource').innerHTML=usingAi?'<i data-lucide="sparkles"></i> AI sorted':usingSystem?'Record order':'Custom order';
-  $('#orderNotice').innerHTML=`<span>Drag to reorder.</span>${usingAi?'':'<button class="text-btn" data-order="ai">Reset to AI order</button>'}<button class="text-btn subtle-link" data-on-file><i data-lucide="history"></i> Insurance on file</button>`;
+  $('#orderNotice').innerHTML=`<span>Drag to reorder.</span>${usingAi?'':'<button class="text-btn" data-order="ai">Reset to AI order</button>'}`;
   const fresh=insurancePlans.filter(plan=>!plan.systemRank&&!plan.userAdded).length;
   $('#insuranceMeta').textContent=`${insurancePlans.length} coverage plans${fresh?` · ${fresh} new`:''}`;
 }
@@ -702,15 +703,23 @@ document.addEventListener('click',event=>{if((state.planWhyOpen||state.insPopKey
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&state.planWhyOpen){const id=state.planWhyOpen;closePlanWhy();$(`[data-plan-why="${id}"]`)?.focus();}});
 addEventListener('scroll',()=>{if(state.planWhyOpen||state.insPopKey)closePlanWhy();},true);
 // "AI resolved" on an insurance field: the info button explains what AI fixed, like the demographics fields.
-$('#insuranceFields').addEventListener('click',event=>{
-  const btn=event.target.closest('[data-ins-ai]');if(!btn)return;
-  event.preventDefault();event.stopPropagation();
-  if(state.insPopKey===btn.dataset.insAi){closePlanWhy();return;}
-  const plan=insurancePlans[state.currentPlan],label=btn.dataset.insAi;
-  openInsPop(label,btn,`How AI resolved ${label}`,aiFixesFor(plan)[label]||'');
-});
-$('#planList').addEventListener('click',event=>{const why=event.target.closest('[data-plan-why]');if(!why)return;event.stopPropagation();togglePlanWhy(why.dataset.planWhy);},true);
-$('#planList').addEventListener('keydown',event=>{const why=event.target.closest('[data-plan-why]');if(!why||(event.key!=='Enter'&&event.key!==' '))return;event.preventDefault();event.stopPropagation();togglePlanWhy(why.dataset.planWhy);});
+// Both info icons show their explanation on hover or keyboard focus. Leaving hides it after a short pause,
+// so the pointer can move onto the tooltip. A click (touch) opens it too, and never selects the card.
+function showInfoPop(el){
+  clearTimeout(state.infoPopTimer);
+  if(el.dataset.planWhy){if(state.planWhyOpen!==el.dataset.planWhy)togglePlanWhy(el.dataset.planWhy);return;}
+  const label=el.dataset.insAi;if(state.insPopKey===label)return;
+  openInsPop(label,el,`How AI resolved ${label}`,aiFixesFor(insurancePlans[state.currentPlan])[label]||'');
+}
+const hideInfoPop=()=>{clearTimeout(state.infoPopTimer);state.infoPopTimer=setTimeout(closePlanWhy,150);};
+const infoTrigger='[data-plan-why],[data-ins-ai]';
+document.addEventListener('pointerover',event=>{const el=event.target.closest(infoTrigger);if(el)showInfoPop(el);else if(event.target.closest('#planWhyPop'))clearTimeout(state.infoPopTimer);});
+document.addEventListener('pointerout',event=>{if(!event.target.closest(`${infoTrigger},#planWhyPop`)||event.relatedTarget?.closest?.(`${infoTrigger},#planWhyPop`))return;hideInfoPop();});
+document.addEventListener('focusin',event=>{const el=event.target.closest(infoTrigger);if(el)showInfoPop(el);});
+document.addEventListener('focusout',event=>{if(event.target.closest(infoTrigger))hideInfoPop();});
+$('#insuranceFields').addEventListener('click',event=>{const btn=event.target.closest('[data-ins-ai]');if(!btn)return;event.preventDefault();event.stopPropagation();showInfoPop(btn);});
+$('#planList').addEventListener('click',event=>{const why=event.target.closest('[data-plan-why]');if(!why)return;event.stopPropagation();showInfoPop(why);},true);
+$('#planList').addEventListener('keydown',event=>{const why=event.target.closest('[data-plan-why]');if(!why||(event.key!=='Enter'&&event.key!==' '))return;event.preventDefault();event.stopPropagation();showInfoPop(why);});
 function renderEligibilityResponse(index){
   const plan=insurancePlans[index],result=planResult(plan);
   if(!result)return;
