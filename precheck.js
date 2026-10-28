@@ -48,48 +48,71 @@ function physicianCheck(rx){
     body:`<dl class="pc-kv"><div><dt>First name</dt><dd>${esc(p.first||'—')}</dd></div><div><dt>Last name</dt><dd>${esc(p.last||'—')}</dd></div><div><dt>NPI</dt><dd>${esc(npi||'Not provided')}</dd></div><div><dt>Specialty</dt><dd>${esc(p.specialty||rx.specialty||'—')}</dd></div><div class="pc-kv-wide"><dt>Address</dt><dd>${esc(p.address||'—')}</dd></div></dl>
       <h5>Medicare enrollment (PECOS)</h5><dl class="pc-kv pc-kv-3"><div><dt>DME</dt><dd>${yn(p.dme)}</dd></div><div><dt>PMD</dt><dd>${yn(p.pmd)}</dd></div><div><dt>PARTB</dt><dd>${yn(p.partb)}</dd></div></dl>`};
 }
+// Prior authorization (demo rules): commercial and Medicaid plans require it for the main equipment; Medicare doesn't for these codes.
+// Accessories and supplies don't need it. Only the primary and secondary payers are checked.
+const paRequiredCodes=/^(E0601|E1390)$/;
+const billingPlans=()=>activePlans().slice(0,2);
+const paRequiredBy=code=>paRequiredCodes.test(code)?billingPlans().filter(p=>!isMedicare(p)):[];
+const paOnFile=(code,plan)=>(intake.priorAuths||[]).find(pa=>pa.code===code&&(!pa.payer||pa.payer===plan.name));
+function priorAuthDocs(code){
+  const payers=paRequiredBy(code);
+  if(!payers.length)return [{name:'Prior authorization',status:`Not required for ${code}`,found:true,na:true}];
+  return payers.map(plan=>{const pa=paOnFile(code,plan);
+    return pa?{name:`Prior authorization · ${plan.name}`,status:`On file · ${pa.number} · ${pa.from} – ${pa.to}`,found:true}
+      :{name:`Prior authorization · ${plan.name}`,status:`Required by ${plan.name} for ${code} · not on file`,found:false,paMissing:true};});
+}
 function documentsCheck(code,rx,item){
   let docs=item.docs?item.docs.map(d=>({...d})):[
     {name:'Standard written order (SWO)',status:rx.source||'Added manually',found:true},
-    {name:'Face-to-face clinical evaluation',status:'Face-to-Face Notes.pdf',found:true},
-    {name:'Prior authorization',status:paFor(code)?`On file · ${paFor(code).number} · ${paFor(code).payer}`:'Not required for these codes',found:Boolean(paFor(code)),na:!paFor(code)}];
+    {name:'Face-to-face clinical evaluation',status:'Face-to-Face Notes.pdf',found:true}];
+  // Prior authorization comes from the payer rules above, not a fixed document list.
+  const paAt=docs.findIndex(d=>/^prior auth/i.test(d.name));
+  docs=docs.filter(d=>!/^prior auth/i.test(d.name));
+  docs.splice(paAt<0?docs.length:paAt,0,...priorAuthDocs(code));
   // Happy path: the oxygen test is on file.
   if(happy)docs=docs.map(d=>/oxygen qualifying/i.test(d.name)&&!d.found?{...d,found:true,status:'Overnight Oximetry.pdf'}:d);
   const needed=docs.filter(d=>!d.na),missingReq=needed.filter(d=>!d.found&&!d.recommended),missingRec=needed.filter(d=>!d.found&&d.recommended);
   const have=needed.length-missingReq.length-missingRec.length;
   return {key:'documents',label:'Required documents',status:missingReq.length?C.fail:missingRec.length?C.warn:C.pass,
-    summary:`${have} of ${needed.length} on file${missingReq.length||missingRec.length?` · ${[...missingReq,...missingRec].map(d=>d.name.replace(/ \(.*\)$/,'')).join(', ')} not found`:''}`,
-    action:missingReq.length||missingRec.length?`Upload the ${[...missingReq,...missingRec].map(d=>d.name.toLowerCase().replace(/ \(.*\)$/,'')).join(' and ')} to the intake.`:'',
+    summary:`${have} of ${needed.length} on file${missingReq.length||missingRec.length?` · ${[...missingReq,...missingRec].map(d=>d.paMissing?`${d.name.split(' · ')[1]} prior authorization`:d.name.replace(/ \(.*\)$/,'')).join(', ')} not found`:''}`,
+    action:missingReq.some(d=>d.paMissing)?`Get prior authorization from ${missingReq.filter(d=>d.paMissing).map(d=>d.name.split(' · ')[1]).join(' and ')} for ${code}, then add it to the intake.`
+      :missingReq.length||missingRec.length?`Upload the ${[...missingReq,...missingRec].map(d=>d.name.toLowerCase().replace(/ \(.*\)$/,'')).join(' and ')} to the intake.`:'',
     body:`<ul class="pc-docs">${docs.map(d=>`<li class="${d.na?'na':d.found?'ok':'bad'}"><i data-lucide="${d.na?'file-minus':d.found?'file-check':'file-x'}"></i><span><b>${esc(d.name)}${d.recommended?` <em class="pc-rec">Recommended by Medicare · ${esc(d.recommended)}</em>`:''}</b><small>${esc(d.status)}</small></span></li>`).join('')}</ul>`};
 }
 // What the payer covers for a code (demo rules) and the Medicare allowable (demo DMEPOS fee schedule amounts).
 const coverageFor=code=>code==='E0601'?'13-month capped rental':code==='E0562'?'Capped rental, billed with E0601':code==='E1390'?'Monthly rental, 36-month cap':oxygenSupply.test(code)?'Included in the E1390 rental':'Purchase';
 const medicareAllowable={...allowable,A4615:'Included in E1390 rental',A4616:'Included in E1390 rental'};
 function ecSummary(plan){const ec=plan?.eligibility;if(!ec)return 'Eligibility not checked';return `${ec.active?'Active':'Inactive'} · ${ec.service} ${ec.eligible?'covered':'not covered'} · checked ${ec.checkedAt.split(' · ')[0]}`;}
+const networkOf=ec=>{const n=ec?.network||'';if(!n)return null;if(/out[- ]of[- ]network|non[- ]?par/i.test(n))return {ok:false,label:'Out of network'};if(/in[- ]network|enrolled|participat/i.test(n))return {ok:true,label:'In network'};return {ok:null,label:n};};
+function payerBlock(plan,code,rank){
+  const ec=plan.eligibility,medicare=isMedicare(plan),net=networkOf(ec);
+  const dedMet=ec?(ec.deductible===ec.deductibleMet?`Met (${esc(ec.deductible)})`:`${esc(ec.deductibleMet)} of ${esc(ec.deductible)} met`):'—';
+  const pill=!ec?'<span class="section-status warning">Not checked</span>':!ec.active?'<span class="section-status danger">Inactive</span>':ec.eligible?`<span class="section-status success-visible">Active · ${esc(ec.service)} covered</span>`:`<span class="section-status danger">${esc(ec.service)} not covered</span>`;
+  const rows=ec?[
+    [`Coverage for ${code}`,coverageFor(code)],
+    ['Benefit',esc(ec.benefit)],
+    ['Deductible',dedMet],
+    ['Out-of-pocket',esc(ec.oop||'—')],
+    ...(net?[['Network',`<span class="pc-net ${net.ok===false?'bad':net.ok?'ok':''}">${esc(net.label)}</span>${net.label!==ec.network?` <span class="pc-muted">${esc(ec.network)}</span>`:''}`]]:[]),
+    ['Allowable',medicare?`${medicareAllowable[code]||'See fee schedule'} <span class="pc-muted">Medicare fee schedule</span>`:'Per payer contract']
+  ]:[['Eligibility','Not checked in the intake']];
+  return `<div class="pc-payer"><div class="pc-payer-head"><span class="pc-payer-name"><small>${esc(rank)}</small>${esc(plan.name)}</span>${pill}</div><dl class="pc-rows">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
+}
 function payerCheck(code){
-  const list=activePlans(),primary=list[0]||primaryPlan(),ec=primary.eligibility,pa=paFor(code);
-  const medicarePrimary=isMedicare(primary),rental=/^(E0601|E0562|E1390)$/.test(code);
-  let status=C.pass,summary=`${primary.name} · ${rental?'covered · rental':'covered · purchase'}`,action='';
+  const list=billingPlans(),primary=list[0]||primaryPlan(),secondary=list[1];
+  const ec=primary.eligibility,ec2=secondary?.eligibility;
+  let status=C.pass,summary=`${primary.name}${secondary?` and ${secondary.name}`:''} · ${coverageFor(code).toLowerCase()}`,action='';
+  const outNet=list.find(p=>networkOf(p.eligibility)?.ok===false);
   if(!ec){status=C.warn;summary='Eligibility not checked';action='Check eligibility for DME in the intake.';}
   else if(!ec.eligible){status=C.fail;summary=`${primary.name} · ${ec.service} not covered`;action='Check the patient’s coverage before ordering.';}
   else if(oxygenSupply.test(code)&&!happy){status=C.fail;summary='Included in the E1390 rental';action='Don’t bill separately. Supply it with the concentrator at no charge.';}
-  else if(oxygenSupply.test(code)){summary='Covered with the E1390 rental';}
   else if(code==='E1390'&&!happy){status=C.warn;summary='Covered once medically qualified';action='Coverage depends on the qualifying oxygen test.';}
-  const dedMet=ec?(ec.deductible===ec.deductibleMet?`Met (${esc(ec.deductible)})`:`${esc(ec.deductibleMet)} of ${esc(ec.deductible)} met`):'—';
-  const rows=[
-    [`Coverage for ${code}`,coverageFor(code)],
-    ['Benefit',ec?esc(ec.benefit):'—'],
-    ['Deductible',dedMet],
-    ['Allowable',medicarePrimary?`${medicareAllowable[code]||'See fee schedule'} <span class="pc-muted">Medicare fee schedule</span>`:'Per payer contract'],
-    ['Prior authorization',pa?`${esc(pa.number)} · ${esc(pa.from)} – ${esc(pa.to)}`:'Not on file']
-  ];
-  const others=list.slice(1).map(p=>`${esc(p.rank||'Other')}: ${esc(p.name)} · ${p.eligibility?.eligible?'active for DME':'not covered'}`);
-  const ecPill=ec?`<span class="section-status ${ec.eligible?'success-visible':'danger'}">${ec.eligible?'Active · DME covered':'DME not covered'}</span>`:'<span class="section-status warning">Not checked</span>';
+  else if(outNet){status=C.warn;summary=`${outNet.name} · out of network`;action=`You’re out of network for ${outNet.name}. Expect a lower payment or a denial from that plan.`;}
+  else if(secondary&&!ec2){status=C.warn;summary=`${secondary.name} · eligibility not checked`;action='Check eligibility for the secondary plan in the intake.';}
+  else if(secondary&&ec2&&!ec2.eligible){status=C.warn;summary=`${secondary.name} · ${ec2.service} not covered`;action='The secondary won’t pick up the patient’s share for this item.';}
   return {key:'payer',label:'Payer coverage',status,summary,action,
-    body:`<div class="pc-payer"><div class="pc-payer-head"><span class="pc-payer-name"><small>Primary</small>${esc(primary.name)}</span>${ecPill}</div>
-      <dl class="pc-rows">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>
-      ${others.length?`<p class="pc-payer-other">${others.join('<br>')}</p>`:''}
-      ${!medicarePrimary&&medicareAllowable[code]?`<p class="pc-payer-ref">Medicare allowable for reference: ${medicareAllowable[code]}</p>`:''}
+    body:`${payerBlock(primary,code,'Primary')}${secondary?payerBlock(secondary,code,'Secondary'):''}
+      ${!isMedicare(primary)&&medicareAllowable[code]?`<p class="pc-payer-ref">Medicare allowable for reference: ${medicareAllowable[code]}</p>`:''}
       <button type="button" class="pc-link" data-eligibility>View EC Response</button>`};
 }
 // Eligibility responses (one per plan), opened from the page header or any payer coverage check.
@@ -184,28 +207,63 @@ function oxygenCriteria(){
 }
 function medicalCheck(code,icdList){
   const icd=`<h5>ICD-10 codes on the prescription</h5><ul class="pc-icd">${icdList}</ul>`;
-  const source=(id,name)=>`<p class="pc-note pc-lcd">Source: Medicare LCD ${id} · ${name} · <a href="${lcdLink(id)}" target="_blank" rel="noopener">Read the full LCD</a></p>`;
+  // Two clearly labeled blocks:
+  //  · the primary payer's own criteria (when it isn't Medicare): its policy if we have it, or a note that we don't
+  //  · Medicare's criteria: "Applies" when Medicare is primary, "Reference" otherwise
+  const primary=billingPlans()[0]||primaryPlan(),medPrimary=isMedicare(primary),own=medPrimary?null:payerPolicies[primary.name]?.[code];
+  const score=groups=>{const now=groups.flatMap(g=>g.items).filter(c=>!notYet(c));const missing=now.filter(c=>c.status==='missing'),review=now.filter(c=>c.status==='review');
+    return {now,met:now.filter(c=>c.status==='met').length,missing,review,first:missing[0]||review[0]};};
+  const head=(kind,title,sub,tag)=>`<span class="pc-crit-src"><i data-lucide="${kind==='payer'?'shield-check':'landmark'}"></i><span><b>${title}</b><small>${sub}</small></span></span><em class="pc-crit-tag ${tag.cls}">${tag.text}</em>`;
+  // When the payer's own criteria are shown, Medicare's reference criteria start collapsed.
+  const block=(kind,title,sub,tag,inner,collapsed=false)=>collapsed
+    ?`<details class="pc-crit-block ${kind}"><summary>${head(kind,title,sub,tag)}<i data-lucide="chevron-down" class="pc-crit-chev"></i></summary>${inner}</details>`
+    :`<section class="pc-crit-block ${kind}"><header>${head(kind,title,sub,tag)}</header>${inner}</section>`;
   const result=(groups,lcd,name)=>{
-    const all=groups.flatMap(g=>g.items),now=all.filter(c=>!notYet(c));
-    const met=now.filter(c=>c.status==='met').length,missing=now.filter(c=>c.status==='missing'),review=now.filter(c=>c.status==='review');
-    const first=missing[0]||review[0];
-    return {key:'medical',label:'Medical criteria',status:missing.length?C.fail:review.length?C.warn:C.pass,
-      summary:`${met} of ${now.length} criteria met${first?` · ${first.status==='missing'?'Not found':'Review'}: ${first.title}`:''}`,
-      action:first?.action||'',
-      body:`${criteriaHtml(groups)}${icd}${source(lcd,name)}`};
+    const ownGroups=own?own.groups():null,decide=score(ownGroups||groups),med=score(groups);
+    const lcdLine=`<p class="pc-note pc-lcd">LCD ${lcd} · ${name} · <a href="${lcdLink(lcd)}" target="_blank" rel="noopener">Read the full LCD</a></p>`;
+    const payerBlock=medPrimary?''
+      :own?block('payer',`${esc(primary.name)} criteria`,`Primary payer · ${esc(own.name)}${own.demo?' · demo data':''}`,{cls:'applies',text:'Applies'},criteriaHtml(ownGroups))
+      :block('payer',`${esc(primary.name)} criteria`,'Primary payer',{cls:'none',text:'Not in Signetic'},`<p class="pc-crit-empty">We don’t have ${esc(primary.name)}’s coverage policy for ${code}. Use the Medicare criteria below as a guide and confirm with ${esc(primary.name)} before dispensing.</p>`);
+    const medBlock=block('medicare','Medicare criteria',medPrimary?'Primary payer · Medicare LCD':`For reference · AI checked the documents against Medicare’s rules`,medPrimary?{cls:'applies',text:'Applies'}:{cls:'ref',text:'Reference'},`${criteriaHtml(groups)}${lcdLine}`,Boolean(own));
+    const who=own?`${primary.name}: `:medPrimary?'':'Medicare reference: ';
+    return {key:'medical',label:'Medical criteria',status:decide.missing.length?C.fail:decide.review.length?C.warn:C.pass,
+      summary:`${who}${decide.met} of ${decide.now.length} criteria met${decide.first?` · ${decide.first.status==='missing'?'Not found':'Review'}: ${decide.first.title}`:''}${!medPrimary&&!own?` · confirm with ${primary.name}`:''}`,
+      action:decide.first?.action||(!medPrimary&&!own?`Confirm the coverage criteria with ${primary.name}.`:''),
+      body:`${payerBlock}${medBlock}${icd}`};
   };
   if(code==='E0601')return result(papCriteria(),'L33718','Positive Airway Pressure (PAP) Devices for the Treatment of Obstructive Sleep Apnea');
   if(code==='E1390')return result(oxygenCriteria(),'L33797','Oxygen and Oxygen Equipment');
-  // Accessories follow the main equipment's qualification.
+  // Accessories are covered only when the main equipment is, so its criteria are shown right here
+  // (no need to open the device code to check them).
   const pap=papCodes.test(code),parentCode=pap?'E0601':'E1390',parent=pap?papCriteria():oxygenCriteria();
-  const parentNow=parent.flatMap(g=>g.items).filter(c=>!notYet(c)),parentOk=parentNow.every(c=>c.status==='met');
-  const groups=[{title:'Accessory coverage',items:[
-    {status:parentOk?'met':parentNow.some(c=>c.status==='missing')?'missing':'review',title:`${parentCode} meets its coverage criteria`,rule:pap?'PAP accessories and the heated humidifier are covered only when the PAP device is covered.':'Oxygen accessories are covered only with covered oxygen equipment.',evidence:`${parentNow.filter(c=>c.status==='met').length} of ${parentNow.length} ${parentCode} criteria met · see ${parentCode} for details`,action:parentOk?'':`Resolve the ${parentCode} medical criteria first.`},
-    pap?{status:'met',title:'Used with the PAP device',rule:'Item is used with a covered E0601 device.',evidence:'Prescribed with E0601 on Prescription 1'}
-       :{status:'met',title:'Used with the oxygen equipment',rule:'Item is used with covered oxygen equipment.',evidence:'Prescribed with E1390 on Prescription 2'}
-  ]}];
+  const groups=[
+    {title:'This accessory',note:pap?'PAP accessories and the heated humidifier are covered only when the PAP device is covered.':'Oxygen accessories are covered only with covered oxygen equipment.',items:[
+      pap?{status:'met',title:'Used with the PAP device',rule:`Item is used with a covered ${parentCode} device.`,evidence:'Prescribed with E0601 on Prescription 1'}
+         :{status:'met',title:'Used with the oxygen equipment',rule:`Item is used with covered ${parentCode} equipment.`,evidence:'Prescribed with E1390 on Prescription 2'}]},
+    ...parent.map((g,gi)=>({...g,title:`${parentCode} device · ${g.title}`,note:gi===0?`Same criteria as ${parentCode}, shown here so you don’t have to switch codes.${g.note?` ${g.note}`:''}`:g.note}))
+  ];
   return result(groups,pap?'L33718':'L33797',pap?'Positive Airway Pressure (PAP) Devices for the Treatment of Obstructive Sleep Apnea':'Oxygen and Oxygen Equipment');
 }
+// Quantity limits per payer. Medicare's published limits are the only source today; for other payers AI estimates from Medicare.
+function qtyLimitsHtml(code,limit){
+  const medicareLimit=limit||(code==='E0601'?'1 device · 13-month capped rental':code==='E1390'?'1 concentrator · 36-month rental cap':'As prescribed');
+  const rows=billingPlans().map((p,i)=>{const med=isMedicare(p);
+    return `<div><dt><small>${i===0?'Primary':'Secondary'}</small>${esc(p.name)}</dt><dd>${esc(medicareLimit)}${med?' <span class="pc-muted">Medicare</span>':' <span class="pill ai-kind pc-ai-tag" title="Not confirmed by the payer. Estimated from Medicare’s limit."><i data-lucide="sparkles"></i> AI estimate</span>'}</dd></div>`;}).join('');
+  const hasEstimate=billingPlans().some(p=>!isMedicare(p));
+  return `<h5>Quantity limits by payer</h5><dl class="pc-rows pc-qty">${rows}</dl>${hasEstimate?'<p class="pc-note">Limits for payers other than Medicare are AI estimates based on Medicare. Confirm with the payer if the order is close to the limit.</p>':''}`;
+}
+// Coverage criteria source per payer: the payer's own policy when we have it, otherwise Medicare's LCD is recommended.
+// Payer-specific coverage policies we have in Signetic (demo: only Aetna's CPAP policy). Most payers aren't here yet.
+const payerPolicies={
+  'Aetna Choice POS II':{E0601:{name:'Aetna clinical policy · CPAP for obstructive sleep apnea',demo:true,groups:()=>[
+    {title:'Initial coverage',items:[
+      {status:'met',title:'Sleep test confirms obstructive sleep apnea',rule:'In-lab or home sleep test showing AHI ≥ 15, or AHI 5–14 with symptoms or comorbidities.',evidence:'Home sleep test (Type III) · 10/08/2026 · AHI 18.4 events/hour'},
+      {status:paFor('E0601')?'met':'missing',title:'Prior authorization approved',rule:'CPAP rental needs prior authorization before delivery.',evidence:paFor('E0601')?`${paFor('E0601').number} · ${paFor('E0601').from} – ${paFor('E0601').to}`:'No authorization on the intake',action:paFor('E0601')?'':'Request prior authorization from Aetna.'},
+      {status:'met',title:'Ordered by the treating provider',rule:'Signed order from the provider managing the sleep apnea.',evidence:'Prescription.pdf · Dr. Sarah Kim · signed 10/12/2026'}]},
+    {title:'Continued coverage',items:[
+      {status:'later',title:'Compliance at 90 days',rule:'Use for at least 4 hours a night on 70% of nights, documented by the provider.',evidence:'Track from the device data after setup.'}]}
+  ]}}
+};
 // Happy path (scenario.js): the oxygen qualifying test is on file, so every code qualifies.
 const happy=window.protoScenario==='happy';
 function evaluate(line,rx,item){
@@ -220,7 +278,7 @@ function evaluate(line,rx,item){
   checks.push({key:'dispensing',label:'Quantity & frequency',status:missingDose?C.warn:C.pass,
     summary:missingDose?'Not on the prescription':limit?`Medicare allows ${limit}`:'As prescribed',
     action:missingDose?'Confirm quantity and frequency with the physician before dispensing.':'',
-    body:`<dl class="pc-kv"><div><dt>On the prescription</dt><dd>${[qty?`Qty ${esc(qty)}`:'',esc(freq)].filter(Boolean).join(' · ')||'Not stated'}</dd></div><div><dt>Medicare allows</dt><dd>${esc(limit||(code==='E0601'?'1 device · 13-month capped rental':code==='E1390'?'1 concentrator · 36-month rental cap':'As prescribed'))}</dd></div></dl>`});
+    body:`<dl class="pc-kv"><div class="pc-kv-wide"><dt>On the prescription</dt><dd>${[qty?`Qty ${esc(qty)}`:'',esc(freq)].filter(Boolean).join(' · ')||'Not stated'}</dd></div></dl>${qtyLimitsHtml(code,limit)}`});
   // 3. Same & similar (Signetic records only)
   const sameMatches=sameMatchesFor(code);
   if(sameMatches.length){const c=sameCheck(code,sameMatches);if(happy){c.status=C.pass;c.action='';}checks.push(c);}
@@ -283,7 +341,7 @@ function renderList(){
       ${exp?`<div class="pr-acc-body">${rx.items.map(item=>`<div class="pr-item">
         <p class="pr-item-name"><span>${esc(item.name)}</span><span class="pill ai-kind" title="Identified by AI"><i data-lucide="sparkles"></i> ${item.bundle?`Bundle · ${item.lines.length}`:'Single'}</span></p>
         ${item.lines.length?'':'<p class="pr-nocode"><i data-lucide="info"></i> No HCPCS code yet. Add one in the review to pre-check this item.</p>'}
-        ${item.lines.map(l=>{const n=issueCount(l),rev=ui.reviewed.has(l.id);return `<button class="pr-code ${l.status} ${ui.selected===l.id?'active':''}" data-code="${l.id}" aria-current="${ui.selected===l.id}"><i data-lucide="${rev?'check':statusIcon[l.status]}" class="st ${rev?'rev':''}"></i><span class="pr-code-copy"><b>${l.code}</b><span>${esc(l.description)}</span><small>${rev?'Reviewed':n?`${n} of ${l.checks.length} checks need attention`:`All ${l.checks.length} checks passed`}</small>${matchNote(l.code)}</span></button>`;}).join('')}
+        ${item.lines.map(l=>{const n=issueCount(l),rev=ui.reviewed.has(l.id);return `<button class="pr-code ${l.status} ${ui.selected===l.id?'active':''}" data-code="${l.id}" aria-current="${ui.selected===l.id}"><i data-lucide="${rev?'check':statusIcon[l.status]}" class="st ${rev?'rev':''}"></i><span class="pr-code-copy"><b>${l.code}</b><span>${esc(l.description)}</span><small>${rev?'Reviewed':n?`${n} of ${l.checks.length} checks need attention`:`All ${l.checks.length} checks passed`}</small></span></button>`;}).join('')}
       </div>`).join('')}
       </div>`:''}
     </section>`;

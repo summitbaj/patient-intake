@@ -102,7 +102,7 @@ function renderFileList(){
   const items=[...uploaded.map(file=>({file,src:'uploaded'})),...existing.map(file=>({file,src:'existing'}))];
   list.className=`file-list ${view}`;
   const pendingCount=documents.filter(file=>file.pendingExtract).length,bar=$('#reextractBar');
-  if(bar){bar.hidden=state.phase!=='review'||(!pendingCount&&!state.reextracting);
+  if(bar){bar.hidden=true;
     $('#reextractCount').textContent=state.reextracting?'Extracting…':`${pendingCount} new ${pendingCount===1?'document':'documents'} to extract`;
     $('#reextractBtn').disabled=Boolean(state.reextracting);}
   $('#viewerFiles').classList.toggle('is-empty',!items.length);
@@ -117,12 +117,14 @@ function renderFileList(){
       :file.needsDecision?`<button class="use-existing extract-one" data-resolve-dup="${file.id}" title="Decide how to store this document"><i data-lucide="copy-check"></i> Resolve</button>`
       :file.pendingExtract?`<button class="use-existing extract-one" data-extract-one="${file.id}" title="Extract this document"><i data-lucide="sparkles"></i> Extract</button>`
       :`<button type="button" class="icon-btn trash-btn" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove"><i data-lucide="trash-2"></i></button>`;
-    if(!file.uploadedAt)file.uploadedAt=file.date||new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    const uploadedOn=`Uploaded ${file.uploadedAt}`;
+    if(!file.uploadedAt)file.uploadedAt=file.date||todayLabel();
     const tag=file.needsDecision?'<em class="file-tag is-new">Needs decision</em>':file.pendingExtract?'<em class="file-tag is-new">New</em>':'';
+    // Status only shows while it says something useful (uploading, extracting, needs a decision…).
+    const quiet=/^(extracted( previously)?|not extracted yet|extracted · added to this intake|existing file · extracted previously)$/i.test(file.meta)&&!file.pendingExtract;
+    const status=quiet?'':`<span class="file-status ${/not extracted/i.test(file.meta)?'warn':''}">${file.pendingExtract?'<em class="file-tag is-new">New</em> ':''}${file.meta}</span>`;
     const body=view==='grid'
-      ?`<button class="file-main" ${key}><span class="gallery-thumb"><img src="${imageForDocument(file)}" alt=""></span><span class="file-name"><strong>${file.name}</strong>${tag}</span><small>${file.meta}</small><small class="file-date">${uploadedOn}</small></button>`
-      :`<button class="file-main" ${key}>${formatBadge(file.name)}<span class="doc-info"><strong>${file.name}</strong><span class="file-meta-row">${/^(extracted( previously)?|not extracted yet)$/i.test(file.meta)&&!file.pendingExtract?'':`<span class="file-status ${/not extracted/i.test(file.meta)?'warn':''}">${file.pendingExtract?'<em class="file-tag is-new">New</em> ':''}${file.meta}</span>`}<span class="file-date"><i data-lucide="calendar"></i>${file.uploadedAt}</span></span></span></button>`;
+      ?`<button class="file-main" ${key}><span class="gallery-thumb"><img src="${imageForDocument(file)}" alt=""></span><span class="file-name"><strong>${file.name}</strong>${tag}</span><small>${docCategory(file)}</small><small class="file-date">Added ${file.uploadedAt}</small></button>`
+      :`<button class="file-main" ${key}>${formatBadge(file.name)}<span class="doc-info"><strong>${file.name}</strong>${fileMetaLine(file,status)}</span></button>`;
     return `<div class="file-item ${file.id===state.selected?'active':''} ${src}">${body}${trailing}</div>`;
   };
   list.innerHTML=groups.map(([src,title])=>{
@@ -148,6 +150,33 @@ function syncSplitPreview(){
 // File icons show the format (PDF, JPG, PNG), not a guess at the document type.
 const fileFormat=name=>{const ext=(name.split('.').pop()||'').toUpperCase();return ext==='JPEG'?'JPG':ext;};
 const formatBadge=name=>{const format=fileFormat(name);return `<span class="doc-icon format-badge ${format==='PDF'?'is-pdf':'is-image'}" aria-hidden="true">${format}</span>`;};
+// Document type shown under every file name: Prescription, Insurance card, Prior authorization, Medical doc…
+const docCategory=file=>{
+  const text=`${file.type||''} ${file.name||''}`.toLowerCase();
+  if(/prior auth|authori[sz]ation/.test(text))return 'Prior authorization';
+  if(/insurance/.test(text))return 'Insurance card';
+  if(/prescription|\brx\b/.test(text))return 'Prescription';
+  if(/consent/.test(text))return 'Consent form';
+  if(/photo id|identification/.test(text))return 'Photo ID';
+  return 'Medical doc';
+};
+const todayLabel=()=>new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+const addedOn=file=>file.uploadedAt||file.date||todayLabel();
+// Shared meta line for every file row (upload screen and review Files panel): type · Added date [· status]
+const fileMetaLine=(file,status='')=>`<span class="file-meta-row"><span class="file-type">${docCategory(file)}</span><span class="file-date">Added ${addedOn(file)}</span>${status}</span>`;
+// Full-screen preview for any file: new uploads, record documents, or files on file.
+function previewFile(id){
+  const file=documents.find(item=>item.id===id)||patientDirectory.flatMap(patient=>patient.documents).find(item=>item.id===id)||existingFiles.find(item=>item.id===id);
+  if(!file||file.uploading)return;
+  const image=$('#dvImage'),src=imageForDocument(file);
+  $('#dvName').textContent=file.name;
+  $('#dvMeta').textContent=`${docCategory(file)} · Added ${addedOn(file)}`;
+  image.alt=`${file.name} document preview`;
+  $('#docViewer').showModal();
+  const fit=()=>fitFullView('page');
+  if(image.getAttribute('src')!==src){image.onload=fit;image.src=src;}else fit();
+  icons();
+}
 function renderUploadQueue(){
   $('#extractDocuments').disabled=!documents.length||state.extracting||documents.some(file=>file.uploading);
   // Ready to extract: the button widens to "Extract documents" so the next step is obvious.
@@ -165,24 +194,24 @@ function renderStartScreen(){
   const patient=linkedPatient(),count=documents.length,busy=documents.some(file=>file.uploading);
   // Same grouping and row design as the Files panel in the review screen.
   const today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  // Left column = what's in this intake (the basket). Right column = where documents come from (the patient's file).
+  // So the patient's file is never listed twice: record documents only appear on the left once they're added.
   const fresh=documents.filter(file=>!file.fromRecord);
-  const onFile=patient?patient.documents:[];
-  $('#uploadList').hidden=!fresh.length&&!onFile.length;
-  $('#uploadListTitle').textContent='Documents';
-  $('#uploadListCount').textContent=`${count} ${count===1?'document':'documents'} in this intake`;
-  const row=(file,onFileRow)=>{
-    const inIntake=documents.some(item=>item.id===file.id);
-    const meta=onFileRow?file.type:`${file.type}${file.size?` · ${file.size}`:''}`;
-    const status=file.uploading?'<span class="file-status">Uploading…</span>':`<span>${meta}</span>`;
-    const date=file.uploadedAt||file.date||today;
-    const trailing=onFileRow
-      ?`<button class="${inIntake?'icon-btn trash-btn':'use-existing'}" data-use-record="${file.id}" aria-pressed="${inIntake}" aria-label="${inIntake?'Remove from this intake':'Use in this intake'}" title="${inIntake?'Remove from this intake':'Use in this intake'}">${inIntake?'<i data-lucide="trash-2"></i>':'<i data-lucide="plus"></i> Add'}</button>`
-      :file.uploading?'<span class="file-state"><span class="spinner"></span></span>'
-      :`<button type="button" class="icon-btn trash-btn" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove"><i data-lucide="trash-2"></i></button>`;
-    return `<div class="file-item ${onFileRow?'existing':'uploaded'}"><div class="file-main">${formatBadge(file.name)}<span class="doc-info"><strong>${file.name}</strong><span class="file-meta-row">${status}<span class="file-date"><i data-lucide="calendar"></i>${date}</span></span></span></div>${trailing}</div>`;
+  const fromFile=documents.filter(file=>file.fromRecord);
+  $('#uploadList').hidden=!count&&!patient;
+  $('#uploadListTitle').textContent='In this intake';
+  $('#uploadListCount').textContent=count?`${count} ${count===1?'document':'documents'}`:'';
+  const row=file=>{
+    if(!file.uploadedAt&&!file.fromRecord)file.uploadedAt=today;
+    const trailing=file.uploading?'<span class="file-state"><span class="spinner"></span></span>'
+      :`<button type="button" class="icon-btn trash-btn" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove from this intake"><i data-lucide="trash-2"></i></button>`;
+    return fileRow(file,trailing,file.uploading?'<span class="file-status">Uploading…</span>':'','uploaded');
   };
   const group=(title,rows)=>rows.length?`<h4 class="file-group-title">${title} <b>${rows.length}</b></h4>${rows.join('')}`:'';
-  $('#uploadQueue').innerHTML=group('New uploads',fresh.map(file=>row(file,false)))+group('On file',onFile.map(file=>row(file,true)));
+  const first=patient?patient.name.split(' ')[0]:'';
+  $('#uploadQueue').innerHTML=count
+    ?group('New uploads',fresh.map(row))+group(`From ${first||'patient'}’s file`,fromFile.map(row))
+    :`<div class="us-intake-empty"><i data-lucide="inbox"></i><span><strong>Nothing in this intake yet</strong><small>Upload files above, or add documents from ${first}’s file.</small></span></div>`;
   $('#dropTitle').textContent=patient?`Add more documents for ${patient.name.split(' ')[0]}`:'Drag and drop documents here';
   $('#startLead').textContent=patient?`Documents you add go to ${patient.name}’s intake. Nothing is processed until you select Extract.`:'Add prescriptions, insurance cards, referrals, and clinical records. Nothing is processed until you select Extract.';
   $('#startExtract').disabled=!count||busy||state.extracting;
@@ -190,20 +219,35 @@ function renderStartScreen(){
   renderQueuePatients();
 }
 
+// One row design for every file on the upload screen, matching the review Files panel.
+// Selecting the row (or the eye icon) opens a full-screen preview.
+function fileRow(file,trailing,status='',kind=''){
+  const inIntake=documents.some(item=>item.id===file.id);
+  const preview=file.uploading?'':`<button type="button" class="row-preview" data-preview-doc="${file.id}" aria-label="Preview ${file.name}" title="Preview"><i data-lucide="eye"></i></button>`;
+  return `<div class="file-item ${kind} ${inIntake&&kind==='existing'?'in-intake':''}"><button type="button" class="file-main" ${file.uploading?'disabled':`data-preview-doc="${file.id}"`} title="${file.uploading?'Uploading…':`Preview ${file.name}`}">${formatBadge(file.name)}<span class="doc-info"><strong>${file.name}</strong>${fileMetaLine(file,status)}</span></button><span class="file-actions">${preview}${trailing}</span></div>`;
+}
+function useRecordButton(file,patientId){
+  const inIntake=documents.some(item=>item.id===file.id);
+  // Added documents show a quiet "Added" state; hovering offers Remove.
+  return inIntake
+    ?`<button type="button" class="use-existing on added-toggle" data-use-record="${file.id}" aria-label="Added. Remove ${file.name} from this intake" title="Remove from this intake"><span class="when-added"><i data-lucide="check"></i> Added</span><span class="when-hover"><i data-lucide="minus"></i> Remove</span></button>`
+    :`<button type="button" class="use-existing" ${patientId?`data-record-pick="${patientId}|${file.id}"`:`data-use-record="${file.id}"`} aria-label="Add ${file.name} to this intake" title="Add to this intake"><i data-lucide="plus"></i> Add</button>`;
+}
 function recordDocsList(patient){
-  const docs=patient.documents.map(file=>{const done=documents.some(item=>item.id===file.id);return `<label class="us-doc ${done?'added':''}"><input type="checkbox" data-record-doc="${file.id}" ${done||state.pickerSelection.has(file.id)?'checked':''} ${done?'disabled':''}>${formatBadge(file.name)}<span><strong>${file.name}</strong><small>${done?'Added to this intake':`${file.type} · ${file.date}`}</small></span></label>`;}).join('');
-  const left=patient.documents.filter(file=>!documents.some(item=>item.id===file.id)).length,count=state.pickerSelection.size,linked=state.knownPatient===patient.id;
-  const action=count?`Add ${count} ${count===1?'document':'documents'}`:linked?'':'Select patient';
-  return `<div class="us-docs">${docs}<div class="us-docs-foot">${left?`<button class="text-btn" data-record-toggle>${count?'Clear all':'Select all'}</button>`:'<span>All documents added</span>'}${action?`<button class="footer-btn primary" data-record-add>${action}</button>`:''}</div></div>`;
+  const rows=patient.documents.map(file=>fileRow(file,useRecordButton(file,patient.id),'','existing')).join('');
+  const left=patient.documents.filter(file=>!documents.some(item=>item.id===file.id)).length;
+  const added=patient.documents.length-left;
+  const foot=`<span>${added?`${added} of ${patient.documents.length} added`:'Select a file to preview it'}</span>${left?`<button class="footer-btn" data-record-all="${patient.id}"><i data-lucide="plus"></i> Add ${left===patient.documents.length?'all ':''}${left}${left===patient.documents.length?'':' remaining'}</button>`:'<span class="us-all-added"><i data-lucide="circle-check"></i> All added</span>'}`;
+  return `<div class="us-docs"><div class="file-list list us-record-files">${rows}</div><div class="us-docs-foot">${foot}</div></div>`;
 }
 function renderQueuePatients(){
   const patient=linkedPatient();
   $('#linkedPatient').hidden=!patient;$('#patientSearch').hidden=Boolean(patient);
   $('#recordListLabel').hidden=Boolean(patient);$('#recordList').hidden=Boolean(patient);
   $('#recordCardTitle').textContent=patient?'Patient for this intake':'Pull from a patient’s record';
-  $('#recordCardLead').textContent=patient?'Pick more documents from their record, or upload new files alongside them.':'Patients waiting in the intake queue. Pick documents straight from their record.';
+  $('#recordCardLead').textContent=patient?'Add documents already on file, or upload new ones. Everything you add shows under In this intake.':'Patients waiting in the intake queue. Pick documents straight from their record.';
   if(patient){
-    $('#linkedPatient').innerHTML=`<div class="us-linked-row"><span class="us-avatar">${patientInitials(patient.name)}</span><span class="us-who"><strong>${patient.name}</strong><small>${patient.mrn} · DOB ${patient.dob}</small></span><em class="us-linked-tag"><i data-lucide="link"></i> Linked</em><button class="text-btn" data-unlink-patient>Change</button></div><span class="us-label">Documents in their record</span>${recordDocsList(patient)}`;
+    $('#linkedPatient').innerHTML=`<div class="us-linked-row"><span class="us-avatar">${patientInitials(patient.name)}</span><span class="us-who"><strong>${patient.name}</strong><small>${patient.mrn} · DOB ${patient.dob}</small></span><em class="us-linked-tag"><i data-lucide="link"></i> Linked</em><button class="text-btn" data-unlink-patient>Change</button></div><span class="us-label">Documents on file</span>${recordDocsList(patient)}`;
     icons();return;
   }
   const query=$('#patientSearchInput').value.trim().toLowerCase();
@@ -231,13 +275,27 @@ function addRecordDocuments(){
   renderDocuments();renderUploadQueue();
   toast(selected.length?`${selected.length} ${selected.length===1?'document':'documents'} from ${patient.name} added. Add more files if you need to.`:`${patient.name} selected. Upload their documents.`);
 }
+// Changing the patient removes the documents pulled from their file, so confirm first and say exactly what goes.
+function confirmUnlinkPatient(){
+  const patient=linkedPatient();if(!patient)return;
+  const fromFile=documents.filter(file=>file.fromRecord),uploads=documents.filter(file=>!file.fromRecord).length;
+  if(!fromFile.length||!$('#changePatientDialog')){unlinkPatient();return;}
+  const first=patient.name.split(' ')[0];
+  $('#changePatientBody').textContent=`${fromFile.length} ${fromFile.length===1?'document':'documents'} from ${first}’s file will be removed from this intake. ${fromFile.length===1?'It stays':'They stay'} in ${first}’s record.`;
+  $('#changePatientList').innerHTML=fromFile.map(file=>`<li>${formatBadge(file.name)}<span><strong>${file.name}</strong><small>${docCategory(file)}</small></span></li>`).join('');
+  $('#changePatientKeep').hidden=!uploads;
+  $('#changePatientKeep').textContent=uploads?`${uploads} ${uploads===1?'file':'files'} you uploaded will stay in this intake.`:'';
+  $('#changePatientDialog').returnValue='';
+  $('#changePatientDialog').showModal();
+}
+$('#changePatientDialog')?.addEventListener('close',()=>{if($('#changePatientDialog').returnValue==='change')unlinkPatient();});
 function unlinkPatient(){
-  const patient=linkedPatient();
+  const patient=linkedPatient(),removed=documents.filter(file=>file.fromRecord).length;
   for(let index=documents.length-1;index>=0;index--)if(documents[index].fromRecord)documents.splice(index,1);
   if(!documents.some(file=>file.id===state.selected))state.selected=documents[0]?.id||'';
   state.knownPatient=null;state.pickerPatient='';state.pickerSelection=new Set();
   renderDocuments();renderUploadQueue();
-  if(patient)toast(`${patient.name} unlinked. Documents from their record were removed.`);
+  if(patient)toast(removed?`${patient.name} unlinked. ${removed} ${removed===1?'document':'documents'} from their file removed. Pick another patient.`:`${patient.name} unlinked. Pick another patient.`);
 }
 
 // Which conflicts this intake has: a similar patient, similar documents, both, or neither.
@@ -366,8 +424,13 @@ function renderPostIntake(){
 function syncNextLock(){
   const left=requiredReviewsLeft(),lock=$('#nextLock'),button=$('#recommendedAction');
   if(!lock||!button)return;
-  $('#nextPanel').hidden=left>0;
-  $('#intakeSummaryCard').hidden=left>0;
+  // While the completion plays out, the next-step panel and AI summary wait, then fade in with the card.
+  const wait=left>0||Boolean(state.completing);
+  const wasHidden=$('#nextPanel').hidden;
+  $('#nextPanel').hidden=wait;
+  $('#intakeSummaryCard').hidden=wait;
+  if(!wait&&wasHidden&&state.justCompleted){$('#nextPanel').classList.add('enter-late');$('#intakeSummaryCard').classList.add('enter-late');setTimeout(()=>{$('#nextPanel').classList.remove('enter-late');$('#intakeSummaryCard').classList.remove('enter-late');},1400);}
+  if(state.completing)return;
   // The panel is no longer a tab that renders on open, so fill it as soon as it becomes visible.
   if(!left&&!syncNextLock.busy){syncNextLock.busy=true;try{renderPostIntake();}finally{syncNextLock.busy=false;}return;}
   lock.hidden=!left;button.classList.toggle('is-locked',left>0);
@@ -534,7 +597,7 @@ const orderBy=key=>[...insurancePlans].sort((a,b)=>(a[key]?rankOrder.indexOf(a[k
 const currentOrder=()=>insurancePlans.map(plan=>plan.id);
 const sameOrder=(a,b)=>a.join()===b.join();
 // The plans are judged as a unit: changing the list or a plan's details clears the confirmation and every check.
-function invalidateInsurance(){state.plansConfirmed=false;insurancePlans.forEach(plan=>{plan.check=null;});}
+function invalidateInsurance(){state.plansConfirmed=false;insurancePlans.forEach(plan=>{plan.check=null;plan.checkedServices={};});}
 function setPlanOrder(ids,message){
   invalidateInsurance();
   const selectedId=insurancePlans[state.currentPlan]?.id;
@@ -554,28 +617,100 @@ function systemPill(plan,index){
 function otherNote(plan){
   if(!plan.check)return '';
   const other=plan.otherCoverage;
-  if(other&&!other.resolved)return '<small class="plan-note warn"><i data-lucide="triangle-alert"></i> Other insurance found</small>';
-  if(other)return `<small class="plan-note ok"><i data-lucide="circle-check"></i> Other insurance ${other.resolved==='added'?'added':'marked unavailable'}</small>`;
-  return `<small class="plan-note ok"><i data-lucide="circle-check"></i> No other insurance detected as of ${plan.check.at.split(' · ')[0]}</small>`;
+  if(other&&!other.resolved)return '<small class="plan-note"><i data-lucide="info"></i> Another plan found</small>';
+  return '';   // nothing to say when the payer reports no other plan
 }
+// Fields AI resolved when the documents disagreed or were hard to read (shown on the plan card and the field).
+const insuranceAiFixes={
+  medicare:{'Member ID suffix':'The card image was blurry (03 or 08). AI matched 03 from the patient’s record.'},
+  aetna:{'Effective from':'The card front and back showed different dates. AI kept 03/15/2025 from the front.'}
+};
+const aiFixesFor=plan=>insuranceAiFixes[plan.id]||{};
+// The plan list: same cards as the patient record. AI's reasoning and record changes stay out of the way until asked for.
 function renderPlanList(){
+  state.planWhy=state.planWhy||new Set();
   $('#planList').innerHTML=insurancePlans.map((plan,index)=>{
-    const result=planResult(plan),checked=plan.check?.service===state.serviceType;
-    const diff=plan.userAdded?'Added by you':!plan.systemRank?'New · not in system':plan.systemRank!==planRank(index)?`${plan.systemRank} in system`:'';
-    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${planRank(index)}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${planRank(index)}</span>${statusPill(plan)}</span>${diff?`<small class="plan-diff"><i data-lucide="${plan.systemRank?'arrow-left-right':'plus'}"></i> ${diff}</small>`:''}${otherNote(plan)}</span></button></div>`;
+    const rank=planRank(index),fixes=Object.keys(aiFixesFor(plan)).length;
+    const isNew=!plan.systemRank&&!plan.userAdded;
+    const aiPlaced=plan.aiRank&&plan.aiReason;   // kept after reordering, so the user can still see what AI suggested
+    // "Why primary?" is a small info icon beside the rank; the reason opens in a popover on demand.
+    const why=aiPlaced?`<span class="plan-why-btn" role="button" tabindex="0" data-plan-why="${plan.id}" aria-label="AI suggests ${plan.aiRank.toLowerCase()}. Why?" aria-haspopup="dialog" aria-expanded="${state.planWhyOpen===plan.id}" title="AI suggests ${plan.aiRank.toLowerCase()}"><i data-lucide="info"></i></span>`:'';
+    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${rank}${isNew?', new, not on file':''}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="pill rank">${rank}</span>${why}${plan.check?statusPill(plan)+serviceTag(plan):''}${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded?'<span class="plan-tag-new">Added by you</span>':''}</span>${fixes?`<small class="plan-ai-fix"><i data-lucide="sparkles"></i> ${fixes} ${fixes===1?'field':'fields'} AI resolved</small>`:''}${otherNote(plan)}</span></button></div>`;
   }).join('');
   renderOrderHint();
 }
-// One-line summary under the list: whether the order came from AI, the system, or the user.
+// One-line footer under the list: reorder, see what's in the patient record today, or go back to AI's order.
 function renderOrderHint(){
   const ai=orderBy('aiRank'),system=orderBy('systemRank'),current=currentOrder();
   const usingAi=sameOrder(current,ai),allInSystem=insurancePlans.every(plan=>plan.systemRank),usingSystem=allInSystem&&sameOrder(current,system);
-  const changes=insurancePlans.filter((plan,index)=>plan.systemRank!==planRank(index)).length;
   $('#orderSource').className=`pill ${usingAi?'info':'neutral'}`;
-  $('#orderSource').innerHTML=usingAi?'<i data-lucide="sparkles"></i> AI sorted':usingSystem?'System order':'Custom order';
-  $('#orderNotice').innerHTML=`<span>${changes?`${changes} ${changes===1?'change':'changes'} from system. `:''}Drag to reorder.</span>${usingAi?(allInSystem?'<button class="text-btn" data-order="system">Use System Order</button>':''):'<button class="text-btn" data-order="ai">Reset to AI Order</button>'}`;
-  $('#insuranceMeta').textContent=`${insurancePlans.length} coverage plans${changes?' · order updated from system':''}`;
+  $('#orderSource').innerHTML=usingAi?'<i data-lucide="sparkles"></i> AI sorted':usingSystem?'Record order':'Custom order';
+  $('#orderNotice').innerHTML=`<span>Drag to reorder.</span>${usingAi?'':'<button class="text-btn" data-order="ai">Reset to AI order</button>'}<button class="text-btn subtle-link" data-on-file><i data-lucide="history"></i> Insurance on file</button>`;
+  const fresh=insurancePlans.filter(plan=>!plan.systemRank&&!plan.userAdded).length;
+  $('#insuranceMeta').textContent=`${insurancePlans.length} coverage plans${fresh?` · ${fresh} new`:''}`;
 }
+// What the patient's record says today: their plans and order, before this intake.
+function showInsuranceOnFile(){
+  const onFile=insurancePlans.filter(plan=>plan.systemRank).sort((a,b)=>rankOrder.indexOf(a.systemRank)-rankOrder.indexOf(b.systemRank));
+  const fresh=insurancePlans.filter(plan=>!plan.systemRank);
+  const idOf=plan=>['Member ID prefix','Member ID','Member ID suffix'].map(k=>plan.fields.find(([n])=>n===k)?.[1]).filter(v=>v&&v!=='—'&&v!=='Not provided').join(' ');
+  $('#eligibilityDialogTitle').textContent='Insurance on file';
+  $('#eligibilityDialogMeta').textContent=`${postIntakeRecommendation.patient}’s record today, before this intake`;
+  const differs=!sameOrder(currentOrder().filter(id=>onFile.some(p=>p.id===id)),onFile.map(p=>p.id));
+  $('#eligibilityDialogBody').innerHTML=`<ol class="on-file-list">${onFile.map(plan=>`<li><span class="pill rank">${plan.systemRank}</span><span><strong>${plan.name}</strong><small>${idOf(plan)}</small></span></li>`).join('')||'<li class="empty-note">No insurance on file</li>'}</ol>${fresh.length?`<p class="on-file-note">Not on file yet: ${fresh.map(plan=>plan.name).join(', ')}.</p>`:''}${differs?'<p class="on-file-note">The order in this intake is different from the record.</p><button type="button" class="small-btn" data-order="system" data-close-on-file>Use record order</button>':''}`;
+  icons();
+  $('#eligibilityDialog').showModal();
+}
+document.addEventListener('click',event=>{
+  if(event.target.closest('[data-on-file]')){showInsuranceOnFile();return;}
+  if(event.target.closest('[data-close-on-file]'))setTimeout(()=>$('#eligibilityDialog').close(),0);
+});
+// "Why primary?" sits inside the plan card, so it handles its own click instead of selecting the card.
+function openInsPop(key,anchor,heading,body){
+  closePlanWhy();
+  let pop=$('#planWhyPop');
+  if(!pop){pop=document.createElement('div');pop.id='planWhyPop';pop.className='ai-pop plan-why-pop';pop.setAttribute('role','dialog');document.body.appendChild(pop);}
+  pop.setAttribute('aria-label',heading);
+  pop.innerHTML=`<div class="ai-decision"><i data-lucide="sparkles"></i><span><b>${heading}</b>${body}</span></div>`;
+  pop.hidden=false;icons();
+  const r=anchor.getBoundingClientRect(),w=pop.offsetWidth,h=pop.offsetHeight;
+  pop.style.left=`${Math.max(12,Math.min(r.left-8,innerWidth-w-12))}px`;
+  pop.style.top=`${r.bottom+h+8>innerHeight?Math.max(12,r.top-h-6):r.bottom+6}px`;
+  state.insPopKey=key;anchor.setAttribute('aria-expanded','true');state.insPopAnchor=anchor;
+}
+function closePlanWhy(){
+  if(state.insPopAnchor){state.insPopAnchor.setAttribute('aria-expanded','false');state.insPopAnchor=null;}
+  const pop=$('#planWhyPop');if(pop)pop.hidden=true;state.insPopKey='';
+  if(state.planWhyOpen){$(`[data-plan-why="${state.planWhyOpen}"]`)?.setAttribute('aria-expanded','false');state.planWhyOpen='';}
+}
+function togglePlanWhy(id){
+  if(state.planWhyOpen===id){closePlanWhy();return;}
+  closePlanWhy();
+  const plan=insurancePlans.find(item=>item.id===id),anchor=$(`[data-plan-why="${id}"]`);if(!plan||!anchor)return;
+  const rank=planRank(insurancePlans.indexOf(plan));
+  let pop=$('#planWhyPop');
+  if(!pop){pop=document.createElement('div');pop.id='planWhyPop';pop.className='ai-pop plan-why-pop';pop.setAttribute('role','dialog');document.body.appendChild(pop);}
+  pop.setAttribute('aria-label',`AI suggests ${plan.aiRank.toLowerCase()}`);
+  pop.innerHTML=`<div class="ai-decision"><i data-lucide="sparkles"></i><span><b>AI suggests ${plan.aiRank.toLowerCase()}</b>${plan.aiReason}${plan.aiRank!==rank?`<small class="why-current">You set this as ${rank.toLowerCase()}.</small>`:''}</span></div>`;
+  pop.hidden=false;icons();
+  const r=anchor.getBoundingClientRect(),w=pop.offsetWidth,h=pop.offsetHeight;
+  pop.style.left=`${Math.max(12,Math.min(r.left-8,innerWidth-w-12))}px`;
+  pop.style.top=`${r.bottom+h+8>innerHeight?Math.max(12,r.top-h-6):r.bottom+6}px`;
+  state.planWhyOpen=id;anchor.setAttribute('aria-expanded','true');
+}
+document.addEventListener('click',event=>{if((state.planWhyOpen||state.insPopKey)&&!event.target.closest('#planWhyPop,[data-plan-why],[data-ins-ai]'))closePlanWhy();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&state.planWhyOpen){const id=state.planWhyOpen;closePlanWhy();$(`[data-plan-why="${id}"]`)?.focus();}});
+addEventListener('scroll',()=>{if(state.planWhyOpen||state.insPopKey)closePlanWhy();},true);
+// "AI resolved" on an insurance field: the info button explains what AI fixed, like the demographics fields.
+$('#insuranceFields').addEventListener('click',event=>{
+  const btn=event.target.closest('[data-ins-ai]');if(!btn)return;
+  event.preventDefault();event.stopPropagation();
+  if(state.insPopKey===btn.dataset.insAi){closePlanWhy();return;}
+  const plan=insurancePlans[state.currentPlan],label=btn.dataset.insAi;
+  openInsPop(label,btn,`How AI resolved ${label}`,aiFixesFor(plan)[label]||'');
+});
+$('#planList').addEventListener('click',event=>{const why=event.target.closest('[data-plan-why]');if(!why)return;event.stopPropagation();togglePlanWhy(why.dataset.planWhy);},true);
+$('#planList').addEventListener('keydown',event=>{const why=event.target.closest('[data-plan-why]');if(!why||(event.key!=='Enter'&&event.key!==' '))return;event.preventDefault();event.stopPropagation();togglePlanWhy(why.dataset.planWhy);});
 function renderEligibilityResponse(index){
   const plan=insurancePlans[index],result=planResult(plan);
   if(!result)return;
@@ -584,22 +719,29 @@ function renderEligibilityResponse(index){
   $('#eligibilityDialogTitle').textContent=plan.name;
   $('#eligibilityDialogMeta').textContent=`${planRank(index)} coverage · ${type.id} · eligibility checked ${plan.check.at}`;
   const rows=[['Coverage status',active?'Active':'Inactive'],['Benefit',result.detail],['Member ID',`${field('Member ID prefix')} ${field('Member ID')} ${field('Member ID suffix')}`.replace(/—/g,'').trim()],['Group number',field('Group number')],['Plan dates',`${field('Effective from')} – ${field('Effective to')}`],['Deductible',`${plan.response.deductible} · ${plan.response.deductibleMet} met`],['Out-of-pocket maximum',plan.response.oop],['Network',plan.response.network],['Payer',plan.response.payer],['Trace number',plan.response.trace]];
-  $('#eligibilityDialogBody').innerHTML=`<div class="response-status ${result.eligible?'eligible':'not-eligible'}"><i data-lucide="${result.eligible?'circle-check':'circle-x'}"></i><span><b>${active?'Active':'Inactive'} · ${type.id} ${result.eligible?'covered':'not covered'}</b>${result.detail}</span></div>${other?`<section class="response-other"><header><i data-lucide="search-check"></i><b>Other insurance found</b></header><dl class="response-list">${[['Plan',other.name],['Payer',other.payer],['Insurance type',other.type],['Member ID',other.memberId],['Group number',other.group],['Plan dates',other.dates]].map(([l,v])=>`<div><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl><p>${other.note} Add it with “Add another plan” if it should be billed.</p></section>`:''}<dl class="response-list">${rows.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
+  $('#eligibilityDialogBody').innerHTML=`<div class="response-status ${result.eligible?'eligible':'not-eligible'}"><i data-lucide="${result.eligible?'circle-check':'circle-x'}"></i><span><b>${active?'Active':'Inactive'} · ${type.id} ${result.eligible?'covered':'not covered'}</b>${result.detail}</span></div>${other?`<section class="response-other"><header><i data-lucide="search-check"></i><b>Other insurance found</b></header><dl class="response-list">${[['Payer',other.payer],['Insurance type',other.type],['Member ID',other.memberId],['Group number',other.group],['Plan dates',other.dates]].map(([l,v])=>`<div><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl><p>Make sure this plan is in the intake’s insurance list. Add it with “Add insurance” if it’s missing.</p></section>`:''}<dl class="response-list">${rows.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
   icons();
   $('#eligibilityDialog').showModal();
 }
 
+// Every service type eligibility has been checked for (DME, Immunization…), kept across checks: green if covered, red if not.
+const checkedServicesOf=plan=>{if(!plan.check)return [];const list=Object.keys(plan.checkedServices||{});if(!list.includes(plan.check.service))list.push(plan.check.service);return serviceTypes.map(t=>t.id).filter(id=>list.includes(id));};
 function servicePill(plan){
-  const type=serviceTypes.find(item=>item.id===state.serviceType),result=planResult(plan),current=plan.check?.service===state.serviceType;
-  if(!current)return `<span class="cov-chip neutral" title="Not checked for ${type.id} yet"><i data-lucide="${type.icon}"></i> ${type.id} · Not checked</span>`;
-  return `<span class="cov-chip ${result.eligible?'ok':'bad'}" title="${result.detail}"><i data-lucide="${result.eligible?'circle-check':'circle-x'}"></i> ${type.id}</span>`;
+  return checkedServicesOf(plan).map(id=>{const type=serviceTypes.find(item=>item.id===id),result=plan.results[id];if(!result)return '';
+    return `<span class="cov-chip ${result.eligible?'ok':'bad'}" title="${id}: ${result.detail}"><i data-lucide="${result.eligible?'circle-check':'circle-x'}"></i> ${type.id}</span>`;}).join('');
+}
+// Same on the plan card, next to Active / Inactive.
+function serviceTag(plan){
+  if(planStatus(plan)!=='active')return '';
+  return checkedServicesOf(plan).map(id=>{const result=plan.results[id];if(!result)return '';
+    return `<span class="pill ${result.eligible?'success':'danger'}" title="${id} ${result.eligible?'covered':'not covered'}: ${result.detail}">${id}</span>`;}).join('');
 }
 
 function renderInsurance(index=state.currentPlan){
   if(!insurancePlans.length){
     $('#planList').innerHTML='';$('#planName').textContent='No insurance yet';$('#planPills').innerHTML='';
     $('#planDiscovered').hidden=true;$('#planAiNote').hidden=true;$('#planActions').innerHTML='';$('#orderNotice').innerHTML='';$('#orderSource').hidden=true;
-    $('#insuranceFields').innerHTML='<p class="empty-note">Add the patient’s insurance with “Add another plan”.</p>';
+    $('#insuranceFields').innerHTML='<p class="empty-note">Add the patient’s insurance with “Add insurance”.</p>';
     $('#insuranceMeta').textContent='No coverage plans';renderEligibility();icons();return;
   }
   if(index>=insurancePlans.length)index=0;
@@ -609,17 +751,30 @@ function renderInsurance(index=state.currentPlan){
   const plan=insurancePlans[index],result=planResult(plan);
   renderPlanList();
   $('#planName').textContent=plan.name;
+  // Source document sits next to the plan name: one click opens it in the document viewer.
+  let source=$('#planSource');
+  if(!source){
+    const name=$('#planName'),row=document.createElement('span');row.className='plan-title-row';
+    name.before(row);row.appendChild(name);
+    source=document.createElement('button');source.type='button';source.id='planSource';source.className='source-link plan-source';row.appendChild(source);
+  }
+  source.hidden=!plan.docId;
+  source.dataset.doc=plan.docId||'';
+  source.title=`View ${plan.source}`;
+  source.innerHTML=`<i data-lucide="scan-text"></i> ${plan.source}`;
   const st=planStatus(plan);
-  $('#planPills').innerHTML=`<div class="cov-strip">${st?`<span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>`:'<span class="cov-chip neutral">Status not checked</span>'}${servicePill(plan)}</div><span class="cov-checked"><i data-lucide="calendar-check"></i> ${plan.check?`Last check ${plan.check.at}`:'Eligibility not checked yet'}</span>`;
+  // Before an eligibility check there's nothing to report, so only a quiet line says so.
+  $('#planPills').innerHTML=st?`<div class="cov-strip"><span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>${servicePill(plan)}</div><span class="cov-checked"><i data-lucide="calendar-check"></i> Last check ${plan.check.at}</span>`:'<span class="cov-checked is-quiet">Eligibility not checked yet</span>';
   const found=$('#planDiscovered');
   found.hidden=!(plan.check&&plan.otherCoverage&&!plan.otherCoverage.resolved&&!state.checkingPlan);
-  found.innerHTML=found.hidden?'':`<i data-lucide="search-check"></i><span><b>Other insurance found during the eligibility check</b>${plan.otherCoverage.name} · ${plan.otherCoverage.note}</span><span class="found-actions"><button class="small-btn primary" data-other-add="${index}"><i data-lucide="plus"></i> Add This Plan</button><button class="small-btn" data-other-skip="${index}">Not Available</button>${state.onHold?'':`<button class="small-btn" data-other-hold><i data-lucide="pause"></i> Put On Hold</button>`}</span>`;
-  const note=$('#planAiNote');
-  note.hidden=plan.systemRank===plan.aiRank;
-  note.innerHTML=note.hidden?'':`<i data-lucide="sparkles"></i><span><b>AI set this as ${plan.aiRank.toLowerCase()}</b>${plan.systemRank?` (system: ${plan.systemRank.toLowerCase()})`:' (not in system yet)'}. ${plan.aiReason}</span><button class="source-link" data-doc="${plan.docId}"><i data-lucide="scan-text"></i> ${plan.source}</button>`;
+  // Information only: the payer mentions another active plan. We can't tell whether it's already in the list, so no actions here.
+  found.innerHTML=found.hidden?'':`<i data-lucide="info"></i><span>The eligibility check found another active plan for this patient. Make sure it’s in the list.</span><button class="text-btn" data-plan-response="${index}">View response</button>`;
+  // AI's reason for the order now lives behind "Why primary?" on the plan card.
+  const note=$('#planAiNote');note.hidden=true;note.innerHTML='';
   const hasResponse=Boolean(plan.check)&&!state.checkingPlan;
-  $('#planActions').innerHTML=`${hasResponse?`<button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View Response</button>`:''}<button class="small-btn" data-plan-check ${state.checkingPlan||!state.plansConfirmed?'disabled':''} ${state.plansConfirmed?'':'title="Confirm the plan list first"'}>${state.checkingPlan?'<span class="spinner"></span> Checking…':`<i data-lucide="refresh-cw"></i> ${plan.check?.service===state.serviceType?'Re-check':'Check'} Eligibility`}</button>`;
-  $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>`<label class="ins-field"><span>${label}</span><input class="ins-input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value.replace(/"/g,'&quot;')}" placeholder="Not provided" aria-label="${label}" autocomplete="off"></label>`).join('');
+  $('#planActions').innerHTML=`${hasResponse?`<button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View Response</button>`:''}<button class="small-btn" data-plan-check ${state.checkingPlan?'disabled':''}>${state.checkingPlan?'<span class="spinner"></span> Checking…':`<i data-lucide="refresh-cw"></i> ${plan.check?.service===state.serviceType?'Re-check':'Check'} Eligibility`}</button>`;
+  const fixes=aiFixesFor(plan);
+  $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>`<label class="ins-field ${fixes[label]?'ai-fixed':''}"><span class="ins-label">${label}${fixes[label]?`<span class="ins-ai"><em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ins-ai="${label}" aria-label="How AI resolved ${label}" aria-expanded="false"><i data-lucide="info"></i></button></span>`:''}</span><input class="ins-input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value.replace(/"/g,'&quot;')}" placeholder="Not provided" aria-label="${label}" autocomplete="off"></label>`).join('');
   renderEligibility();
 }
 
@@ -629,13 +784,13 @@ function renderEligibility(){
   $('#serviceTrigger').querySelector('[data-lucide]:first-child')?.setAttribute('data-lucide',type.icon);
   const allChecked=insurancePlans.every(plan=>plan.check?.service===state.serviceType);
   const button=$('#checkEligibility');
-  const locked=!state.plansConfirmed;
+  const locked=false;   // the "are these all the plans?" step was removed; checks are always available
   button.disabled=!insurancePlans.length||state.checkingEligibility||locked;
   $('#serviceTrigger').disabled=locked;$('#serviceSuggest').classList.toggle('is-locked',locked);
   button.classList.toggle('primary',!allChecked&&!state.checkingEligibility);
   button.innerHTML=state.checkingEligibility?'<span class="spinner"></span> Checking…':`<i data-lucide="refresh-cw"></i> ${allChecked?'Re-check':'Check'} Eligibility`;
-  $('#eligibilityMeta').textContent=state.checkingEligibility?`Checking ${type.id} eligibility for all plans…`:allChecked?'':`Not checked for ${type.id} on every plan · check all plans here or one plan at a time`;
-  if(locked)$('#eligibilityMeta').textContent='Confirm the plan list above before checking eligibility.';
+  $('#eligibilityMeta').textContent=state.checkingEligibility?`Checking ${type.id} eligibility for all plans…`:'';
+
   renderCoverageConfirm();
   renderServiceSuggest(allChecked);
   renderHoldBanner();
@@ -645,10 +800,12 @@ function renderEligibility(){
 }
 function renderCoverageConfirm(){
   const box=$('#coverageConfirm'),n=insurancePlans.length;
+  // Removed: the "Are these all of the patient's insurance plans?" step.
+  box.style.display='none';box.innerHTML='';return;
   box.classList.toggle('is-done',state.plansConfirmed);
   box.innerHTML=state.plansConfirmed
     ?`<span class="step-num done"><i data-lucide="check"></i></span><div class="suggest-copy"><span><b>Plan list confirmed</b> · ${n} ${n===1?'plan':'plans'}, in coverage order above</span></div><button class="text-btn" data-unconfirm-plans>Change</button>`
-    :`<span class="step-num">1</span><div class="suggest-copy"><span><b>Are these all of the patient’s insurance plans?</b></span><span class="eligibility-meta">Look for a secondary plan before checking eligibility. If one is missing, add it first.</span></div><button class="small-btn" data-open-add-plan><i data-lucide="plus"></i> Add Another Plan</button><button class="small-btn primary" data-confirm-plans ${n?'':'disabled'}>Yes, This Is Everything</button>`;
+    :`<span class="step-num">1</span><div class="suggest-copy"><span><b>Are these all of the patient’s insurance plans?</b></span><span class="eligibility-meta">Look for a secondary plan before checking eligibility. If one is missing, add it first.</span></div><button class="small-btn" data-open-add-plan><i data-lucide="plus"></i> Add Insurance</button><button class="small-btn primary" data-confirm-plans ${n?'':'disabled'}>Yes, This Is Everything</button>`;
 }
 function renderHoldBanner(){
   const box=$('#holdBanner');box.hidden=!state.onHold;
@@ -657,7 +814,7 @@ function renderHoldBanner(){
 const planEnd=plan=>{const value=plan.fields.find(([label])=>label==='Effective to')?.[1],m=/^(\d\d)\/(\d\d)\/(\d{4})$/.exec(value||'');return m?{text:value,time:new Date(+m[3],+m[1]-1,+m[2]).getTime()}:null;};
 // Step 3: the three things the provider needs to know once every plan has been checked.
 function renderEligSummary(allChecked){
-  const box=$('#eligSummary');box.hidden=!allChecked||!insurancePlans.length;if(box.hidden)return;
+  const box=$('#eligSummary');box.hidden=true;box.innerHTML='';return;   // removed: the "Insurance needs attention" summary
   const type=state.serviceType,n=insurancePlans.length;
   const found=insurancePlans.filter(plan=>plan.otherCoverage&&!plan.otherCoverage.resolved);
   const inactive=insurancePlans.filter(plan=>planStatus(plan)==='inactive');
@@ -665,13 +822,13 @@ function renderEligSummary(allChecked){
   const covered=insurancePlans.filter(plan=>planResult(plan)?.eligible);
   const asOf=insurancePlans[0].check.at.split(' · ')[0];
   const rows=[
-    [found.length?'warn':'ok','Insurance list is complete',found.length?`Other insurance found on ${found.map(plan=>plan.name).join(', ')}. Add it or resolve it before moving on.`:`No other primary or secondary insurance detected as of ${asOf}.`],
+    found.length&&['info','Payer mentions another plan',found.length?`${found.map(plan=>plan.name).join(', ')} ${found.length===1?'mentions':'mention'} another active plan (${found.map(plan=>plan.otherCoverage.name).join(', ')}). Make sure it’s in the list if the patient still has it.`:`No other primary or secondary insurance detected as of ${asOf}.`],
     [inactive.length?'bad':'ok','Coverage is active',inactive.length?`${inactive.map(plan=>plan.name).join(', ')} ${inactive.length===1?'is':'are'} inactive.`:`All ${n===1?'plan is':`${n} plans are`} active and not expired${ends.length?` · earliest expiry ${ends[0].text}`:''}.`],
     [covered.length?'ok':'bad',`Eligible for ${type}`,covered.length?`${covered.length} of ${n} ${n===1?'plan covers':'plans cover'} ${type}.`:`No plan covers ${type}.`]
-  ];
-  const good=rows.every(row=>row[0]==='ok');
+  ].filter(Boolean);
+  const good=rows.every(row=>row[0]==='ok'||row[0]==='info');
   box.className=`elig-summary ${good?'is-ok':'is-warn'}`;
-  box.innerHTML=`<header><span class="step-num ${good?'done':''}">${good?'<i data-lucide="check"></i>':'3'}</span><strong>${good?'Insurance information is correct':'Insurance needs attention'}</strong></header><ul>${rows.map(([kind,title,detail])=>`<li class="${kind}"><i data-lucide="${kind==='ok'?'circle-check':kind==='warn'?'triangle-alert':'circle-x'}"></i><span><b>${title}</b>${detail}</span></li>`).join('')}</ul>`;
+  box.innerHTML=`<header><span class="step-num ${good?'done':''}">${good?'<i data-lucide="check"></i>':'2'}</span><strong>${good?'Insurance information is correct':'Insurance needs attention'}</strong></header><ul>${rows.map(([kind,title,detail])=>`<li class="${kind}"><i data-lucide="${kind==='ok'?'circle-check':kind==='info'?'info':kind==='warn'?'triangle-alert':'circle-x'}"></i><span><b>${title}</b>${detail}</span></li>`).join('')}</ul>`;
 }
 // Guess the service type from the prescribed HCPCS codes: equipment and supply codes (A, E, K, L) mean DME.
 function suggestedService(){
@@ -679,15 +836,18 @@ function suggestedService(){
   return codes.some(code=>/^[AEKL]\d/i.test(code))?'DME':'Clinical Services';
 }
 function renderServiceSuggest(allChecked){
-  const suggested=suggestedService(),label=suggested==='DME'?'DME':'clinical';
-  $('#serviceSuggestText').innerHTML=`<b>Based on the prescription, we think this is a ${label} order.</b> Which service type should we check eligibility for?`;
+  // AI pre-selects the service type from the prescribed items; a quiet tag says so, or offers it back if the user changed it.
+  const suggested=suggestedService();
+  $('#serviceSuggestAi').innerHTML=state.serviceType===suggested
+    ?`<i data-lucide="sparkles"></i> AI suggested from the prescription`
+    :`<button class="text-btn" data-use-suggested><i data-lucide="sparkles"></i> Use AI suggestion (${suggested})</button>`;
 }
 
 async function checkEligibility(){
   state.checkingEligibility=true;renderEligibility();
   await wait(900);
   state.checkingEligibility=false;
-  const at=nowStamp();insurancePlans.forEach(plan=>{plan.check={service:state.serviceType,at};});
+  const at=nowStamp();insurancePlans.forEach(plan=>{plan.check={service:state.serviceType,at};plan.checkedServices={...plan.checkedServices,[state.serviceType]:at};});
   renderInsurance();
   const covered=insurancePlans.filter(plan=>planResult(plan).eligible).length;
   const found=insurancePlans.filter(plan=>plan.otherCoverage).length;
@@ -698,7 +858,7 @@ async function checkPlanEligibility(){
   const plan=insurancePlans[state.currentPlan];
   state.checkingPlan=true;renderInsurance();
   await wait(900);
-  state.checkingPlan=false;plan.check={service:state.serviceType,at:nowStamp()};
+  state.checkingPlan=false;plan.check={service:state.serviceType,at:nowStamp()};plan.checkedServices={...plan.checkedServices,[state.serviceType]:plan.check.at};
   renderInsurance();
   toast(`${plan.name}: ${planStatus(plan)==='active'?'active':'inactive'} · ${state.serviceType} ${planResult(plan).eligible?'covered':'not covered'}${plan.otherCoverage?' · other insurance found':''}`);
 }
@@ -711,13 +871,14 @@ function renderServiceMenu(){
 function issueCount(){ return [state.mobile,state.provider,state.product,state.physicianName,state.signature,state.authAck].filter(value=>!value).length; }
 function reviewItems(){
   return [
-    !state.plansConfirmed&&{id:'coverageConfirm',label:'Confirm all insurance plans',detail:'Make sure no primary or secondary plan is missing',section:'Insurance information',severity:'missing',tag:'Required'},
-    insurancePlans.some(plan=>plan.check&&plan.otherCoverage&&!plan.otherCoverage.resolved)&&{id:'insurance-section',label:'Other insurance found',detail:state.onHold?'Intake on hold · waiting for the patient’s plan':'Add it, or mark it not available',section:'Insurance information',severity:'missing',tag:'Required'},
-    !insurancePlans.every(plan=>plan.check?.service===suggestedService())&&{id:'insurance-section',label:'Check insurance eligibility',detail:`Not checked for ${suggestedService()} on every plan`,section:'Insurance information',severity:'missing',tag:'Required'},
+    // Eligibility checks are optional, so an unchecked plan is not a review item.
     !state.mobile&&{id:'mobileField',label:'Mobile phone number',detail:'Digits look blurry',section:'Contact information',severity:'warning'},
     !state.provider&&{id:'providerField',label:'Ordering physician',detail:'Not found in the NPI registry · search to add',section:'Prescription 1',severity:'missing'},
     !state.product&&{id:'rx-rx1-item-1',label:'Medicare coverage for E0601',detail:'Choose the policy that applies',section:'Prescription 1',severity:'missing',tag:'Select'}
-  ].filter(Boolean).concat(requiredFieldGaps(),manualGaps());
+  ].filter(Boolean).concat(
+    [...(state.extractingDocs||new Map()).entries()].map(([key,name])=>({id:'documentViewer',label:`Extracting ${name}`,detail:'Reading the document and adding its info',section:'Documents',severity:'missing',loading:true,key})),
+    (state.newInfo||[]).map(item=>({id:item.target,label:`New info from ${item.file}`,detail:item.detail,section:'Documents',severity:'missing',newInfoKey:item.key})),
+    requiredFieldGaps(),manualGaps());
 }
 // Manual intake: the prescription is typed in, so the essentials are required review items.
 function manualGaps(){
@@ -742,7 +903,9 @@ function requiredFieldGaps(){
       const label=(cell.querySelector('.cell-label,span')?.childNodes[0]?.textContent||'Field').trim();
       if(!cell.id)cell.id=`req-${sel.slice(1)}-${i}`;
       const select=cell.querySelector('select,input'),value=select?select.value.trim():(cell.querySelector('strong')?.textContent||'').trim();
-      const empty=!value||value==='—';
+      const typing=cell.contains(document.activeElement)&&document.activeElement.tagName!=='SELECT'&&cell.dataset.committed!==value;
+      const empty=!value||value==='—'||typing;
+      if(!typing)cell.dataset.committed=value;
       cell.classList.toggle('field-error',empty&&!select);
       cell.classList.toggle('done',Boolean(select)&&!empty);
       let msg=cell.querySelector('.field-error-msg');
@@ -754,9 +917,11 @@ function requiredFieldGaps(){
   });
   return gaps;
 }
-document.addEventListener('input',event=>{if(event.target.closest?.('[data-editable]')&&event.target.closest('#demographics-section,#contact-section'))updateProgress();});
+// Required fields count as done when the user finishes entering them (leaves the field or presses Enter), not on every keystroke.
+document.addEventListener('focusout',event=>{if(event.target.closest?.('[data-editable]')&&event.target.closest('#demographics-section,#contact-section'))updateProgress();});
 document.addEventListener('change',event=>{if(event.target.id==='genderInput')updateProgress();});
-document.addEventListener('input',event=>{if(event.target.id==='mobileInput')updateProgress();});
+document.addEventListener('focusout',event=>{if(event.target.id==='mobileInput')updateProgress();});
+document.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches?.('#mobileInput,#demographics-section [data-editable],#contact-section [data-editable]')){event.preventDefault();event.target.blur();}});
 
 // "Your intake is mostly done" banner: says what's left and opens the left review panel.
 // Review notice in the page header: a short title, one line of guidance and one action.
@@ -765,10 +930,16 @@ const requiredHint='Almost there. Finish these to unlock the next action.';
 function renderGuidance(){
   const box=$('#reviewGuidance');if(!box)return;
   const required=reviewItems().filter(item=>item.severity==='missing').length;
-  box.className=`header-notice ${required?'is-required':'is-clear'}`;
+  const extracting=state.extractingDocs?.size||0;
+  if(extracting){
+    box.className='header-notice is-extracting';
+    box.innerHTML=`<span class="notice-icon"><span class="spinner"></span></span><span class="notice-copy"><strong>Extracting ${extracting===1?[...state.extractingDocs.values()][0]:`${extracting} documents`}</strong><small>The intake is back in draft until you review what’s new.</small></span>`;
+    return;
+  }
+  box.className=`header-notice ${required?'is-required':'is-clear'}${!required&&state.justCompleted?' notice-enter':''}`;
   box.innerHTML=required
     ?`<span class="notice-icon"><i data-lucide="list-checks"></i><b>${required}</b></span><span class="notice-copy"><strong>${requiredTitle(required)}</strong><small>${requiredHint}</small></span><button type="button" class="notice-btn" data-guidance-review>Review Now <i data-lucide="arrow-right"></i></button>`
-    :`<span class="notice-icon"><i data-lucide="check"></i></span><span class="notice-copy"><strong>All required items reviewed</strong><small>Nice work. You can move on to the next action.</small></span><button type="button" class="notice-btn" data-guidance-next>Next Action <i data-lucide="arrow-right"></i></button>`;
+    :`<span class="notice-icon"><i data-lucide="check"></i></span><span class="notice-copy"><strong>Intake complete</strong><small>Everything required is in place.</small></span><button type="button" class="notice-btn" data-guidance-next>See next steps <i data-lucide="arrow-right"></i></button>`;
   icons();
 }
 document.addEventListener('click',event=>{
@@ -777,24 +948,26 @@ document.addEventListener('click',event=>{
 });
 
 const refreshNoticeHtml=()=>`<div class="refresh-notice"><i data-lucide="refresh-cw"></i><span><b>There may be new updates</b><small>Your changes can affect the next action.</small></span><button type="button" class="footer-btn" data-refresh-next><i data-lucide="sparkles"></i> Refresh Next Action</button></div>`;
+// When changes may affect the next action, the system refreshes it on its own (no "Refresh" prompt).
 function renderNextStatus(){
   const box=$('#nextStatus');if(!box||state.refreshingNext)return;
-  box.innerHTML=state.nextStale?refreshNoticeHtml():'';icons();
+  box.innerHTML='';
+  if(state.nextStale&&!requiredReviewsLeft()&&!state.completing){clearTimeout(renderNextStatus.timer);renderNextStatus.timer=setTimeout(()=>refreshNextAction(true),700);}
 }
 // Refresh: AI re-reads the intake, then the next action pane updates in place.
-async function refreshNextAction(){
+async function refreshNextAction(auto=false){
   if(state.refreshingNext)return;
-  state.refreshingNext=true;setSourceDrawer(true,true);setSideTab('next');
+  state.refreshingNext=true;if(!auto){setSourceDrawer(true,true);setSideTab('next');}
   const panel=$('#nextPanel'),box=$('#nextStatus');panel.classList.add('is-updating');
   const steps=['Reading the updated intake','Checking coverage and existing orders','Choosing the next action'];
   for(const step of steps){
-    box.innerHTML=`<div class="refresh-notice is-working"><span class="spinner"></span><span><b>Updating next action</b><small>${step}…</small></span></div>`;
-    await wait(850);
+    box.innerHTML=`<div class="refresh-notice is-working is-auto"><span class="spinner"></span><span><b>Updating next action</b><small>${step}…</small></span></div>`;
+    await wait(auto?600:850);
   }
   state.refreshingNext=false;state.nextStale=false;panel.classList.remove('is-updating');
   renderPostIntake();renderNextStatus();renderReviewMenu();
   $('#nextPanel .next-action')?.classList.add('just-updated');setTimeout(()=>$('#nextPanel .next-action')?.classList.remove('just-updated'),1600);
-  toast('Next action is up to date. The recommendation hasn’t changed.');
+  if(!auto)toast('Next action is up to date. The recommendation hasn’t changed.');
 }
 document.addEventListener('click',event=>{if(event.target.closest('[data-refresh-next]'))refreshNextAction();});
 document.addEventListener('click',event=>{if(event.target.closest('[data-use-suggested]')){state.serviceType=suggestedService();renderInsurance();}});
@@ -808,20 +981,40 @@ function renderReviewMenu(){
   // Once required review is done, resolving more items can change the recommendation: offer a refresh.
   if(count)state.nextStale=false;
   else if(state.lastOptional!=null&&optional<state.lastOptional&&!state.lastRequired)state.nextStale=true;
+  // Finishing the last required item plays out in two beats instead of snapping:
+  // 1) the required items tick off in place, 2) the "Intake complete" card settles in.
+  if(count)state.completing=null;
+  else if(state.lastRequired>0&&state.phase==='review'&&!state.completing){
+    state.completing={items:state.lastRequiredItems||[]};
+    clearTimeout(state.completeTimer);
+    const quick=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    state.completeTimer=setTimeout(()=>{state.completing=null;state.justCompleted=true;renderReviewMenu();state.justCompleted=false;},quick?500:1300);
+  }
+  if(count)state.lastRequiredItems=required;
   state.lastOptional=optional;state.lastRequired=count;
   $('#reviewTabCount').textContent=total;$('#reviewTabCount').classList.toggle('has-required',count>0);
   const rail=$('#railCount');rail.textContent=total;rail.hidden=!total;rail.classList.toggle('has-required',count>0);
-  $('#reviewPopoverTitle').textContent=count?requiredTitle(count):total?'All required information is complete':'Everything is reviewed';
-  $('#reviewPopoverSub').hidden=!count;$('#reviewPopoverSub').textContent=requiredHint;
-  const row=item=>`<button class="review-item ${item.severity}" data-review-target="${item.id}"><span class="ri-dot" aria-hidden="true"></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span><i class="review-go" data-lucide="chevron-right"></i></button>`;
+  const completing=state.completing;
+  const extractingN=state.extractingDocs?.size||0;
+  $('#reviewPopoverTitle').textContent=extractingN?'Back in draft · extracting new info':count?requiredTitle(count):completing?'All required items done':'Intake complete';
+  $('.review-list-head').style.display=count||completing?'':'none';   // the completion card carries the title
+  $('#reviewPopoverSub').hidden=!count;$('#reviewPopoverSub').textContent=extractingN?'New document info is being added to the intake.':required.every(item=>item.newInfoKey)?'Check what the new document added. Then the intake is complete again.':requiredHint;
+  const row=item=>item.loading
+    ?`<div class="review-item is-loading" aria-live="polite"><span class="spinner" aria-hidden="true"></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span></div>`
+    :`<button class="review-item ${item.severity}${item.newInfoKey?' is-new-info':''}" data-review-target="${item.id}" ${item.newInfoKey?`data-new-info="${item.newInfoKey}"`:''}><span class="ri-dot" aria-hidden="true"></span><span class="review-copy"><b>${item.label}</b><small>${item.detail}</small></span><i class="review-go" data-lucide="chevron-right"></i></button>`;
   const optionalRows=[...warnings,...aiItems.map(item=>({...item,severity:'ai',tag:'AI resolved'}))];
-  const done=`<div class="review-done"><i data-lucide="circle-check"></i><span><b>Required review complete</b><small>${optionalRows.length?'Optional items below are still worth a look.':'Nothing else needs your attention.'}</small></span><button class="footer-btn primary" data-side-tab="next"><i data-lucide="arrow-right"></i> Next Action</button></div>`
-    +(state.nextStale?refreshNoticeHtml():'');
-  $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required</span>${required.map(row).join('')}</div>`:done)
+  // Required review finished: celebrate the finished intake and point straight at what happens next.
+  const plansN=insurancePlans.length,rxN=prescriptions.length;
+  const done=`<div class="review-done intake-ready"><span class="ready-badge"><i data-lucide="check"></i></span><b class="ready-title">Intake complete</b><small class="ready-sub">${plansN} insurance ${plansN===1?'plan':'plans'} · ${rxN} ${rxN===1?'prescription':'prescriptions'}</small><button class="footer-btn primary" data-side-tab="next">See next steps <i data-lucide="arrow-right"></i></button></div>`
+;
+  const doneRow=(item,i)=>`<div class="review-item is-done" style="--i:${i}"><span class="ri-check" aria-hidden="true"><i data-lucide="check"></i></span><span class="review-copy"><b>${item.label}</b><small>Done</small></span></div>`;
+  const ready=state.justCompleted?done.replace('review-done intake-ready','review-done intake-ready is-entering'):done;
+  $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required</span>${required.map(row).join('')}</div>`
+      :completing?`<div class="review-group resolving" aria-live="polite"><span class="review-group-title">Required</span>${completing.items.map(doneRow).join('')}</div>`:ready)
     +(optionalRows.length?`<div class="review-group"><span class="review-group-title">Optional</span>${optionalRows.map(row).join('')}</div>`:'');
   icons();
   syncNextLock();
-  renderGuidance();
+  if(!completing)renderGuidance();   // the header banner changes with the card, not before it
   renderNextStatus();
   document.dispatchEvent(new Event('intake:change'));
 }
@@ -903,6 +1096,7 @@ function addFiles(fileList){
 document.addEventListener('click',event=>{
   const target=event.target.closest('button,[data-doc]');
   if(!target)return;
+  if(target.dataset.previewDoc){previewFile(target.dataset.previewDoc);return;}
   if(target.dataset.removeUpload){
     const index=documents.findIndex(file=>file.id===target.dataset.removeUpload);if(index<0||state.extracting)return;
     const [removed]=documents.splice(index,1);
@@ -967,7 +1161,13 @@ document.addEventListener('click',event=>{
   if(target.dataset.useExisting){
     const file=existingFiles.find(item=>item.id===target.dataset.useExisting);if(!file)return;
     file.used=!file.used;
-    if(file.used&&!file.extracted){file.meta='Extracting for this intake…';renderExistingFiles();setTimeout(()=>{file.extracted=true;file.meta='Extracted for this intake';renderExistingFiles();toast(`${file.name} is ready for this intake`);},900);}else{renderExistingFiles();toast(file.used?`${file.name} added to this intake`:`${file.name} removed from this intake`);}return;
+    if(file.used&&state.phase==='review'){
+      file.meta='Extracting for this intake…';file.processing=true;renderExistingFiles();startExtractingDocs([file]);
+      setTimeout(()=>{file.extracted=true;file.processing=false;file.meta='Extracted for this intake';renderExistingFiles();finishExtractingDocs([file]);toast(`${file.name} extracted. Review what’s new.`);},2200);
+    }else{
+      if(!file.used){state.newInfo=state.newInfo.filter(item=>item.key!==file.id);state.extractingDocs.delete(file.id);renderReviewMenu();}
+      renderExistingFiles();toast(file.used?`${file.name} added to this intake`:`${file.name} removed from this intake`);
+    }return;
   }
   if(target.dataset.patientDetails){const card=$(`#patient-${target.dataset.patientDetails}`),details=card.querySelector('.patient-details'),open=details.hidden;details.hidden=!open;target.setAttribute('aria-expanded',open);target.textContent=open?'Hide Details':'View Details';return;}
   if(target.dataset.linkPatient){
@@ -999,6 +1199,7 @@ document.addEventListener('click',event=>{
   if(target.dataset.jump){document.getElementById(target.dataset.jump).scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(target.dataset.reviewTarget){
     const destination=$(`#${target.dataset.reviewTarget}`),group=destination?.closest('details');if(group)group.open=true;
+    if(target.dataset.newInfo){state.newInfo=state.newInfo.filter(item=>item.key!==target.dataset.newInfo);renderReviewMenu();}
     const aiItem=aiResolvedFields.find(item=>item.id===target.dataset.reviewTarget);
     if(aiItem){state.aiReviewed.add(aiItem.key);renderReviewMenu();}
     if(innerWidth<=1180)setSourceDrawer(false,true);
@@ -1036,13 +1237,17 @@ $('#cancelUpload').addEventListener('click',cancelUpload);
 $('#startExtract').addEventListener('click',startExtraction);
 $('#patientSearchInput').addEventListener('input',()=>{state.pickerPatient='';renderQueuePatients();});
 $('#recordCard').addEventListener('click',event=>{
-  if(event.target.closest('[data-unlink-patient]')){unlinkPatient();return;}
+  if(event.target.closest('[data-unlink-patient]')){confirmUnlinkPatient();return;}
   if(event.target.closest('[data-record-toggle]')){
     const patient=patientDirectory.find(item=>item.id===(state.knownPatient||state.pickerPatient));if(!patient)return;
     state.pickerSelection=state.pickerSelection.size?new Set():new Set(patient.documents.filter(file=>!documents.some(item=>item.id===file.id)).map(file=>file.id));
     renderQueuePatients();return;
   }
   if(event.target.closest('[data-record-add]')){addRecordDocuments();return;}
+  const pick=event.target.closest('[data-record-pick]');
+  if(pick){const [patientId,fileId]=pick.dataset.recordPick.split('|');state.pickerPatient=patientId;state.pickerSelection=new Set([fileId]);addRecordDocuments();return;}
+  const all=event.target.closest('[data-record-all]');
+  if(all){const patient=patientDirectory.find(item=>item.id===all.dataset.recordAll);if(!patient)return;state.pickerPatient=patient.id;state.pickerSelection=new Set(patient.documents.filter(file=>!documents.some(item=>item.id===file.id)).map(file=>file.id));addRecordDocuments();return;}
   const row=event.target.closest('[data-record-patient]');
   if(row){if(state.pickerPatient===row.dataset.recordPatient){state.pickerPatient='';renderQueuePatients();}else openRecordPicker(row.dataset.recordPatient);}
 });
@@ -1132,32 +1337,64 @@ function addDemoUploads(){
 // Files upload one after another. In review they're extracted straight into the intake.
 async function simulateUpload(files){
   const inReview=state.phase==='review';
-  files.forEach(file=>documents.push({...file,meta:'Uploading…',uploading:true,processing:false}));
+  files.forEach(file=>documents.push({...file,meta:'Uploading…',uploading:true,processing:false,uploadedAt:todayLabel()}));
+  if(inReview)startExtractingDocs(files);
   if(!state.selected)state.selected=documents[0].id;
   renderDocuments();renderUploadQueue();
   for(const file of files){
     await wait(450+Math.random()*450);
     const doc=documents.find(item=>item.id===file.id);if(!doc)continue;
     doc.uploading=false;
-    if(inReview){doc.pendingExtract=true;doc.meta='Not extracted yet';}
+    // In review, every uploaded file is extracted straight away; there's no "not extracted" state.
+    if(inReview){doc.pendingExtract=true;doc.processing=true;doc.meta='Extracting…';}
     else doc.meta=`${file.size?`${file.size} · `:''}Ready to extract`;
     renderDocuments();renderUploadQueue();
   }
   if(!files.some(file=>documents.some(item=>item.id===file.id)))return;
+  if(inReview){reextractDocuments();return;}
   toast(`${files.length} ${files.length===1?'document':'documents'} uploaded and ready to extract.`);
 }
 // Re-extract new documents during review. AI may fill a required field; the next action may need a refresh.
+// ---------- Documents added during review (or after the intake was complete) ----------
+// While they extract, the intake goes back to draft and a loader says what's happening.
+// Afterwards each document leaves a required "review what's new" item, so the user confirms the new info.
+state.extractingDocs=state.extractingDocs||new Map();   // id -> file name
+state.newInfo=state.newInfo||[];                         // [{key,file,label,detail,target}]
+function newInfoFor(file){
+  const kind=docCategory(file);
+  if(kind==='Insurance card')return {target:'insurance-section',detail:'Insurance details read from the card · check the insurance section'};
+  if(kind==='Prescription')return {target:'prescriptions',detail:'Prescription details added · check the items and physician'};
+  if(kind==='Photo ID'||kind==='Consent form')return {target:'demographics-section',detail:'Patient details compared with the record'};
+  return {target:'prescriptions',detail:'Clinical details added as supporting documentation'};
+}
+function startExtractingDocs(files){
+  if(state.phase!=='review')return;
+  files.forEach(file=>state.extractingDocs.set(file.id,file.name));
+  renderReviewMenu();
+}
+function finishExtractingDocs(files){
+  files.forEach(file=>{
+    state.extractingDocs.delete(file.id);
+    if(state.phase!=='review')return;
+    state.newInfo=state.newInfo.filter(item=>item.key!==file.id);
+    state.newInfo.push({key:file.id,file:file.name,...newInfoFor(file)});
+  });
+  renderReviewMenu();
+}
 async function reextractDocuments(onlyId){
   const pending=documents.filter(file=>file.pendingExtract&&(!onlyId||file.id===onlyId));if(!pending.length||state.reextracting)return;
   state.reextracting=true;
   pending.forEach(file=>{file.processing=true;file.meta='Extracting…';});renderDocuments();
-  await wait(1800);
+  startExtractingDocs(pending);
+  await wait(2200);
   // With issues, a new file can look like one already on record. Hold it until the user decides.
   const held=window.protoScenario==='issues'?pending.filter(file=>file.dup):[];
   held.forEach(file=>{file.processing=false;file.pendingExtract=false;file.needsDecision=true;file.meta=`${file.dup.kind==='exact'?'Exact copy of':'Similar to'} ${file.dup.existing}`;});
   const done=pending.filter(file=>!held.includes(file));
   done.forEach(file=>{file.processing=false;file.pendingExtract=false;file.meta='Extracted · Added to this intake';});
   state.reextracting=false;
+  held.forEach(file=>state.extractingDocs.delete(file.id));
+  finishExtractingDocs(done);
   if(held.length){renderDocuments();openDupDialog();}
   if(!done.length){renderDocuments();return;}
   const source=done[0].name,wasClear=!requiredReviewsLeft();let filled='';
@@ -1893,7 +2130,7 @@ function restoreProgress(){
   replaceAll(insurancePlans,data.insurancePlans||insurancePlans);replaceAll(prescriptions,data.prescriptions||prescriptions);
   replaceAll(priorAuthList,data.priorAuthList||priorAuthList);Object.assign(receivedDocs,data.receivedDocs||{});
   Object.assign(state,data.state);setFields.forEach(key=>{state[key]=new Set(data.state[key]||[]);});
-  Object.assign(state,{checkingEligibility:false,checkingPlan:false,editingPlan:false,refreshingNext:false,reextracting:false});
+  Object.assign(state,{checkingEligibility:false,checkingPlan:false,editingPlan:false,refreshingNext:false,reextracting:false,extractingDocs:new Map(),completing:null,newInfo:Array.isArray(data.state.newInfo)?data.state.newInfo:[]});
   Object.entries(state.paneWidths||{}).forEach(([name,width])=>setPaneWidth(name,width));
   // Uploads and extraction can't resume mid-way: finished uploads stay, an interrupted extraction is ready to run again.
   documents.forEach(file=>{if(file.uploading||file.processing){file.uploading=false;file.processing=false;file.meta=state.phase==='review'?'Extracted · Added to this intake':'Ready to extract';}});
@@ -1962,7 +2199,7 @@ $('#planList').addEventListener('keydown',event=>{
   $(`[data-plan="${to}"]`)?.focus();
 });
 
-// Add another plan
+// Add insurance
 const formatDate=value=>{if(!value)return '';const [y,m,d]=value.split('-');return `${m}/${d}/${y}`;};
 function openAddPlan(){
   state.pendingOther=null;
@@ -2086,7 +2323,7 @@ $('#prescriptions').addEventListener('change',refreshRxStatus);
   }else if(['review','review-new','review-done','complete','complete-ready','complete-stale'].includes(screen)){
     load();state.extractionComplete=true;state.patientResolved=true;state.patientLinked=true;state.knownPatient='ashlynn';
     setPhase('review');
-    if(screen==='review-new'){[...extraUploadBatches[0],...extraUploadBatches[1]].forEach(file=>documents.push({...file,meta:'Not extracted yet',pendingExtract:true,processing:false}));setViewerTab('files');}
+    if(screen==='review-new'){[...extraUploadBatches[0],...extraUploadBatches[1]].forEach(file=>documents.push({...file,meta:'Extracting…',pendingExtract:true,processing:true,uploadedAt:todayLabel()}));setViewerTab('files');setTimeout(()=>reextractDocuments(),400);}
     if(['review-done','complete-ready','complete-stale'].includes(screen)){
       // Demo: the two required items (gender, ordering physician) are already filled in.
       $('#genderInput').value='Female';if($('#mobileInput'))$('#mobileInput').value='(415) 220-8841';$('#toast').classList.remove('show');

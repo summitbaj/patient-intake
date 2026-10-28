@@ -92,12 +92,12 @@
         <button class="footer-btn primary" id="startExtract" disabled><i data-lucide="sparkles"></i> Extract</button>
       </footer>
     </section>
-    <aside class="source-panel" id="sourcePanel" aria-label="Review list">
+    <aside class="source-panel" id="sourcePanel" aria-label="Actions">
       <div class="viewer-resize review-resize" id="reviewResize" role="separator" aria-orientation="vertical" aria-label="Resize review list"></div>
-      <button class="review-collapsed-tab" id="expandReview" aria-label="Open review list" title="Open review list"><i data-lucide="panel-left-open"></i><span>Review</span><b id="railCount" hidden>0</b></button>
-      <div class="viewer-tabs side-tabs" role="tablist" aria-label="Review sidebar">
-        <button role="tab" id="tabReview" data-side-tab="review" aria-selected="true" aria-controls="reviewList"><i data-lucide="list-checks"></i> Review <b id="reviewTabCount">0</b></button>
-        <button class="icon-btn collapse-btn" id="collapseSources" aria-label="Close review list" title="Close review list"><i data-lucide="panel-left-close"></i></button>
+      <button class="review-collapsed-tab" id="expandReview" aria-label="Open actions" title="Open actions"><i data-lucide="panel-left-open"></i><span>Action</span><b id="railCount" hidden>0</b></button>
+      <div class="viewer-tabs side-tabs" role="tablist" aria-label="Actions sidebar">
+        <button role="tab" id="tabReview" data-side-tab="review" aria-selected="true" aria-controls="reviewList"><i data-lucide="list-checks"></i> Action <b id="reviewTabCount">0</b></button>
+        <button class="icon-btn collapse-btn" id="collapseSources" aria-label="Close actions" title="Close actions"><i data-lucide="panel-left-close"></i></button>
       </div>
       <div class="source-content review-list" id="reviewList" role="tabpanel" aria-labelledby="tabReview">
         <div class="review-list-head"><strong id="reviewPopoverTitle">Items to review</strong><span id="reviewPopoverSub" hidden></span></div>
@@ -123,7 +123,7 @@
         </div>
       </div>
     </aside>
-    <button class="source-scrim" id="sourceScrim" aria-label="Close review list" hidden></button>
+    <button class="source-scrim" id="sourceScrim" aria-label="Close actions" hidden></button>
 
     <section class="review-area" aria-label="AI extraction review">
       <section class="summary-card" id="intakeSummaryCard" aria-labelledby="summaryTitle" hidden><span class="summary-icon"><i data-lucide="sparkles"></i></span><div><span class="eyebrow">AI intake summary</span><h3 id="summaryTitle">New PAP therapy intake</h3><p id="handoffSummary"></p></div></section>
@@ -149,7 +149,7 @@
       <section class="review-card" id="insurance-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span></div>
         <div class="insurance-workspace">
-          <aside class="plan-list" aria-label="Insurance coverage order"><p class="plan-list-head"><span>Coverage order</span><span class="pill info" id="orderSource"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="planList" role="list"></div><div class="order-hint" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add Another Plan</button></aside>
+          <aside class="plan-list" aria-label="Insurance coverage order"><p class="plan-list-head"><span>Coverage order</span><span class="pill info" id="orderSource"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="planList" role="list"></div><div class="order-hint" id="orderNotice"></div><button class="add-plan" id="addPlan"><i data-lucide="plus"></i> Add Insurance</button></aside>
           <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
             <p class="plan-discovered" id="planDiscovered" hidden></p>
             <p class="plan-ai-note" id="planAiNote" hidden></p>
@@ -158,13 +158,14 @@
         </div>
         <div class="coverage-confirm" id="coverageConfirm"></div>
         <div class="service-suggest" id="serviceSuggest">
-          <span class="step-num">2</span>
-          <div class="suggest-copy"><span id="serviceSuggestText"></span><span class="eligibility-meta" id="eligibilityMeta"></span></div>
+          <span class="suggest-label" id="serviceSuggestText">Check eligibility for</span>
           <div class="service-select">
             <span class="sr-only" id="serviceTypeLabel">Service type</span>
             <button class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
             <div class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></div>
           </div>
+          <span class="suggest-ai" id="serviceSuggestAi"></span>
+          <span class="eligibility-meta" id="eligibilityMeta"></span>
           <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check Eligibility</button>
         </div>
         <div class="hold-banner" id="holdBanner" hidden></div>
@@ -296,6 +297,19 @@
     </form>
   </dialog>
 
+  <dialog class="confirm-dialog" id="changePatientDialog" aria-labelledby="changePatientTitle" aria-describedby="changePatientBody">
+    <form method="dialog">
+      <h2 id="changePatientTitle">Change patient?</h2>
+      <p id="changePatientBody"></p>
+      <ul class="change-patient-list" id="changePatientList"></ul>
+      <p class="change-patient-keep" id="changePatientKeep" hidden></p>
+      <div class="confirm-actions">
+        <button class="footer-btn" value="keep" autofocus>Keep patient</button>
+        <button class="footer-btn primary" value="change">Change Patient</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog class="confirm-dialog" id="cancelIntakeDialog" aria-labelledby="cancelIntakeTitle" aria-describedby="cancelIntakeBody">
     <form method="dialog">
       <h2 id="cancelIntakeTitle">Cancel this intake?</h2>
@@ -317,7 +331,7 @@
 
   <dialog class="confirm-dialog add-plan-dialog" id="addPlanDialog" aria-labelledby="addPlanTitle">
     <form id="addPlanForm" novalidate>
-      <header class="response-head"><div><span class="eyebrow">Insurance</span><h2 id="addPlanTitle">Add Another Plan</h2><p>Enter the details from the patient’s insurance card. You can check eligibility after saving.</p></div><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
+      <header class="response-head"><div><span class="eyebrow">Insurance</span><h2 id="addPlanTitle">Add Insurance</h2><p>Enter the details from the patient’s insurance card. You can check eligibility after saving.</p></div><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
 
       <button type="button" class="card-scan" id="scanCard"><i data-lucide="scan-line"></i><span><strong>Upload insurance card</strong><small>AI fills in the fields for you to review</small></span></button>
 
@@ -334,7 +348,7 @@
       </div>
       <p class="form-error" id="addPlanError" hidden>Fill in the required fields marked with *.</p>
       <label class="check-row"><input type="checkbox" name="checkNow" checked> Check eligibility after adding</label>
-      <div class="confirm-actions"><button class="footer-btn" type="button" data-close-add-plan>Cancel</button><button class="footer-btn primary" type="submit">Add Plan</button></div>
+      <div class="confirm-actions"><button class="footer-btn" type="button" data-close-add-plan>Cancel</button><button class="footer-btn primary" type="submit">Add Insurance</button></div>
     </form>
   </dialog>
 

@@ -1758,8 +1758,60 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .file-item .file-main .doc-info strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .us-upload-list .file-item{min-height:56px}
 
-/* Upload dates only make sense once the review screen shows files from different times */
-.workspace:not(.phase-review) .file-date{display:none!important}
+/* File rows: type · Added date, same on the upload screen and in the review Files panel */
+.file-item .file-meta-row{display:flex;gap:2px 6px}
+.file-item .file-meta-row .file-type{display:inline;font-size:12px;color:var(--text)}
+.file-meta-row .file-date{font-size:12px;color:var(--muted)}
+.file-meta-row .file-type+.file-date::before{content:"·";margin-right:2px;color:var(--muted)}
+
+/* Add / Remove: quiet text buttons, not pills */
+.file-item .use-existing:not(.extract-one){height:28px;padding:0 8px;border:0;border-radius:var(--fluent-corner-2);background:transparent;color:var(--muted);font-weight:500;gap:4px;box-shadow:none}
+.file-item .use-existing:not(.extract-one):hover{background:var(--sunken);color:var(--text)}
+.file-item .use-existing:not(.extract-one):not(.on){color:var(--primary)}
+.file-item .use-existing:not(.extract-one):not(.on):hover{background:var(--blue-soft)}
+.file-list.grid .file-item .use-existing:not(.extract-one){background:var(--white)}
+
+/* Upload screen: preview icon + action at the end of each row */
+.file-item .file-actions{display:inline-flex;align-items:center;gap:2px}
+.file-item .row-preview{width:28px;height:28px;border:0;border-radius:var(--fluent-corner-2);background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .12s}
+.file-item:hover .row-preview,.file-item:focus-within .row-preview{opacity:1}
+.file-item .row-preview:hover{background:var(--sunken);color:var(--text)}
+.file-item .row-preview .lucide{width:15px;height:15px}
+.file-item .file-main[disabled]{cursor:default}
+@media (hover:none){.file-item .row-preview{opacity:1}}
+.us-record-files{gap:var(--space-3)}
+
+/* Patient's file (right): added rows step back so what's left to add stands out */
+.us-record-files .file-item.in-intake{background:var(--sunken);border-color:transparent}
+.us-record-files .file-item.in-intake .doc-info strong{color:var(--muted)}
+.file-item .use-existing.added-toggle{color:var(--green)}
+.file-item .use-existing.added-toggle .when-hover{display:none}
+.file-item .use-existing.added-toggle:hover,.file-item .use-existing.added-toggle:focus-visible{color:var(--text);background:var(--white)}
+.file-item .use-existing.added-toggle:hover .when-added,.file-item .use-existing.added-toggle:focus-visible .when-added{display:none}
+.file-item .use-existing.added-toggle:hover .when-hover,.file-item .use-existing.added-toggle:focus-visible .when-hover{display:inline-flex}
+.added-toggle>span{display:inline-flex;align-items:center;gap:4px}
+.added-toggle .lucide{width:12px;height:12px}
+.us-all-added{display:inline-flex;align-items:center;gap:4px;color:var(--green)!important;font-weight:600}
+.us-all-added .lucide{width:14px;height:14px}
+
+/* Change patient confirmation: list exactly which documents leave the intake */
+#changePatientDialog p#changePatientBody{margin:0 0 16px}
+.change-patient-list{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:240px;overflow:auto}
+.change-patient-list li{display:grid;grid-template-columns:32px minmax(0,1fr);align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--fluent-corner-2);background:var(--white,#fff)}
+.change-patient-list .format-badge{width:32px;height:32px;display:grid;place-items:center;border-radius:var(--fluent-corner-2);font-size:10px;font-weight:600;letter-spacing:.04em}
+.change-patient-list span:not(.format-badge){display:grid;gap:2px;min-width:0;line-height:1.3}
+.change-patient-list strong{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.change-patient-list small{font-size:12px;color:var(--muted)}
+#changePatientDialog p.change-patient-keep{margin:12px 0 0;font-size:13px;color:var(--muted)}
+#changePatientDialog .confirm-actions{margin-top:24px}
+
+/* In this intake (left): empty state while a patient is linked but nothing is added yet */
+.us-intake-empty{display:flex;align-items:center;gap:12px;padding:16px;border:1px dashed var(--line);border-radius:var(--fluent-corner-2);color:var(--muted)}
+.us-intake-empty>.lucide{width:20px;height:20px;flex:none}
+.us-intake-empty span{display:grid;gap:2px}
+.us-intake-empty strong{font-size:13px;font-weight:600;color:var(--text)}
+.us-intake-empty small{font-size:12px}
+.us-docs-foot .footer-btn .lucide{width:14px;height:14px}
 
 /* Insurance steps: confirm the plan list, verify, then read the result */
 .step-num{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:#fff;font-size:12px;font-weight:600}
@@ -1802,3 +1854,123 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .review-card .card-header>div{gap:8px}
 .review-card .card-header .section-icon{width:28px;height:28px;flex:none}
 .review-card .card-header .lucide{width:14px;height:14px}
+/* Insurance plan cards: quiet extras (new plan, AI-resolved fields, "Why primary?") */
+.plan-tag-new{display:inline-flex;align-items:center;padding:0 6px;border:1px solid var(--line);border-radius:999px;font-size:11px;font-weight:600;line-height:16px;color:var(--muted);background:var(--white)}
+.insurance-workspace .plan-ai-fix{display:flex;align-items:center;gap:4px;font-size:11px;line-height:1.3;color:var(--ai,var(--primary))}
+.plan-ai-fix .lucide{width:11px;height:11px;flex:none}
+.plan-item .plan-pills{display:flex!important;flex-wrap:wrap;align-items:center;gap:6px}
+.plan-item .plan-why-btn{display:inline-grid!important;place-items:center;width:20px;height:20px;margin-left:-2px;border-radius:50%;color:var(--muted);cursor:pointer}
+.plan-item .plan-why-btn:hover,.plan-item .plan-why-btn[aria-expanded=true]{background:var(--sunken);color:var(--primary)}
+.plan-item .plan-why-btn:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.plan-item .plan-why-btn .lucide{width:14px;height:14px}
+.plan-why-pop{width:min(300px,calc(100vw - 24px))}
+.plan-detail-head span.cov-checked.is-quiet{font-size:12px;color:var(--muted);font-style:italic}
+.ins-field.ai-fixed>span{display:flex;align-items:center;gap:6px}
+.ins-field .ai-chip{text-transform:none;letter-spacing:0;cursor:help}
+.order-hint .subtle-link{display:inline-flex;align-items:center;gap:3px;color:var(--muted)}
+.order-hint .subtle-link:hover{color:var(--primary)}
+.order-hint .subtle-link .lucide{width:12px;height:12px}
+.on-file-list{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
+.on-file-list li{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--fluent-corner-2)}
+.on-file-list li>span:last-child{display:grid}
+.on-file-list strong{font-size:14px;color:var(--ink)}
+.on-file-list small{font-size:12px;color:var(--muted)}
+.on-file-note{margin:0 0 10px!important;font-size:13px;color:var(--muted)}
+.plan-detail-head .plan-title-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.plan-detail-head .plan-source{display:inline-flex;align-items:center;gap:4px;padding:0;font-size:12px}
+.plan-detail-head .plan-source .lucide{width:13px;height:13px}
+.plan-detail-head .plan-source[hidden]{display:none}
+/* Other insurance mentioned by the payer: an informational note, no actions */
+.plan-discovered{background:var(--blue-wash,var(--sunken));box-shadow:inset 0 0 0 1px var(--line);color:var(--text);line-height:1.45}
+.plan-discovered>.lucide{color:var(--primary);align-self:flex-start;margin-top:2px}
+.plan-discovered b{display:inline;font-weight:600}
+.elig-summary li.info .lucide{color:var(--primary)}
+.plan-discovered .text-btn{padding:0;font-size:13px;white-space:nowrap}
+#serviceSuggestText{display:inline-flex;align-items:center;gap:6px}
+#serviceSuggestText .lucide{width:14px;height:14px;color:var(--ai,var(--primary))}
+#serviceSuggestText b{font-weight:600}
+
+/* Service type row: label · select · AI tag · button, wraps cleanly on narrow screens */
+.service-suggest{row-gap:10px}
+.service-suggest .suggest-label{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap}
+.service-suggest .suggest-ai{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);white-space:nowrap}
+.service-suggest .suggest-ai .lucide{width:13px;height:13px;color:var(--ai,var(--primary))}
+.service-suggest .suggest-ai .text-btn{display:inline-flex;align-items:center;gap:5px;padding:0;font-size:12px}
+.service-suggest .eligibility-meta:empty{display:none}
+.service-suggest #checkEligibility{margin-left:auto}
+#insurance-section{container-type:inline-size;container-name:ins}
+@container ins (max-width:560px){
+  .service-suggest .suggest-label{flex-basis:100%}
+  .service-suggest .service-select{flex:1;min-width:160px}
+  .service-suggest .service-trigger{width:100%}
+  .service-suggest .suggest-ai{order:5;flex-basis:100%}
+  .service-suggest #checkEligibility{margin-left:0}
+}
+
+/* Insurance fields: label and "AI resolved" + info, same pattern as demographics */
+.ins-field>.ins-label{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.ins-field .ai-chip{text-transform:none;letter-spacing:0;white-space:nowrap}
+.ins-field .ai-info{width:16px;height:16px}
+.ins-field .ai-info .lucide{width:12px;height:12px}
+.insurance-fields>label.ins-field{min-width:0}
+.insurance-fields .ins-input{min-width:0;width:100%;text-overflow:ellipsis}
+@container ins (max-width:760px){.insurance-workspace{grid-template-columns:200px minmax(0,1fr)}.insurance-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container ins (max-width:600px){
+  .insurance-workspace{grid-template-columns:1fr}
+  .insurance-workspace .plan-list{border-right:0;border-bottom:1px solid var(--line)}
+  .plan-list #planList{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+  .plan-list .plan-row{min-width:0!important}
+}
+.plan-why-pop .why-current{display:block;margin-top:6px;font-size:12px;color:var(--muted)}
+
+/* Intake complete: a calm finish, then one clear next step */
+.review-done.intake-ready{display:grid;grid-template-columns:1fr;justify-items:center;gap:4px;margin:var(--space-3) var(--space-3) var(--space-6);padding:20px 16px;text-align:center;background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0}
+.intake-ready .ready-badge{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--green-soft);color:var(--green);margin-bottom:6px;animation:ready-pop .35s cubic-bezier(.2,.8,.3,1.3)}
+.intake-ready .ready-badge .lucide{width:20px;height:20px;stroke-width:2.5}
+.intake-ready .ready-title{font-size:15px!important;color:var(--ink)!important}
+.intake-ready .ready-sub{font-size:12px!important;color:var(--muted)!important;margin:0!important}
+.intake-ready .footer-btn{width:100%;margin-top:14px;gap:8px}
+@keyframes ready-pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.intake-ready .ready-badge{animation:none}}
+.cov-strip{flex-wrap:wrap}
+/* "AI resolved" tag and its info icon always stay together on one line */
+.ins-field .ins-ai{display:inline-flex;align-items:center;gap:2px;white-space:nowrap;flex:none}
+
+/* Draft → complete: required items tick off, then the completion card settles in */
+.review-group.resolving .review-item.is-done{cursor:default;display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;gap:10px;padding:10px 12px;border-radius:var(--fluent-corner-2);background:transparent;animation:done-row .45s ease both;animation-delay:calc(var(--i,0) * 140ms)}
+.review-item.is-done .ri-check{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:var(--green);color:#fff;animation:check-in .35s cubic-bezier(.2,.8,.3,1.4) both;animation-delay:calc(var(--i,0) * 140ms + 120ms)}
+.review-item.is-done .ri-check .lucide{width:12px;height:12px;stroke-width:3}
+.review-item.is-done b{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
+.review-item.is-done small{color:var(--green)!important;font-weight:600}
+@keyframes done-row{from{background:var(--red-soft,#fdecec)}to{background:transparent}}
+@keyframes check-in{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+.intake-ready.is-entering{animation:ready-in .55s cubic-bezier(.2,.7,.2,1) both}
+.intake-ready.is-entering .ready-badge{position:relative;animation:ready-pop .5s .12s cubic-bezier(.2,.8,.3,1.3) both}
+.intake-ready.is-entering .ready-badge::after{content:"";position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 35%,transparent);animation:ready-ring .9s .3s ease-out both}
+.intake-ready.is-entering .ready-title{animation:fade-up .4s .25s ease both}
+.intake-ready.is-entering .ready-sub{animation:fade-up .4s .35s ease both}
+.intake-ready.is-entering .footer-btn{animation:fade-up .4s .5s ease both}
+@keyframes ready-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes ready-ring{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 35%,transparent)}to{box-shadow:0 0 0 14px transparent}}
+@keyframes fade-up{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.header-notice.notice-enter{animation:fade-up .45s .2s ease both}
+@media (prefers-reduced-motion:reduce){
+  .review-group.resolving .review-item.is-done,.review-item.is-done .ri-check,.intake-ready.is-entering,.intake-ready.is-entering *,.intake-ready.is-entering .ready-badge::after,.header-notice.notice-enter{animation:none!important}
+}
+.enter-late{animation:fade-up .5s .6s ease both}
+@media (prefers-reduced-motion:reduce){.enter-late{animation:none}}
+
+/* Documents added during review: loader row, then a "new info" item to confirm */
+.review-item.is-loading{display:grid;grid-template-columns:16px minmax(0,1fr);align-items:center;gap:10px;padding:10px 12px;border-radius:var(--fluent-corner-2);background:var(--blue-wash,var(--sunken));cursor:default;position:relative;overflow:hidden}
+.review-item.is-loading .spinner{width:14px;height:14px}
+.review-item.is-loading::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:40%;background:var(--primary);animation:extract-bar 1.2s ease-in-out infinite}
+@keyframes extract-bar{from{transform:translateX(-100%)}to{transform:translateX(260%)}}
+.review-item.is-new-info .ri-dot{background:var(--primary)!important}
+.header-notice.is-extracting{animation:fade-up .3s ease both}
+.header-notice.is-extracting .notice-icon .spinner{width:16px;height:16px}
+@media (prefers-reduced-motion:reduce){.review-item.is-loading::after{animation:none;width:100%;opacity:.4}}
+/* Next action refreshes itself: a quiet inline status, no prompt */
+.refresh-notice.is-auto{background:transparent;border:0;padding:6px 2px;box-shadow:none}
+.refresh-notice.is-auto b{font-size:12px}
+.refresh-notice.is-auto small{font-size:12px}

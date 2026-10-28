@@ -71,7 +71,30 @@ function cardsFor(ri){
   cards.forEach(c=>{c.actionable=['new','refill','add'].includes(c.kind);c.done=c.actionable&&c.entries.every(ordered);});
   return cards;
 }
-const allCards=()=>intake.prescriptions.flatMap((rx,ri)=>cardsFor(ri));
+// Cards across all prescriptions, in one list: things to do first (new orders, refills, adds), then info cards.
+const kindOrder={new:0,refill:1,add:2,hold:3,skip:4};
+const allCards=()=>intake.prescriptions.flatMap((rx,ri)=>cardsFor(ri)).sort((a,b)=>kindOrder[a.kind]-kindOrder[b.kind]||a.ri-b.ri);
+// A small label that says which prescription an item or card came from (instead of grouping by prescription).
+const rxTag=ri=>{const rx=intake.prescriptions[ri];const last=(rx.physician||'').split(' ').pop();return `<span class="ful-rx-tag" title="${esc(rx.title)}${rx.physician?` · Dr. ${esc(rx.physician)}`:''}">Rx ${ri+1}${last?` · Dr. ${esc(last)}`:''}</span>`;};
+// What happens to one item, in plain words, including any link to an existing order.
+function itemFate(entry){
+  const c=choice(entry),order=c.target&&c.route!=='new'?api.orderById(c.target):null;
+  if(ordered(entry))return {cls:'done',icon:'circle-check',label:c.route==='refill'?`Refilled · ${c.target}`:c.route==='add'?`Added to ${c.target}`:'Ordered',note:''};
+  if(c.route==='refill')return {cls:'refill',icon:'refresh-cw',label:order?`Refill · ${order.id}`:'Refill',note:order?`${order.title} · due now`:'Due on more than one order · pick one below'};
+  if(c.route==='add')return {cls:'add',icon:'list-plus',label:order?`Add to ${order.id}`:'Add to an order',note:order?`${order.title} · not shipped yet`:''};
+  if(c.route==='hold'){const m=api.codesOf(entry.item).flatMap(code=>api.lineMatches(code)).find(x=>x.order.editable);return {cls:'hold',icon:'copy-check',label:m?`Already on ${m.order.id}`:'Already ordered',note:m?`${m.order.title} · ${m.order.statusNote}`:''};}
+  if(c.route==='skip')return {cls:'skip',icon:'pause',label:'Not ordering now',note:''};
+  // New order: still mention a related existing order (e.g. on file but not due yet).
+  const related=api.codesOf(entry.item).flatMap(code=>api.lineMatches(code))[0];
+  return {cls:'new',icon:'file-plus',label:'New order',note:related?entry.suggested.why:''};
+}
+function itemsOverview(){
+  const rows=items.map(entry=>{
+    const f=itemFate(entry),s=itemStatus(entry),pc=s&&s!=='pass'?`<span class="section-status ${statusPill[s][0]} ful-pc"><i data-lucide="${statusPill[s][1]}"></i> ${statusPill[s][2]}</span>`:'';
+    return `<li class="ful-ov-row"><div class="ful-ov-item"><b>${esc(entry.item.name)}</b><small>${api.codesOf(entry.item).join(', ')||'No HCPCS code'}</small></div>${rxTag(entry.ri)}<div class="ful-ov-fate ${f.cls}"><span class="ful-fate"><i data-lucide="${f.icon}"></i> ${esc(f.label)}</span>${f.note?`<small>${esc(f.note)}</small>`:''}${pc}</div></li>`;
+  }).join('');
+  return `<section class="ful-card ful-overview"><header class="ful-ov-head"><b>Items in this intake</b><small>${plural(items.length,'item')} from ${plural(intake.prescriptions.length,'prescription')}</small></header><ul class="ful-ov">${rows}</ul></section>`;
+}
 
 // The Move choices for one item, shown only after the user clicks Move.
 function moveChoices(entry,cards){
@@ -89,18 +112,19 @@ function itemRow(entry,cards,card){
   const s=itemStatus(entry),pill=s&&s!=='pass'?`<span class="section-status ${statusPill[s][0]} ful-pc"><i data-lucide="${statusPill[s][1]}"></i> ${statusPill[s][2]}</span>`:'';
   const codes=api.codesOf(entry.item).join(', ')||'No HCPCS code';
   const holdNote=card.kind==='hold'?(()=>{const m=api.codesOf(entry.item).flatMap(code=>api.lineMatches(code)).find(x=>x.order.editable);return m?`<small class="ful-note">On ${m.order.id} · ${esc(m.order.title)} · ${esc(m.order.statusNote)}</small>`:'';})():'';
+  const related=card.kind==='new'&&api.codesOf(entry.item).some(code=>api.lineMatches(code).length)?`<small class="ful-note"><i data-lucide="link-2"></i> ${esc(entry.suggested.why)}</small>`:'';
   const canMove=!ordered(entry)&&!card.done;
-  return `<li class="ful-item"><div class="ful-item-main"><span class="ful-item-name">${esc(entry.item.name)}</span><span class="ful-item-codes">${codes}</span>${pill}${holdNote}</div>${canMove?`<button type="button" class="ful-move" data-move="${entry.key}" aria-expanded="${moving===entry.key}">${card.kind==='hold'?'Order anyway':card.kind==='skip'?'Undo':'Move'}</button>`:''}${moving===entry.key?moveChoices(entry,cards):''}</li>`;
+  return `<li class="ful-item"><div class="ful-item-main"><span class="ful-item-name">${esc(entry.item.name)}</span><span class="ful-item-codes">${codes}</span>${pill}${holdNote}${related}</div>${canMove?`<button type="button" class="ful-move" data-move="${entry.key}" aria-expanded="${moving===entry.key}">${card.kind==='hold'?'Order anyway':card.kind==='skip'?'Undo':'Move'}</button>`:''}${moving===entry.key?moveChoices(entry,cards):''}</li>`;
 }
 // Plain-language copy per card.
 function cardCopy(card){
   const order=card.target&&card.kind!=='new'?api.orderById(card.target):null;
-  if(card.kind==='new')return {icon:'file-plus',title:card.label,sub:card.entries.length>1?`These ${card.entries.length} items go on one new order.`:'This item goes on a new order.',button:'Create Order'};
-  if(card.kind==='refill'&&!card.target)return {icon:'refresh-cw',title:'Refill',sub:'This item can be refilled on more than one order. Pick one.',button:'Open Refill'};
-  if(card.kind==='refill')return {icon:'refresh-cw',title:`Refill ${order.id}`,sub:`Already on ${order.id} (${order.title}) and due now.`,button:'Open Refill'};
-  if(card.kind==='add')return {icon:'list-plus',title:`Add to ${order.id}`,sub:`${order.id} hasn’t shipped yet. These items will be added to it.`,button:'Open Order'};
-  if(card.kind==='hold')return {icon:'copy-check',title:'Already ordered',sub:'These are already on an order that hasn’t shipped. They won’t be ordered again. Nothing to do.'};
-  return {icon:'pause',title:'Not ordering now',sub:'These stay on the intake. You can order them later.'};
+  if(card.kind==='new')return {icon:'file-plus',title:card.label,sub:card.entries.length>1?`${card.entries.length} items on one new order`:'1 item on a new order',button:'Create order'};
+  if(card.kind==='refill'&&!card.target)return {icon:'refresh-cw',title:'Refill',sub:'Due on more than one order · pick one',button:'Open refill'};
+  if(card.kind==='refill')return {icon:'refresh-cw',title:`Refill ${order.id}`,sub:`${order.title} · due now`,button:'Open refill'};
+  if(card.kind==='add')return {icon:'list-plus',title:`Add to ${order.id}`,sub:`${order.title} · not shipped yet`,button:'Open order'};
+  if(card.kind==='hold')return {icon:'copy-check',title:'Already ordered',sub:'On an order that hasn’t shipped · nothing to do'};
+  return {icon:'pause',title:'Not ordering now',sub:'Stays on the intake · order it later'};
 }
 function cardHtml(card,cards,step,isNext){
   const copy=cardCopy(card);
@@ -112,7 +136,7 @@ function cardHtml(card,cards,step,isNext){
   const order=card.target&&card.kind!=='new'&&card.kind!=='hold'?api.orderById(card.target):null;
   const physician=order&&card.entries[0].rx.physician&&order.physician&&order.physician!==card.entries[0].rx.physician?`<p class="ful-warn"><i data-lucide="triangle-alert"></i> Prescribed by Dr. ${esc(card.entries[0].rx.physician)}, but ${order.id} is under Dr. ${esc(order.physician)}.</p>`:'';
   return `<article class="ful-card ful-${card.kind} ${card.done?'done':''}">
-    <header class="ful-head">${card.actionable?`<span class="ful-step">${card.done?'<i data-lucide="check"></i>':step}</span>`:`<span class="ful-step info"><i data-lucide="${copy.icon}"></i></span>`}<div class="ful-title"><b>${copy.title}</b><small>${copy.sub}</small></div>${action}</header>
+    <header class="ful-head"><span class="ful-icon ${card.done?'done':card.kind}"><i data-lucide="${card.done?'check':copy.icon}"></i></span><div class="ful-title"><b>${copy.title} ${rxTag(card.ri)}</b><small>${copy.sub}</small></div>${action}</header>
     <ul class="ful-items">${card.entries.map(e=>itemRow(e,cards,card)).join('')}</ul>${pick}${physician}
   </article>`;
 }
@@ -134,20 +158,19 @@ function render(){
   const count=k=>cards.filter(c=>c.kind===k).length;
   const summary=[[count('new'),'new order'],[count('refill'),'refill'],[count('add'),'add to an order'],[count('hold'),'already ordered']].filter(([n])=>n).map(([n,w])=>w==='already ordered'||w==='add to an order'?`${n} ${w}`:plural(n,w)).join(' · ');
   $('#poPatient').textContent=`From intake #${intake.id}${precheckStatus?'':' · pre-check not run'}`;
-  $('#poLead').innerHTML=`<b>What will happen:</b> ${summary||'Nothing to order'}. Finish each card below.`;
+  $('#poLead').innerHTML=summary?`${[[count('new'),'new order','file-plus','new'],[count('refill'),'refill','refresh-cw','refill'],[count('add'),'add to an order','list-plus','add'],[count('hold'),'already ordered','copy-check','hold']].filter(([n])=>n).map(([n,w,ic,k])=>`<span class="ful-sum ${k}"><i data-lucide="${ic}"></i> ${w==='already ordered'||w==='add to an order'?`${n} ${w}`:plural(n,w)}</span>`).join('')}`:'Nothing to order';
   const next=todo.find(c=>c.target)||null;let step=0;
-  const rxHtml=intake.prescriptions.map((rx,ri)=>{
-    const list=cardsFor(ri);
-    return `<section class="ful-rx"><h2>${esc(rx.title)} <span>${rx.physician?`Dr. ${esc(rx.physician)}`:''}</span></h2>${list.map(c=>cardHtml(c,list,c.actionable?++step:0,next&&c.id===next.id)).join('')}</section>`;
-  }).join('');
+  const done=cards.filter(c=>c.actionable&&c.done).length,actionable=cards.filter(c=>c.actionable).length;
+  const listHead=`<header class="ful-list-head"><div><h2>Items in this intake</h2><small>${plural(items.length,'item')} from ${plural(intake.prescriptions.length,'prescription')}</small></div>${actionable?`<span class="ful-progress"><b>${done} of ${actionable}</b> done<span class="ful-progress-bar"><span style="width:${Math.round(done/actionable*100)}%"></span></span></span>`:''}</header>`;
+  const rxHtml=`<section class="ful-list">${listHead}${cards.map(c=>cardHtml(c,cardsFor(c.ri),0,next&&c.id===next.id)).join('')}</section>`;
   const services=recommendedServices();
-  const apptHtml=services.length?`<section class="ful-rx"><h2>Recommended services <span>Optional · based on this intake</span></h2><div class="ful-card ful-services"><ul class="ful-svc">${services.map(s=>{const booked=plan.appts[s.id];return `<li><i data-lucide="${booked?'circle-check':'sparkles'}" class="${booked?'ok':''}"></i><div><b>${s.name}</b><small>${booked?`Scheduled · ${esc(booked)}`:s.why}</small></div>${booked?'':`<button type="button" class="ful-move" data-appt="${s.id}">Schedule</button>`}</li>`;}).join('')}</ul></div></section>`:'';
+  const apptHtml=services.length?`<section class="ful-list ful-svc-wrap"><header class="ful-list-head"><div><h2>Recommended services</h2><small>Optional · based on this intake</small></div></header><div class="ful-card ful-services"><ul class="ful-svc">${services.map(s=>{const booked=plan.appts[s.id];return `<li><i data-lucide="${booked?'circle-check':'sparkles'}" class="${booked?'ok':''}"></i><div><b>${s.name}</b><small>${booked?`Scheduled · ${esc(booked)}`:s.why}</small></div>${booked?'':`<button type="button" class="ful-move" data-appt="${s.id}">Schedule</button>`}</li>`;}).join('')}</ul></div></section>`:'';
   $('#poBody').innerHTML=rxHtml+apptHtml;
   const left=todo.length,all=left===0;
   $('#poStatus').className=`pk-footer-status ${all?'done':'todo'}`;
   $('#poStatus').innerHTML=all
     ?'<span class="pk-status-icon"><i data-lucide="check"></i></span><span><b>All done</b><span class="v2-next">Orders and refills are in Signetic</span></span>'
-    :`<span class="pk-status-icon"><i data-lucide="list-checks"></i></span><span><b>${plural(left,'step')} left</b><span class="v2-next">Finish each card to complete fulfillment</span></span>`;
+    :`<span class="pk-status-icon"><i data-lucide="list-checks"></i></span><span><b>${left} to do</b><span class="v2-next">Create the orders and refills above</span></span>`;
   $('#poActions').innerHTML='';
   icons();
 }

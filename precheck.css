@@ -434,3 +434,51 @@ a.footer-btn{text-decoration:none}
 @media(max-width:560px){.pc-rows>div{grid-template-columns:1fr;gap:2px}}
 .pr-nocode{display:flex;align-items:center;gap:6px;margin:2px 0 6px;font-size:12px;color:var(--muted)}
 .pr-nocode .lucide{width:13px;height:13px}
+
+/* Payer coverage: primary and secondary blocks, network from the eligibility response */
+.pc-payer+.pc-payer{margin-top:var(--space-4)}
+.pc-net{display:inline-flex;align-items:center;gap:4px;font-weight:600}
+.pc-net.ok{color:var(--green)}
+.pc-net.bad{color:var(--red)}
+/* Quantity limits by payer */
+.pc-qty{border:1px solid var(--line);border-radius:var(--fluent-corner-2)}
+.pc-qty dt{display:grid;gap:1px}
+.pc-qty dt small,.pc-src small{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.pc-qty dt{color:var(--text)!important;font-weight:600}
+.pc-ai-tag{margin-left:6px;font-size:11px}
+/* Criteria source per payer */
+.pc-src{list-style:none;margin:0 0 8px;padding:0;display:grid;gap:6px}
+.pc-src li{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 12px;padding:8px 12px;border:1px solid var(--line);border-radius:var(--fluent-corner-2);font-size:13px}
+.pc-src li>span{display:grid;font-weight:600}
+.pc-src em{font-style:normal;color:var(--text)}
+.pc-src em.pc-src-rec{color:var(--amber)}
+.pc-ref-note{display:flex;align-items:flex-start;gap:8px;margin:0 0 var(--space-6)!important;padding:8px 12px;border-radius:var(--fluent-corner-2);background:var(--blue-wash,var(--sunken));font-size:13px;line-height:1.45;color:var(--text)}
+.pc-ref-note .lucide{width:14px;height:14px;flex:none;margin-top:2px;color:var(--primary)}
+
+/* Medical criteria: primary payer's criteria and Medicare's criteria as two labeled blocks */
+.pc-crit-block{border:1px solid var(--line);border-radius:var(--fluent-corner-2);margin:0 0 var(--space-6);overflow:hidden}
+.pc-crit-block>header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.pc-crit-block.payer>header{background:var(--blue-wash,var(--sunken));box-shadow:inset 3px 0 var(--primary)}
+.pc-crit-block.medicare>header{background:var(--fluent-neutral-lighter-alt,var(--sunken));box-shadow:inset 3px 0 var(--muted)}
+.pc-crit-block>:not(header){margin-left:14px;margin-right:14px}
+.pc-crit-block>h5:first-of-type{margin-top:12px}
+.pc-crit-block>.pc-lcd{margin-bottom:12px!important}
+.pc-crit-src{display:flex;align-items:center;gap:10px;min-width:0}
+.pc-crit-src>.lucide{width:18px;height:18px;flex:none;color:var(--primary)}
+.pc-crit-block.medicare .pc-crit-src>.lucide{color:var(--muted)}
+.pc-crit-src>span{display:grid}
+.pc-crit-src b{font-size:14px;color:var(--ink)}
+.pc-crit-src small{font-size:12px;color:var(--muted)}
+.pc-crit-tag{font-style:normal;font-size:11px;font-weight:600;padding:2px 9px;border-radius:999px;white-space:nowrap}
+.pc-crit-tag.applies{background:var(--green-soft);color:var(--green)}
+.pc-crit-tag.ref{background:var(--white);color:var(--muted);border:1px solid var(--line)}
+.pc-crit-tag.none{background:var(--amber-soft);color:var(--amber)}
+.pc-crit-empty{margin:12px 14px!important;font-size:13px;line-height:1.5;color:var(--text)}
+details.pc-crit-block>summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px;padding:10px 14px;list-style:none;cursor:pointer;background:var(--fluent-neutral-lighter-alt,var(--sunken));box-shadow:inset 3px 0 var(--muted)}
+details.pc-crit-block>summary::-webkit-details-marker{display:none}
+details.pc-crit-block>summary .pc-crit-tag{margin-left:auto}
+details.pc-crit-block .pc-crit-chev{width:16px;height:16px;color:var(--muted);transition:transform .15s}
+details.pc-crit-block[open] .pc-crit-chev{transform:rotate(180deg)}
+details.pc-crit-block[open]>summary{border-bottom:1px solid var(--line)}
+details.pc-crit-block>:not(summary){margin-left:14px;margin-right:14px}
+details.pc-crit-block>h5:first-of-type{margin-top:12px}
