@@ -62,8 +62,8 @@
   --fluent-focus-border:var(--fluent-neutral-secondary);
   --fluent-link:var(--fluent-theme-primary);
   --fluent-link-hovered:var(--fluent-theme-darker);
-  --fluent-input-border:var(--fluent-neutral-secondary);
-  --fluent-input-border-hovered:var(--fluent-neutral-primary);
+  --fluent-input-border:var(--fluent-neutral-tertiary-alt); /* light grey (gray60) */
+  --fluent-input-border-hovered:var(--fluent-neutral-secondary-alt); /* a step darker on hover */
   --fluent-input-focus-border:var(--fluent-theme-primary);
   --fluent-input-placeholder:var(--fluent-neutral-secondary);
   --fluent-button-border:var(--fluent-neutral-secondary-alt);

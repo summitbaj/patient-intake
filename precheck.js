@@ -269,7 +269,7 @@ const happy=window.protoScenario==='happy';
 function evaluate(line,rx,item){
   const code=line.code,checks=[];
   const physicianOk=Boolean(rx.npi);
-  const icdList=(rx.icd||[]).map(c=>`<li><i data-lucide="check"></i><b>${c.code}</b> ${esc(c.description)}${c.primary?' <em>Primary</em>':''}</li>`).join('');
+  const icdList=(rx.icd||[]).map(c=>`<li><i data-lucide="check"></i>${c.primary?'<span class="rank-primary icon-only" role="img" aria-label="Primary" title="Primary"><i data-lucide="star"></i></span> ':''}<b>${c.code}</b> ${esc(c.description)}</li>`).join('');
   // 1. Medical criteria: each LCD criterion with its status and the evidence found in the intake documents.
   checks.push(medicalCheck(code,icdList));
   // 2. Quantity & frequency come from the prescribed product, only when the prescription states them.

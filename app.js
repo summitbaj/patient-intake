@@ -1599,7 +1599,7 @@ $('#prescriptions').addEventListener('click',event=>{const b=event.target.closes
 document.addEventListener('mousedown',event=>{$$('.phys-results:not([hidden])').forEach(box=>{if(!box.closest('form').contains(event.target))box.hidden=true;});});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')$$('.phys-results:not([hidden])').forEach(box=>box.hidden=true);});
 function icdHtml(rx){
-  return `<div class="code-list">${rx.icd.map((item,i)=>`<span class="code-chip"><b>${item.code}</b><span>${item.description}</span>${item.primary?'<em>Primary</em>':''}<button type="button" class="chip-remove" data-remove-icd="${rx.id}" data-index="${i}" aria-label="Remove ${item.code}" title="Remove"><i data-lucide="x"></i></button></span>`).join('')||'<span class="empty-note">No ICD-10 codes yet</span>'}</div>
+  return `<div class="code-list">${rx.icd.map((item,i)=>`<span class="code-chip">${item.primary?'<span class="rank-primary icon-only" role="img" aria-label="Primary" title="Primary"><i data-lucide="star"></i></span>':''}<b>${item.code}</b><span>${item.description}</span><button type="button" class="chip-remove" data-remove-icd="${rx.id}" data-index="${i}" aria-label="Remove ${item.code}" title="Remove"><i data-lucide="x"></i></button></span>`).join('')||'<span class="empty-note">No ICD-10 codes yet</span>'}</div>
     <form class="inline-add" data-add-icd="${rx.id}"><input class="input" name="code" list="icdOptions" placeholder="ICD-10 code or diagnosis" aria-label="Add ICD-10 code" autocomplete="off"><button class="small-btn" type="submit"><i data-lucide="plus"></i> Add ICD-10 Code</button></form>`;
 }
 // Bundle vs single item: decided by AI unless the user changed the item's codes.
@@ -1673,7 +1673,7 @@ function noteHtml(rx){
   const unsigned=n.source&&!n.signed?`<div class="note-message"><i data-lucide="info"></i><span><b>Physician signature not found</b> The note doesn’t appear to be signed. This doesn’t block the intake.</span><button class="source-link" data-doc="${n.docId}"><i data-lucide="scan-text"></i> ${n.source} · ${n.signaturePage||n.page}</button></div>`:'';
   return `<details class="data-group rx-note" open><summary><span>Physician note</span>${status}<i data-lucide="chevron-down"></i></summary>
     ${unsigned}
-    <div class="note-body"><label class="note-label" for="note-${rx.id}">Clinical note${n.source?` <span class="note-from">· extracted from ${n.source}</span>`:''}</label><textarea class="input note-input" id="note-${rx.id}" data-rx-note="${rx.id}" rows="4" placeholder="Add the physician’s clinical note for this prescription">${n.text}</textarea>${n.source?`<button class="source-link" data-doc="${n.docId}"><i data-lucide="scan-text"></i> ${n.source} · ${n.page}</button>`:''}</div>
+    <div class="note-body"><textarea class="input note-input" id="note-${rx.id}" data-rx-note="${rx.id}" rows="4" placeholder="Add the physician’s clinical note for this prescription">${n.text}</textarea><div class="note-foot"><label class="note-label" for="note-${rx.id}">Clinical note${n.source?` <span class="note-from">· extracted from ${n.source}</span>`:''}</label>${n.source?`<button class="source-link" data-doc="${n.docId}"><i data-lucide="scan-text"></i> ${n.source} · ${n.page}</button>`:''}</div></div>
   </details>`;
 }
 function rxSectionHtml(rx,index){
@@ -1951,7 +1951,7 @@ const priorAuthList=[
 function paCardHtml(pa){
   return `<article class="pa-card" id="pa-${pa.id}">
     <header class="pa-head"><span class="hcpcs-badge">${pa.code}</span><div><strong>${hcpcsCatalog[pa.code]||'HCPCS '+pa.code}</strong><small>${pa.number} · ${pa.payer}</small></div>${pa.added?'<span class="pill neutral">Added by you</span>':''}<button type="button" class="icon-btn trash-btn" data-remove-pa="${pa.id}" aria-label="Remove prior authorization" title="Remove"><i data-lucide="trash-2"></i></button></header>
-    <div class="compact-fields"><div><span>Prior authorization number</span><strong>${pa.number}</strong></div><div><span>Payer</span><strong>${pa.payer}</strong></div><div><span>Effective date</span><strong>${pa.from||'—'} – ${pa.to||'—'}</strong></div><div><span>Quantity/Amount</span><strong>${pa.qty||'—'}</strong></div><div class="wide"><span>Dispensing frequency</span><strong>${pa.frequency||'—'}</strong></div></div>
+    <div class="compact-fields"><div><span>Prior authorization number</span><strong>${pa.number}</strong></div><div><span>Payer</span><strong>${pa.payer}</strong></div><div><span>Effective date</span><strong>${pa.from||'—'} – ${pa.to||'—'}</strong></div><div><span>Quantity/Amount</span><strong>${pa.qty||'—'}</strong></div><div class="pa-freq"><span>Dispensing frequency</span><strong>${pa.frequency||'—'}</strong></div></div>
   </article>`;
 }
 function syncPriorAuthMeta(){

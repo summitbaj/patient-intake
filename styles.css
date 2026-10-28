@@ -617,6 +617,8 @@ body.nav-collapsed .nav-toggle{justify-content:center;padding:0}
 .add-prescription{display:flex;align-items:center;justify-content:center;gap:var(--space-3);width:100%;margin:0 0 var(--space-8);padding:var(--space-6);border:1px dashed var(--line-strong);border-radius:var(--fluent-corner-2);background:var(--white);color:var(--primary);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .add-prescription:hover{border-color:var(--primary);background:var(--blue-soft)}
 .add-prescription .lucide{width:15px;height:15px}
+.add-prescription[hidden]{display:none}
+.pa-add .add-prescription{margin:0}   /* Add Prior Authorization: same dashed button, inside its card */
 .item-docs .required-doc:last-child{border-bottom:0}
 .item-docs{margin-bottom:var(--space-6)}
 .required-doc.missing>.lucide{color:var(--amber)}
@@ -681,6 +683,7 @@ body.nav-collapsed .nav-toggle{justify-content:center;padding:0}
 .pa-head .icon-btn{width:28px;height:28px}
 .pa-head .icon-btn .lucide{width:14px;height:14px}
 .pa-card .compact-fields .wide{grid-column:1/-1}
+.pa-card .compact-fields .pa-freq{grid-column:span 2}   /* sits next to Quantity/Amount and fills the row */
 .pa-card .field-grid{border-top:1px solid var(--fluent-neutral-lighter)}
 .pa-add{padding:var(--space-6) var(--space-8) var(--space-8)}
 .pa-add .text-btn{display:inline-flex;align-items:center;gap:4px;font-size:14px}
@@ -2032,3 +2035,32 @@ dialog.confirm-dialog #manualPick .modal-sub,dialog.confirm-dialog .pc-ec .modal
 /* Plan card after an eligibility check: status and checked types on their own line, as one group */
 .insurance-workspace .plan-item .plan-coverage{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px}
 .insurance-workspace .plan-item .plan-coverage .pill{display:inline-flex}
+
+/* Eligibility response modal: no row lines, 12px between rows and between blocks; "Other insurance found" on light grey */
+#eligibilityDialog .response-list{row-gap:12px;column-gap:16px;margin:0;border:0}
+#eligibilityDialog .response-list>div{padding:0;border:0}
+#eligibilityDialog .response-status,#eligibilityDialog .response-other{margin:0 0 12px}
+#eligibilityDialog .response-other{padding:12px;background:var(--sunken);box-shadow:none;border:0}
+#eligibilityDialog .response-other header{margin-bottom:12px}
+#eligibilityDialog .response-other header .lucide{color:var(--muted)}
+#eligibilityDialog .response-other p{margin-top:12px}
+
+/* Prescription: 12px vertical rhythm inside Ordering physician and ICD-10 codes */
+.rx-card .phys-block{padding:0 16px 12px;gap:12px}
+.rx-card .phys-card{padding:12px 16px;gap:12px}
+.rx-card .phys-grid{row-gap:12px}
+.rx-card [data-icd]{padding:0 16px 12px}
+.rx-card [data-icd] .code-list{padding:0;row-gap:12px}
+.rx-card [data-icd] .inline-add{margin:12px 0 0;padding:0}
+
+/* Primary marker: orange star + grey label, same as the Primary insurance plan (used on ICD-10 codes) */
+.rank-primary{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:400;font-style:normal;color:var(--muted);white-space:nowrap}
+.rank-primary .lucide{width:14px;height:14px;flex:none;color:#f7630c;fill:currentColor}
+/* Expanded prescription groups start right under their summary */
+.rx-card .ai-kind-note{margin-top:0}
+.rx-card .note-body{padding-top:0}
+/* Physician note: "Clinical note · extracted from …" and the source link sit under the text area */
+.rx-card .note-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px}
+.rx-card .note-foot .source-link{padding:0}
+.rx-card textarea.note-input{padding:8px}
+.rank-primary.icon-only{gap:0;cursor:default}
