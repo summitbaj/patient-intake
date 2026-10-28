@@ -403,9 +403,7 @@ const minorWords=new Set(['a','an','the','and','or','to','of','in','on','for','b
 function buttonCase(text){return text.split(' ').map((word,i)=>i&&minorWords.has(word)?word:word.split('-').map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join('-')).join(' ');}
 function renderPostIntake(){
   const recommendation=postIntakeRecommendation;
-  $('#handoffPatient').textContent=recommendation.patient;
   const summary=buildIntakeSummary();
-  $('#handoffContext').textContent=summary.context;
   $('#summaryTitle').textContent=summary.title;
   $('#handoffSummary').textContent=summary.lead;
   $('#nextActionTitle').textContent=recommendation.action;
@@ -1019,13 +1017,16 @@ function renderReviewMenu(){
   const optionalRows=[...warnings,...aiItems.map(item=>({...item,severity:'ai',tag:'AI resolved'}))];
   // Required review finished: celebrate the finished intake and point straight at what happens next.
   const plansN=insurancePlans.length,rxN=prescriptions.length;
-  const done=`<div class="review-done intake-ready"><span class="ready-badge"><i data-lucide="check"></i></span><b class="ready-title">Intake complete</b><small class="ready-sub">${plansN} insurance ${plansN===1?'plan':'plans'} · ${rxN} ${rxN===1?'prescription':'prescriptions'}</small><button class="footer-btn primary" data-side-tab="next">See next steps <i data-lucide="arrow-right"></i></button></div>`
+  const done=`<div class="review-done intake-ready"><span class="ready-badge"><i data-lucide="check"></i></span><b class="ready-title">Intake complete</b><small class="ready-sub">${plansN} insurance ${plansN===1?'plan':'plans'} · ${rxN} ${rxN===1?'prescription':'prescriptions'}</small></div>`
 ;
   const doneRow=(item,i)=>`<div class="review-item is-done" style="--i:${i}"><span class="ri-check" aria-hidden="true"><i data-lucide="check"></i></span><span class="review-copy"><b>${item.label}</b><small>Done</small></span></div>`;
   const ready=state.justCompleted?done.replace('review-done intake-ready','review-done intake-ready is-entering'):done;
+  // The next-action panel sits right under "Intake complete"; park it outside the list while the list re-renders.
+  const nextPanel=$('#nextPanel');if(nextPanel)$('#reviewList').appendChild(nextPanel);
   $('#reviewItems').innerHTML=(count?`<div class="review-group"><span class="review-group-title">Required</span>${required.map(row).join('')}</div>`
       :completing?`<div class="review-group resolving" aria-live="polite"><span class="review-group-title">Required</span>${completing.items.map(doneRow).join('')}</div>`:ready)
-    +(optionalRows.length?`<div class="review-group"><span class="review-group-title">Optional</span>${optionalRows.map(row).join('')}</div>`:'');
+    +(optionalRows.length?`<div class="review-group is-optional"><span class="review-group-title">Optional</span>${optionalRows.map(row).join('')}</div>`:'');
+  const readyCard=$('#reviewItems .intake-ready');if(readyCard&&nextPanel)readyCard.after(nextPanel);
   icons();
   syncNextLock();
   if(!completing)renderGuidance();   // the header banner changes with the card, not before it

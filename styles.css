@@ -1960,7 +1960,6 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .intake-ready .ready-badge .lucide{width:20px;height:20px;stroke-width:2.5}
 .intake-ready .ready-title{font-size:15px!important;color:var(--ink)!important}
 .intake-ready .ready-sub{font-size:12px!important;color:var(--muted)!important;margin:0!important}
-.intake-ready .footer-btn{width:100%;margin-top:14px;gap:8px}
 @keyframes ready-pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 @media (prefers-reduced-motion:reduce){.intake-ready .ready-badge{animation:none}}
 .cov-strip{flex-wrap:wrap}
@@ -2064,3 +2063,19 @@ dialog.confirm-dialog #manualPick .modal-sub,dialog.confirm-dialog .pc-ec .modal
 .rx-card .note-foot .source-link{padding:0}
 .rx-card textarea.note-input{padding:8px}
 .rank-primary.icon-only{gap:0;cursor:default}
+
+/* Confirm before we upload the intake: 16px body, both steps sit flat on the body (no card border) */
+#resolveDialog .modal-body.extraction-issues{padding:16px}
+#resolveDialog .extraction-issues .extraction-issue,#resolveDialog .extraction-issues #documentIssue.is-locked{border:0;padding:0;background:transparent}
+#resolveDialog .extraction-issues .issue-title{margin-top:20px}
+
+/* Action panel once complete: no line under "Intake complete"; the Optional list starts under its own top border */
+.review-done.intake-ready{border-bottom:0}
+#reviewItems>.next-panel{border-top:0;margin-top:0}
+#reviewItems>.review-group.is-optional:not(:first-child){margin-top:var(--space-6);padding-top:var(--space-4);border-top:1px solid var(--line)}
+.review-done.intake-ready{margin-bottom:0}
+.next-panel{padding-left:6px!important;padding-right:6px!important}
+.next-panel{padding-top:0!important}
+#reviewItems>.review-group.is-optional:not(:first-child){margin-top:0;padding-top:0}
+/* Optional section's top border runs the full width of the panel; its rows stay aligned with the rest */
+#reviewItems>.review-group.is-optional:not(:first-child){margin-left:calc(-1 * var(--space-4));margin-right:calc(-1 * var(--space-4));padding-left:var(--space-4);padding-right:var(--space-4)}
