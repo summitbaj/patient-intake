@@ -348,11 +348,13 @@
       aria-labelledby="cancelOrderTitle"
     >
       <form method="dialog">
-        <h2 id="cancelOrderTitle">Cancel this order?</h2>
-        <p>
-          The order will be cancelled. The completed patient intake stays as it
-          is.
-        </p>
+        <header class="modal-head"><h2 id="cancelOrderTitle">Cancel this order?</h2></header>
+        <div class="modal-body">
+          <p>
+            The order will be cancelled. The completed patient intake stays as
+            it is.
+          </p>
+        </div>
         <div class="confirm-actions">
           <button class="footer-btn" value="keep" autofocus>Keep Order</button
           ><button class="footer-btn danger" value="cancel">

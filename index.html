@@ -242,6 +242,7 @@
         </section>
         <section class="viewer-preview" id="viewerPreview" role="tabpanel" aria-labelledby="tabPreview" hidden>
           <div class="preview-toolbar"><button class="text-btn back-to-files" id="backToFiles"><i data-lucide="arrow-left"></i> Files</button><div><i data-lucide="file-text"></i><span id="previewName">Referral.pdf</span><small id="previewMeta">Page 1 of 2</small></div><button class="icon-btn" id="openFullView" aria-label="Open in full screen" title="Full screen"><i data-lucide="maximize-2"></i></button></div>
+          <div class="card-sides" id="cardSides" role="group" aria-label="Card side" hidden><button type="button" data-card-side="front" aria-pressed="true">Front</button><button type="button" data-card-side="back" aria-pressed="false">Back</button></div>
           <div class="preview-empty"><i data-lucide="file-search"></i><strong>No file to preview</strong><span>Upload documents, then select one to see it here.</span></div>
           <div class="paper document-image-stage" id="paperPreview"><div class="doc-frame"><img id="documentImage" src="assets/referral.svg" alt="Referral document preview"><span class="doc-highlight" id="docHighlight" hidden></span></div></div>
         </section>
@@ -255,24 +256,26 @@
   </div>
 
   <dialog class="confirm-dialog resolve-dialog" id="resolveDialog" aria-labelledby="resolveTitle">
-    <div class="resolve-head"><span class="ai-label"><i data-lucide="sparkles"></i> Extraction complete</span><h2 id="resolveTitle">Confirm before we upload the intake</h2></div>
-    <div class="extraction-issues" id="extractionIssues"><section class="extraction-issue" id="patientIssue"><div class="issue-title"><span class="issue-number">1</span><div><strong>Which patient is this?</strong><span>Choose one record, or create a new one.</span></div><b>Required</b></div><div id="extractionPatientMatches"></div><button class="create-new-patient" data-extract-new-patient><i data-lucide="user-plus"></i><span><strong>None of these</strong><small>Create a new patient record</small></span><i data-lucide="chevron-right"></i></button></section><section class="extraction-issue" id="documentIssue"><div class="issue-title"><span class="issue-number" id="documentIssueNumber">2</span><div><strong>What should we do with similar documents?</strong><span id="documentIssueHint">Decide how to store the same and similar documents.</span></div><b>Required</b></div><div id="extractionDocumentMatches"></div></section><div class="extraction-waiting" id="extractionWaiting" hidden></div></div>
+    <header class="modal-head"><h2 id="resolveTitle">Confirm before we upload the intake</h2></header>
+    <div class="extraction-issues modal-body" id="extractionIssues"><section class="extraction-issue" id="patientIssue"><div class="issue-title"><span class="issue-number">1</span><div><strong>Which patient is this?</strong><span>Choose one record, or create a new one.</span></div><b>Required</b></div><div id="extractionPatientMatches"></div><button class="create-new-patient" data-extract-new-patient><i data-lucide="user-plus"></i><span><strong>None of these</strong><small>Create a new patient record</small></span><i data-lucide="chevron-right"></i></button></section><section class="extraction-issue" id="documentIssue"><div class="issue-title"><span class="issue-number" id="documentIssueNumber">2</span><div><strong>What should we do with similar documents?</strong><span id="documentIssueHint">Decide how to store the same and similar documents.</span></div><b>Required</b></div><div id="extractionDocumentMatches"></div></section><div class="extraction-waiting" id="extractionWaiting" hidden></div></div>
   </dialog>
 
   <dialog class="confirm-dialog resolve-dialog" id="dupDialog" aria-labelledby="dupTitle">
-    <div class="resolve-head"><span class="ai-label"><i data-lucide="sparkles"></i> Extraction complete</span><h2 id="dupTitle">Confirm how to store this document</h2></div>
-    <div class="extraction-issues single-step"><section class="extraction-issue"><div class="issue-title"><div><strong>Similar documents found</strong><span>Decide how to store each one.</span></div><b>Required</b></div><div id="dupList"></div></section></div>
+    <header class="modal-head"><h2 id="dupTitle">Confirm how to store this document</h2></header>
+    <div class="extraction-issues single-step modal-body"><section class="extraction-issue"><div class="issue-title"><div><strong>Similar documents found</strong><span>Decide how to store each one.</span></div><b>Required</b></div><div id="dupList"></div></section></div>
   </dialog>
 
   <dialog class="confirm-dialog manual-dialog" id="manualDialog" aria-labelledby="manualDialogTitle">
     <div class="manual-wrap">
-      <header class="manual-head"><div><h2 id="manualDialogTitle">Enter intake manually</h2><p>Pick the patient. Their details and insurance come from Signetic. You type the prescription.</p></div><button class="icon-btn" type="button" data-close-manual aria-label="Close"><i data-lucide="x"></i></button></header>
-      <div id="manualPick">
+      <header class="modal-head"><h2 id="manualDialogTitle">Enter intake manually</h2><button class="icon-btn" type="button" data-close-manual aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="modal-body" id="manualPick">
+        <p class="modal-sub">Pick the patient. Their details and insurance come from Signetic. You type the prescription.</p>
         <label class="us-search manual-search"><i data-lucide="search"></i><input id="manualSearch" type="text" placeholder="Search by name, date of birth or MRN" aria-label="Search patients" autocomplete="off"></label>
         <div class="manual-list" id="manualList" role="list"></div>
         <button class="manual-new" type="button" id="manualNewBtn"><i data-lucide="user-plus"></i> New patient · not in Signetic yet</button>
       </div>
       <form id="manualNewForm" class="manual-new-form" hidden>
+        <div class="modal-body">
         <p class="manual-sub">New patient</p>
         <div class="manual-grid">
           <label>First name *<input class="input" name="first" required autocomplete="off"></label>
@@ -282,14 +285,17 @@
           <label>Mobile number<input class="input" name="phone" placeholder="(000) 000-0000" autocomplete="off"></label>
         </div>
         <p class="manual-error" id="manualError" hidden>Fill in the fields marked with *.</p>
-        <div class="manual-actions"><button class="footer-btn" type="button" id="manualBack">Back</button><button class="footer-btn primary" type="submit">Start intake</button></div>
+        </div>
+        <div class="manual-actions confirm-actions"><button class="footer-btn" type="button" id="manualBack">Back</button><button class="footer-btn primary" type="submit">Start intake</button></div>
       </form>
     </div>
   </dialog>
   <dialog class="confirm-dialog" id="gateDialog" aria-labelledby="gateTitle" aria-describedby="gateBody">
     <form method="dialog">
-      <h2 id="gateTitle">Finish the required review first</h2>
+      <header class="modal-head"><h2 id="gateTitle">Finish the required review first</h2></header>
+      <div class="modal-body">
       <p id="gateBody">You can only do this once you finish all the mandatory reviews.</p>
+      </div>
       <div class="confirm-actions">
         <button class="footer-btn" value="close">Close</button>
         <button class="footer-btn primary" value="review" autofocus>Go to Review</button>
@@ -299,10 +305,12 @@
 
   <dialog class="confirm-dialog" id="changePatientDialog" aria-labelledby="changePatientTitle" aria-describedby="changePatientBody">
     <form method="dialog">
-      <h2 id="changePatientTitle">Change patient?</h2>
+      <header class="modal-head"><h2 id="changePatientTitle">Change patient?</h2></header>
+      <div class="modal-body">
       <p id="changePatientBody"></p>
       <ul class="change-patient-list" id="changePatientList"></ul>
       <p class="change-patient-keep" id="changePatientKeep" hidden></p>
+      </div>
       <div class="confirm-actions">
         <button class="footer-btn" value="keep" autofocus>Keep patient</button>
         <button class="footer-btn primary" value="change">Change Patient</button>
@@ -312,8 +320,10 @@
 
   <dialog class="confirm-dialog" id="cancelIntakeDialog" aria-labelledby="cancelIntakeTitle" aria-describedby="cancelIntakeBody">
     <form method="dialog">
-      <h2 id="cancelIntakeTitle">Cancel this intake?</h2>
+      <header class="modal-head"><h2 id="cancelIntakeTitle">Cancel this intake?</h2></header>
+      <div class="modal-body">
       <p id="cancelIntakeBody">All extracted information and any changes you made will be discarded. A cancelled intake can’t be resumed later. To try again, you’ll need to start a new intake.</p>
+      </div>
       <div class="confirm-actions">
         <button class="footer-btn" value="keep" autofocus>Keep working</button>
         <button class="footer-btn danger" value="cancel">Cancel Intake</button>
@@ -323,15 +333,17 @@
 
   <dialog class="confirm-dialog response-dialog" id="eligibilityDialog" aria-labelledby="eligibilityDialogTitle">
     <form method="dialog">
-      <header class="response-head"><div><span class="eyebrow">Eligibility response</span><h2 id="eligibilityDialogTitle"></h2><p id="eligibilityDialogMeta"></p></div><button class="icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
-      <div id="eligibilityDialogBody"></div>
+      <header class="modal-head"><h2 id="eligibilityDialogTitle"></h2><button class="icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="modal-body"><p class="modal-sub" id="eligibilityDialogMeta"></p><div id="eligibilityDialogBody"></div></div>
       <div class="confirm-actions"><button class="footer-btn" value="close">Close</button></div>
     </form>
   </dialog>
 
   <dialog class="confirm-dialog add-plan-dialog" id="addPlanDialog" aria-labelledby="addPlanTitle">
     <form id="addPlanForm" novalidate>
-      <header class="response-head"><div><span class="eyebrow">Insurance</span><h2 id="addPlanTitle">Add Insurance</h2><p>Enter the details from the patient’s insurance card. You can check eligibility after saving.</p></div><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
+      <header class="modal-head"><h2 id="addPlanTitle">Add Insurance</h2><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="modal-body">
+      <p class="modal-sub">Enter the details from the patient’s insurance card. You can check eligibility after saving.</p>
 
       <button type="button" class="card-scan" id="scanCard"><i data-lucide="scan-line"></i><span><strong>Upload insurance card</strong><small>AI fills in the fields for you to review</small></span></button>
 
@@ -348,14 +360,15 @@
       </div>
       <p class="form-error" id="addPlanError" hidden>Fill in the required fields marked with *.</p>
       <label class="check-row"><input type="checkbox" name="checkNow" checked> Check eligibility after adding</label>
+      </div>
       <div class="confirm-actions"><button class="footer-btn" type="button" data-close-add-plan>Cancel</button><button class="footer-btn primary" type="submit">Add Insurance</button></div>
     </form>
   </dialog>
 
   <dialog class="confirm-dialog response-dialog" id="itemDocsDialog" aria-labelledby="itemDocsTitle">
     <form method="dialog">
-      <header class="response-head"><div><span class="eyebrow">Required documents</span><h2 id="itemDocsTitle"></h2><p id="itemDocsMeta"></p></div><button class="icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
-      <div class="item-docs" id="itemDocsList"></div>
+      <header class="modal-head"><h2 id="itemDocsTitle"></h2><button class="icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="modal-body"><p class="modal-sub" id="itemDocsMeta"></p><div class="item-docs" id="itemDocsList"></div></div>
       <div class="confirm-actions"><button class="footer-btn" value="close">Close</button></div>
     </form>
   </dialog>

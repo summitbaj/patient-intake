@@ -1803,7 +1803,6 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .change-patient-list strong{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .change-patient-list small{font-size:12px;color:var(--muted)}
 #changePatientDialog p.change-patient-keep{margin:12px 0 0;font-size:13px;color:var(--muted)}
-#changePatientDialog .confirm-actions{margin-top:24px}
 
 /* In this intake (left): empty state while a patient is linked but nothing is added yet */
 .us-intake-empty{display:flex;align-items:center;gap:12px;padding:16px;border:1px dashed var(--line);border-radius:var(--fluent-corner-2);color:var(--muted)}
@@ -1882,16 +1881,24 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .order-hint .subtle-link{display:inline-flex;align-items:center;gap:3px;color:var(--muted)}
 .order-hint .subtle-link:hover{color:var(--primary)}
 .order-hint .subtle-link .lucide{width:12px;height:12px}
-.on-file-list{list-style:none;margin:0 0 12px;padding:0;display:grid;gap:8px}
-.on-file-list li{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--fluent-corner-2)}
-.on-file-list li>span:last-child{display:grid}
-.on-file-list strong{font-size:14px;color:var(--ink)}
+.on-file-list{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:8px}
+.on-file-list li{display:grid;gap:4px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--fluent-corner-2);background:var(--white)}
+.on-file-list strong{font-size:14px;font-weight:600;color:var(--ink)}
+.on-file-list .on-file-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px}
+.on-file-list .plan-rank{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.on-file-list .plan-rank .lucide{width:14px;height:14px;flex:none;color:#f7630c;fill:currentColor}
 .on-file-list small{font-size:12px;color:var(--muted)}
+.on-file-list.is-new li{background:var(--sunken,#f3f2f1)}
+/* Plans not on file yet: their own section, above the record-order callout */
+.on-file-section{margin-top:16px}
+.on-file-section .on-file-list{margin-bottom:0}
+.on-file-sub{margin:0 0 8px!important;font-size:12px!important;color:var(--muted)!important}
+/* Record order differs: a tinted callout with its own action, apart from the lists */
+.on-file-callout{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin-top:16px;padding:10px 12px;border:1px solid var(--blue-line);border-radius:var(--fluent-corner-2);background:var(--blue-soft);font-size:13px;color:var(--ink)}
+.on-file-callout>.lucide{width:16px;height:16px;flex:none;color:var(--primary)}
+.on-file-callout>span{flex:1 1 200px;min-width:0}
+.on-file-callout .small-btn{margin-left:auto;background:var(--white)}
 .on-file-note{margin:0 0 10px!important;font-size:13px;color:var(--muted)}
-.plan-detail-head .plan-title-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
-.plan-detail-head .plan-source{display:inline-flex;align-items:center;gap:4px;padding:0;font-size:12px}
-.plan-detail-head .plan-source .lucide{width:13px;height:13px}
-.plan-detail-head .plan-source[hidden]{display:none}
 /* Other insurance mentioned by the payer: an informational note, no actions */
 .plan-discovered{background:var(--blue-wash,var(--sunken));box-shadow:inset 0 0 0 1px var(--line);color:var(--text);line-height:1.45}
 .plan-discovered>.lucide{color:var(--primary);align-self:flex-start;margin-top:2px}
@@ -1995,3 +2002,33 @@ body[data-radius] :is(.review-card,.rx-item)>:first-child{border-top-left-radius
 .refresh-notice.is-auto{background:transparent;border:0;padding:6px 2px;box-shadow:none}
 .refresh-notice.is-auto b{font-size:12px}
 .refresh-notice.is-auto small{font-size:12px}
+
+/* Insurance card preview: Front / Back switch above the scan */
+.card-sides{display:inline-flex;align-self:flex-start;margin:10px 12px 0;padding:2px;border:1px solid var(--line);border-radius:var(--fluent-corner-2);background:var(--white)}
+.card-sides[hidden]{display:none}
+.card-sides button{min-width:64px;padding:4px 12px;border:0;border-radius:var(--fluent-corner-2);background:transparent;color:var(--text);font:inherit;font-size:12px;cursor:pointer}
+.card-sides button:hover{background:var(--sunken)}
+.card-sides button[aria-pressed=true]{background:var(--blue-soft);color:var(--primary);font-weight:600}
+.card-sides button:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+
+/* Modals: header (title, plus a close button where there is one) · body · footer, split by 1px lines.
+   Header and footer stay put; only the body scrolls. */
+dialog.confirm-dialog{padding:0;max-height:calc(100vh - 64px);overflow:hidden}
+dialog.confirm-dialog[open]{display:flex;flex-direction:column}
+dialog.confirm-dialog>form,dialog.confirm-dialog>.manual-wrap,dialog.confirm-dialog>.pc-ec,dialog.confirm-dialog .manual-new-form:not([hidden]){display:flex;flex-direction:column;flex:1 1 auto;min-height:0;gap:0;padding:0;overflow:hidden}
+dialog.confirm-dialog .modal-head{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:16px 24px;border-bottom:1px solid var(--line)}
+dialog.confirm-dialog .modal-head h2{margin:0;line-height:1.3}
+dialog.confirm-dialog .modal-head .icon-btn{flex:none;margin:-4px -8px -4px 0}
+dialog.confirm-dialog .modal-body,dialog.confirm-dialog .modal-body.extraction-issues{flex:1 1 auto;min-height:0;overflow:auto;padding:20px 24px}
+dialog.confirm-dialog .modal-body>:last-child{margin-bottom:0}
+dialog.confirm-dialog .modal-sub{margin:0 0 16px;font-size:13px;line-height:1.45;color:var(--muted)}
+dialog.confirm-dialog .modal-body>.extraction-issue:first-child{margin-top:0}
+dialog.confirm-dialog .confirm-actions{flex:none;margin:0;padding:12px 24px;border-top:1px solid var(--line);background:var(--white)}
+/* Bodies that stack their contents keep the spacing their old wrappers gave them */
+dialog.confirm-dialog #manualPick,dialog.confirm-dialog .manual-new-form .modal-body,dialog.confirm-dialog .pc-ec .modal-body{display:grid;gap:12px;align-content:start}
+dialog.confirm-dialog #manualPick[hidden]{display:none}
+dialog.confirm-dialog #manualPick .modal-sub,dialog.confirm-dialog .pc-ec .modal-sub{margin:0}
+
+/* Plan card after an eligibility check: status and checked types on their own line, as one group */
+.insurance-workspace .plan-item .plan-coverage{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px}
+.insurance-workspace .plan-item .plan-coverage .pill{display:inline-flex}

@@ -565,7 +565,18 @@ async function startExtraction(){
   checkExtractionReady();
 }
 
-function openDocument(id){
+// Insurance cards are scanned on both sides; the preview switches between them.
+const cardBackImage='assets/insurance-back.svg';
+const isInsuranceCard=document=>document.type==='Insurance card'||/insurance card/i.test(document.name);
+function setCardSide(side){
+  const image=$('#documentImage'),document=documents.find(item=>item.id===image.dataset.doc)||existingFiles.find(item=>item.id===image.dataset.doc);
+  if(!document)return;
+  image.src=side==='back'?cardBackImage:imageForDocument(document);
+  image.alt=`${document.name} ${side} preview`;
+  $('#previewMeta').textContent=side==='back'?'Back':'Front';
+  $$('[data-card-side]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.cardSide===side)));
+}
+function openDocument(id,side='front'){
   const retained=id==='consent'?{id:'consent',name:'Consent Form.pdf',meta:'Existing file · Extracted previously',type:'Consent form'}:null;
   const document=documents.find(item=>item.id===id) || existingFiles.find(item=>item.id===id) || retained || documents[0];
   if(!document)return;
@@ -578,6 +589,9 @@ function openDocument(id){
   const image=$('#documentImage');
   image.src=imageForDocument(document);
   image.alt=`${document.name} document preview`;image.dataset.doc=document.id;
+  const card=isInsuranceCard(document);
+  $('#cardSides').hidden=!card;
+  if(card)setCardSide(side);
   $('#sourcePreview').hidden=false;
   setViewerMode('preview');
   renderDocuments();
@@ -635,7 +649,7 @@ function renderPlanList(){
     const aiPlaced=plan.aiRank&&plan.aiReason;   // kept after reordering, so the user can still see what AI suggested
     // "Why primary?" is a small info icon beside the rank; the reason opens in a popover on demand.
     const why=aiPlaced?`<span class="plan-why-btn" role="button" tabindex="0" data-plan-why="${plan.id}" aria-label="AI suggests ${plan.aiRank.toLowerCase()}. Why?" aria-expanded="${state.planWhyOpen===plan.id}"><i data-lucide="info"></i></span>`:'';
-    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${rank}${isNew?', new, not on file':''}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${rank}</span>${why}${plan.check?statusPill(plan)+serviceTag(plan):''}${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded?'<span class="plan-tag-new">Added by you</span>':''}</span>${fixes?`<small class="plan-ai-fix"><i data-lucide="sparkles"></i> ${fixes} ${fixes===1?'field':'fields'} AI resolved</small>`:''}${otherNote(plan)}</span></button></div>`;
+    return `<div class="plan-row ${index===state.currentPlan?'active':''}" draggable="true" data-drag-plan="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${rank}${isNew?', new, not on file':''}. Press Alt plus arrow keys to reorder."><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${rank}</span>${why}${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded?'<span class="plan-tag-new">Added by you</span>':''}</span>${plan.check?`<span class="plan-coverage" aria-label="Eligibility">${statusPill(plan)}${serviceTag(plan)}</span>`:''}${fixes?`<small class="plan-ai-fix"><i data-lucide="sparkles"></i> ${fixes} ${fixes===1?'field':'fields'} AI resolved</small>`:''}${otherNote(plan)}</span></button></div>`;
   }).join('');
   renderOrderHint();
   icons();   // the list can re-render on its own (e.g. a drop back in place), so it draws its own grip, star and info icons
@@ -658,7 +672,9 @@ function showInsuranceOnFile(){
   $('#eligibilityDialogTitle').textContent='Insurance on file';
   $('#eligibilityDialogMeta').textContent=`${postIntakeRecommendation.patient}’s record today, before this intake`;
   const differs=!sameOrder(currentOrder().filter(id=>onFile.some(p=>p.id===id)),onFile.map(p=>p.id));
-  $('#eligibilityDialogBody').innerHTML=`<ol class="on-file-list">${onFile.map(plan=>`<li><span class="pill rank">${plan.systemRank}</span><span><strong>${plan.name}</strong><small>${idOf(plan)}</small></span></li>`).join('')||'<li class="empty-note">No insurance on file</li>'}</ol>${fresh.length?`<p class="on-file-note">Not on file yet: ${fresh.map(plan=>plan.name).join(', ')}.</p>`:''}${differs?'<p class="on-file-note">The order in this intake is different from the record.</p><button type="button" class="small-btn" data-order="system" data-close-on-file>Use record order</button>':''}`;
+  // Same card as the plan list: name, then the rank (a star on Primary) and the member ID.
+  const card=(plan,rank)=>`<li><strong>${plan.name}</strong><span class="on-file-meta">${rank?`<span class="plan-rank">${rank==='Primary'?'<i data-lucide="star"></i>':''}${rank}</span>`:''}${idOf(plan)?`<small>${idOf(plan)}</small>`:''}</span></li>`;
+  $('#eligibilityDialogBody').innerHTML=`<ol class="on-file-list">${onFile.map(plan=>card(plan,plan.systemRank)).join('')||'<li class="empty-note">No insurance on file</li>'}</ol>${fresh.length?`<section class="on-file-section"><p class="on-file-sub">Found in this intake. Not in the patient’s record.</p><ul class="on-file-list is-new">${fresh.map(plan=>card(plan,'')).join('')}</ul></section>`:''}${differs?'<div class="on-file-callout"><i data-lucide="arrow-down-up"></i><span>The order in this intake is different from the record.</span><button type="button" class="small-btn" data-order="system" data-close-on-file>Use record order</button></div>':''}`;
   icons();
   $('#eligibilityDialog').showModal();
 }
@@ -760,17 +776,6 @@ function renderInsurance(index=state.currentPlan){
   const plan=insurancePlans[index],result=planResult(plan);
   renderPlanList();
   $('#planName').textContent=plan.name;
-  // Source document sits next to the plan name: one click opens it in the document viewer.
-  let source=$('#planSource');
-  if(!source){
-    const name=$('#planName'),row=document.createElement('span');row.className='plan-title-row';
-    name.before(row);row.appendChild(name);
-    source=document.createElement('button');source.type='button';source.id='planSource';source.className='source-link plan-source';row.appendChild(source);
-  }
-  source.hidden=!plan.docId;
-  source.dataset.doc=plan.docId||'';
-  source.title=`View ${plan.source}`;
-  source.innerHTML=`<i data-lucide="scan-text"></i> ${plan.source}`;
   const st=planStatus(plan);
   // Before an eligibility check there's nothing to report, so only a quiet line says so.
   $('#planPills').innerHTML=st?`<div class="cov-strip"><span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>${servicePill(plan)}</div><span class="cov-checked"><i data-lucide="calendar-check"></i> Last check ${plan.check.at}</span>`:'<span class="cov-checked is-quiet">Eligibility not checked yet</span>';
@@ -1134,7 +1139,12 @@ document.addEventListener('click',event=>{
     const id=target.dataset.extractDocument;state.documentResolutions.add(id);const card=$(`#extract-${id}`);card.classList.add('resolved');card.querySelector('.extract-document-actions').innerHTML=`<span class="issue-resolved"><i data-lucide="check"></i><span><strong>${target.dataset.decision==='existing'?'Using existing document':target.dataset.decision==='replace'?'Replacing existing document':target.dataset.decision==='upload'?'Keeping new copy':'Keeping both'}</strong></span></span>`;
     if(state.documentResolutions.size===state.docDecisionsNeeded)$('#documentIssue .issue-title>b').textContent='Resolved';icons();checkExtractionReady();return;
   }
-  if(target.dataset.plan!==undefined){renderInsurance(+target.dataset.plan);return;}
+  if(target.dataset.plan!==undefined){
+    const plan=insurancePlans[+target.dataset.plan];renderInsurance(+target.dataset.plan);
+    // The card opens its source in the document panel: the insurance card on the right side, or the page it was read from.
+    if(plan&&!plan.userAdded&&plan.docId)openDocument(plan.docId,/·\s*back/i.test(plan.source)?'back':'front');
+    return;
+  }
   if(target.dataset.planEdit!==undefined){state.editingPlan=true;renderInsurance();$('[data-plan-field]')?.focus();return;}
   if(target.dataset.planCancel!==undefined){state.editingPlan=false;renderInsurance();return;}
   if(target.dataset.planSave!==undefined){const plan=insurancePlans[state.currentPlan];$$('[data-plan-field]').forEach(input=>{plan.fields[input.dataset.planField][1]=input.value.trim()||'Not provided';});state.editingPlan=false;invalidateInsurance();renderInsurance();toast(`${plan.name} updated. Check eligibility again for ${state.serviceType}.`);return;}
@@ -2197,6 +2207,7 @@ $('#planList').addEventListener('drop',event=>{
   const name=insurancePlans[dragPlan].name;dragPlan=null;
   if(!sameOrder(ids,currentOrder()))setPlanOrder(ids,`${name} moved to ${planRank(to).toLowerCase()}`);else renderPlanList();
 });
+document.addEventListener('click',event=>{const side=event.target.closest('[data-card-side]');if(side)setCardSide(side.dataset.cardSide);});
 $('#planList').addEventListener('dragend',()=>{dragPlan=null;$$('.plan-row').forEach(item=>item.classList.remove('dragging','drop-above','drop-below'));});
 $('#planList').addEventListener('keydown',event=>{
   if(!event.altKey||(event.key!=='ArrowUp'&&event.key!=='ArrowDown'))return;
