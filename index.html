@@ -372,6 +372,22 @@
     </form>
   </dialog>
 
+  <dialog class="doc-drawer" id="uploadPreview" aria-labelledby="upName">
+    <header class="doc-drawer-head">
+      <span id="upBadge"></span>
+      <div class="doc-drawer-title"><strong id="upName"></strong><small id="upMeta"></small></div>
+      <button class="icon-btn" type="button" data-up="close" aria-label="Close preview" title="Close (Esc)"><i data-lucide="x"></i></button>
+    </header>
+    <div class="doc-drawer-body">
+      <div class="doc-drawer-stage" id="upStage"><img id="upImage" alt=""></div>
+      <div class="doc-drawer-zoom" role="toolbar" aria-label="Document zoom">
+        <button class="icon-btn" type="button" data-up="out" aria-label="Zoom out" title="Zoom out (−)"><i data-lucide="zoom-out"></i></button>
+        <span class="dv-zoom" id="upZoom" aria-live="polite">100%</span>
+        <button class="icon-btn" type="button" data-up="in" aria-label="Zoom in" title="Zoom in (+)"><i data-lucide="zoom-in"></i></button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="doc-viewer" id="docViewer" aria-labelledby="dvName">
     <header class="dv-bar">
       <div class="dv-title"><i data-lucide="file-text"></i><strong id="dvName"></strong><small id="dvMeta"></small></div>

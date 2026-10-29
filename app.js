@@ -164,19 +164,37 @@ const todayLabel=()=>new Date().toLocaleDateString('en-US',{month:'short',day:'n
 const addedOn=file=>file.uploadedAt||file.date||todayLabel();
 // Shared meta line for every file row (upload screen and review Files panel): type · Added date [· status]
 const fileMetaLine=(file,status='')=>`<span class="file-meta-row"><span class="file-type">${docCategory(file)}</span><span class="file-date">Added ${addedOn(file)}</span>${status}</span>`;
-// Full-screen preview for any file: new uploads, record documents, or files on file.
+// Upload screen preview: the file slides in from the right. Header: format, name, type · added date, close. Body: the page and zoom.
+const drawerView={zoom:1};
+function applyDrawerZoom(){const image=$('#upImage');drawerView.zoom=Math.min(4,Math.max(.25,drawerView.zoom));if(image.naturalWidth)image.style.width=`${Math.round(image.naturalWidth*drawerView.zoom)}px`;$('#upZoom').textContent=`${Math.round(drawerView.zoom*100)}%`;}
+function fitDrawerWidth(){const stage=$('#upStage'),image=$('#upImage');if(!image.naturalWidth)return;drawerView.zoom=(stage.clientWidth-48)/image.naturalWidth;applyDrawerZoom();}
 function previewFile(id){
   const file=documents.find(item=>item.id===id)||patientDirectory.flatMap(patient=>patient.documents).find(item=>item.id===id)||existingFiles.find(item=>item.id===id);
   if(!file||file.uploading)return;
-  const image=$('#dvImage'),src=imageForDocument(file);
-  $('#dvName').textContent=file.name;
-  $('#dvMeta').textContent=`${docCategory(file)} · Added ${addedOn(file)}`;
+  const image=$('#upImage'),src=imageForDocument(file);
+  $('#upBadge').innerHTML=formatBadge(file.name);
+  $('#upName').textContent=file.name;
+  $('#upMeta').textContent=`${docCategory(file)} · Added ${addedOn(file)}`;
   image.alt=`${file.name} document preview`;
-  $('#docViewer').showModal();
-  const fit=()=>fitFullView('page');
-  if(image.getAttribute('src')!==src){image.onload=fit;image.src=src;}else fit();
+  const drawer=$('#uploadPreview');drawer.classList.remove('is-closing');drawer.showModal();
+  $('#upStage').scrollTop=0;
+  if(image.getAttribute('src')!==src){image.onload=fitDrawerWidth;image.src=src;}else fitDrawerWidth();
   icons();
 }
+// Closing slides the panel back out before the dialog actually closes.
+function closeDrawer(){const drawer=$('#uploadPreview');if(!drawer.open||drawer.classList.contains('is-closing'))return;drawer.classList.add('is-closing');setTimeout(()=>{drawer.classList.remove('is-closing');drawer.close();},matchMedia('(prefers-reduced-motion:reduce)').matches?0:200);}
+$('#uploadPreview').addEventListener('click',event=>{
+  if(event.target===event.currentTarget){closeDrawer();return;}   // click on the dimmed backdrop
+  const control=event.target.closest('[data-up]');if(!control)return;
+  const action=control.dataset.up;
+  if(action==='close')closeDrawer();
+  else{drawerView.zoom*=action==='in'?1.25:.8;applyDrawerZoom();}
+});
+$('#uploadPreview').addEventListener('cancel',event=>{event.preventDefault();closeDrawer();});
+$('#uploadPreview').addEventListener('keydown',event=>{
+  if(event.key==='+'||event.key==='='){event.preventDefault();$('[data-up=in]').click();}
+  if(event.key==='-'){event.preventDefault();$('[data-up=out]').click();}
+});
 function renderUploadQueue(){
   $('#extractDocuments').disabled=!documents.length||state.extracting||documents.some(file=>file.uploading);
   // Ready to extract: the button widens to "Extract documents" so the next step is obvious.
