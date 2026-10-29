@@ -832,7 +832,7 @@ function renderEligibility(){
 
 // Alternate insurance layout: plans as a vertical accordion, with a coverage checklist beside them.
 // Plans start collapsed. Demo data: Apple Health came without a relationship, and Aetna was added by the user.
-const insAlt={open:-1,checks:{active:false,others:false,qualifies:false},savedAt:'',values:{},missing:{medicaid:['Relationship to insured']},addedByYou:['aetna']};
+const insAlt={open:-1,menuOpen:false,checks:{active:false,others:false,qualifies:false},savedAt:'',values:{},missing:{medicaid:['Relationship to insured']},addedByYou:['aetna']};
 const insAltValue=(plan,label,value)=>insAlt.values[plan.id]?.[label]??(insAlt.missing[plan.id]?.includes(label)?'':value);
 const insAltGaps=plan=>plan.fields.filter(([label,value])=>!insAltValue(plan,label,value)).length;
 function renderInsuranceAlt(){
@@ -840,7 +840,7 @@ function renderInsuranceAlt(){
   $('#insAltMeta').textContent=n?`${n} coverage ${n===1?'plan':'plans'}`:'No coverage plans';
   $('#insAltPlans').innerHTML=n?insurancePlans.map((plan,index)=>{
     const open=index===insAlt.open,memberId=plan.fields.find(([label])=>label==='Member ID')?.[1]||'',gaps=insAltGaps(plan);
-    return `<section class="ins-acc ${open?'open':''}"><button type="button" class="ins-acc-head" data-ins-acc="${index}" aria-expanded="${open}"><span class="ins-acc-title"><strong>${plan.name}</strong><span class="ins-acc-sub"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${planRank(index)}</span>${memberId?`<span>· ${memberId}</span>`:''}${!plan.systemRank&&!plan.userAdded?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded||insAlt.addedByYou.includes(plan.id)?'<span class="plan-tag-new">Added by you</span>':''}${gaps?`<span class="ins-tag-missing" title="${gaps} required ${gaps===1?'field':'fields'} not found in the documents">Missing</span>`:''}</span></span><i class="ins-acc-chevron" data-lucide="chevron-down"></i></button>${open?`<dl class="ins-acc-body">${plan.fields.map(([label,value])=>{
+    return `<section class="ins-acc ${open?'open':''}"><button type="button" class="ins-acc-head" data-ins-acc="${index}" aria-expanded="${open}"><span class="ins-acc-title"><strong>${plan.name}</strong><span class="ins-acc-sub"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${planRank(index)}</span>${memberId?`<span>· ${memberId}</span>`:''}${!plan.systemRank&&!plan.userAdded?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded||insAlt.addedByYou.includes(plan.id)?'<span class="plan-tag-new">Added by you</span>':''}${gaps?`<span class="ins-tag-missing" title="${gaps} required ${gaps===1?'field':'fields'} not found in the documents">Missing</span>`:''}</span></span><i class="ins-acc-chevron" data-lucide="chevron-down"></i></button>${open?`${insAltPlanElig(plan,index)}<dl class="ins-acc-body">${plan.fields.map(([label,value])=>{
       // A field the documents didn't provide is filled in place, like Gender in Patient Demographics.
       const edited=insAlt.values[plan.id]&&label in insAlt.values[plan.id],v=insAltValue(plan,label,value);
       if(insAlt.missing[plan.id]?.includes(label)||edited){const empty=!v;return `<div class="ins-acc-missing ${empty?'':'done'}"><dt>${label}<em class="miss-chip">${empty?'Not found':'Added'}</em></dt><dd>${label==='Relationship to insured'?`<select class="input inline-input" data-ins-alt-field="${plan.id}|${label}" aria-label="${label}"><option value="">Select relationship</option>${['Self','Spouse','Child','Other'].map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`:`<input class="input inline-input" data-ins-alt-field="${plan.id}|${label}" value="${v}" placeholder="Enter ${label.toLowerCase()}" aria-label="${label}">`}</dd></div>`;}
@@ -854,10 +854,29 @@ function renderInsuranceAlt(){
   ];
   // "Other insurance" lets the user add a plan straight from the checklist.
   $('#insAltItems').innerHTML=items.map(([key,title,hint])=>`<div class="ins-alt-item"><label><input type="checkbox" name="${key}" ${insAlt.checks[key]?'checked':''}><span><b>${title}</b><small>${hint}</small></span></label>${key==='others'?'<button type="button" class="text-btn header-link ins-alt-link" data-ins-alt-add><i data-lucide="plus"></i> Add Insurance</button>':''}</div>`).join('');
-  $('#insAltSaved').innerHTML=insAlt.savedAt?`<i data-lucide="circle-check"></i> Saved ${insAlt.savedAt}`:'';
+  $('#insAltSaved').innerHTML='';
+  $('#insAltSave').disabled=!Object.values(insAlt.checks).every(Boolean);
+  // Once the checklist is saved it steps aside: plans go full width and the eligibility check takes its place.
+  $('#insurance-alt-section .ins-alt').classList.toggle('is-verified',Boolean(insAlt.savedAt));
+  $('#insAltCheck').hidden=Boolean(insAlt.savedAt);
+  const elig=$('#insAltElig');elig.hidden=!insAlt.savedAt||!n;
+  if(!elig.hidden){
+    const type=serviceTypes.find(item=>item.id===state.serviceType);
+    elig.innerHTML=`<span class="suggest-label">Check eligibility for</span><div class="ins-alt-service"><div class="service-select"><button type="button" class="service-trigger" data-ins-alt-menu aria-haspopup="listbox" aria-expanded="${insAlt.menuOpen}"><i data-lucide="${type.icon}"></i><span>${type.id}</span><i class="service-chevron" data-lucide="chevron-down"></i></button>${insAlt.menuOpen?`<div class="service-menu" role="listbox">${serviceTypes.map(item=>`<button type="button" class="service-option ${item.id===state.serviceType?'selected':''}" role="option" aria-selected="${item.id===state.serviceType}" data-ins-alt-service="${item.id}"><i data-lucide="${item.icon}"></i><span><strong>${item.id}</strong><small>${item.description}</small></span>${item.id===state.serviceType?'<i class="service-check" data-lucide="check"></i>':''}</button>`).join('')}</div>`:''}</div><span class="suggest-ai"><i data-lucide="sparkles"></i> AI suggested from the prescription</span></div><button type="button" class="small-btn primary" data-ins-alt-check-all ${state.checkingEligibility?'disabled':''}>${state.checkingEligibility?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check Eligibility'}</button>`;
+  }
+}
+// Per-plan eligibility, shown at the bottom of an expanded plan.
+function insAltPlanElig(plan,index){
+  const st=planStatus(plan),checking=state.checkingPlan&&state.currentPlan===index,result=planResult(plan);
+  const status=checking?'<span class="ins-elig-note">Checking eligibility…</span>'
+    :st?`<span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>${servicePill(plan)}<span class="ins-elig-note">${result?result.detail+' · ':''}Checked ${plan.check.at}</span>`
+    :'<span class="ins-elig-note">Eligibility not checked yet</span>';
+  return `<div class="ins-acc-elig"><div class="ins-acc-elig-status"><strong>Eligibility</strong><div>${status}</div></div><div class="ins-acc-elig-actions">${plan.check&&!checking?`<button type="button" class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View Response</button>`:''}<button type="button" class="small-btn" data-ins-alt-check-plan="${index}" ${checking?'disabled':''}>${checking?'<span class="spinner"></span> Checking…':`<i data-lucide="refresh-cw"></i> ${plan.check?.service===state.serviceType?'Re-check':'Check'} Eligibility`}</button></div></div>`;
 }
 document.addEventListener('click',event=>{
   if(event.target.closest('[data-ins-alt-add]')){openAddPlan();return;}
+  const one=event.target.closest('[data-ins-alt-check-plan]');if(one){state.currentPlan=Number(one.dataset.insAltCheckPlan);checkPlanEligibility();return;}
+  if(event.target.closest('[data-ins-alt-check-all]')){checkEligibility();return;}
   const head=event.target.closest('[data-ins-acc]');if(!head)return;
   const index=Number(head.dataset.insAcc);insAlt.open=insAlt.open===index?-1:index;renderInsuranceAlt();icons();
 });
@@ -865,11 +884,17 @@ $('#insAltPlans').addEventListener('change',event=>{
   const field=event.target.closest('[data-ins-alt-field]');if(!field)return;
   const [id,label]=field.dataset.insAltField.split('|');(insAlt.values[id]??={})[label]=field.value.trim();renderInsuranceAlt();icons();
 });
-$('#insAltCheck').addEventListener('change',event=>{if(event.target.name in insAlt.checks)insAlt.checks[event.target.name]=event.target.checked;});
+$('#insAltCheck').addEventListener('change',event=>{if(event.target.name in insAlt.checks){insAlt.checks[event.target.name]=event.target.checked;$('#insAltSave').disabled=!Object.values(insAlt.checks).every(Boolean);}});
+$('#insAltElig').addEventListener('click',event=>{
+  const option=event.target.closest('[data-ins-alt-service]');
+  if(option){state.serviceType=option.dataset.insAltService;insAlt.menuOpen=false;renderEligibility();return;}
+  if(event.target.closest('[data-ins-alt-menu]')){insAlt.menuOpen=!insAlt.menuOpen;renderInsuranceAlt();icons();}
+});
+document.addEventListener('click',event=>{if(insAlt.menuOpen&&!event.target.closest('#insAltElig .service-select')){insAlt.menuOpen=false;renderInsuranceAlt();icons();}});
 $('#insAltCheck').addEventListener('submit',event=>{
   event.preventDefault();
   insAlt.savedAt=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-  renderInsuranceAlt();icons();toast('Coverage checklist saved');
+  renderInsuranceAlt();icons();toast('Coverage verified. Check eligibility next.');
 });
 function renderCoverageConfirm(){
   const box=$('#coverageConfirm'),n=insurancePlans.length;

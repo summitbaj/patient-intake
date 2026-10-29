@@ -285,3 +285,27 @@ body.phase-upload #cancelUpload{display:none!important}
 .ins-acc-body>.ins-acc-missing.done{outline-color:transparent}
 .ins-acc-missing dt{display:flex;align-items:center;gap:6px}
 .ins-acc-missing .inline-input{width:100%;max-width:320px;height:32px;margin-top:4px}
+/* After the checklist is saved: plans full width, blue eligibility bar below */
+.ins-alt.is-verified{grid-template-columns:minmax(0,1fr)}
+.ins-alt-check[hidden],.ins-alt-elig[hidden]{display:none}
+.ins-alt-elig{display:flex;flex-wrap:wrap;align-items:flex-start;gap:12px;margin:0 16px 16px;padding:12px;border:1px solid var(--blue-line);border-radius:var(--radius);background:var(--blue-soft);font-size:13px}
+.ins-alt-elig .suggest-label{font-weight:600;color:var(--text)}
+.ins-alt-elig .suggest-label{line-height:34px}
+.ins-alt-elig .ins-alt-service{display:grid;gap:4px}
+.ins-alt-elig .service-trigger{width:220px;background:var(--white)}
+/* The card clips overflow, so the menu opens upward like the one above */
+.ins-alt-elig .service-menu{top:auto;bottom:calc(100% + 4px)}
+.ins-alt-elig .suggest-ai{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.ins-alt-elig .suggest-ai .lucide{width:14px;height:14px;color:var(--primary)}
+.ins-alt-elig>.small-btn{margin-left:auto;align-self:flex-start;margin-top:3px}
+/* Eligibility for one plan, at the bottom of the expanded plan */
+.ins-acc-elig{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:12px 12px 4px;padding:12px;border-radius:var(--radius);background:var(--blue-soft)}
+.ins-acc-elig-status{display:grid;gap:6px;flex:1 1 240px;min-width:0}
+.ins-acc-elig-status strong{font-size:13px;font-weight:600;color:var(--text)}
+.ins-acc-elig-status>div{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.ins-acc-elig .cov-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:var(--pill-radius,999px);font-size:12px;font-weight:600}
+.ins-acc-elig .cov-chip .lucide{width:13px;height:13px}
+.ins-acc-elig .cov-chip.ok{background:var(--green-soft);color:var(--green)}
+.ins-acc-elig .cov-chip.bad{background:var(--red-soft);color:var(--red)}
+.ins-elig-note{font-size:12px;color:var(--muted)}
+.ins-acc-elig-actions{display:flex;gap:8px;margin-left:auto}
