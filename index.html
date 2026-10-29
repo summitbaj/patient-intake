@@ -171,6 +171,18 @@
         <div class="elig-summary" id="eligSummary" hidden></div>
       </section>
 
+      <section class="review-card ins-alt-card" id="insurance-alt-section">
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insAltMeta">3 coverage plans</p></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on file</button><button type="button" class="text-btn header-link" data-ins-alt-add><i data-lucide="plus"></i> Add Insurance</button></div></div></div>
+        <div class="ins-alt">
+          <div class="ins-alt-plans" id="insAltPlans"></div>
+          <form class="ins-alt-check" id="insAltCheck">
+            <div class="ins-alt-check-head"><strong>Verify Coverage</strong><span>Confirm each item before moving on.</span></div>
+            <div class="ins-alt-items" id="insAltItems"></div>
+            <div class="ins-alt-foot"><span class="ins-alt-saved" id="insAltSaved"></span><button type="submit" class="small-btn primary">Save</button></div>
+          </form>
+        </div>
+      </section>
+
       <div id="prescriptions"></div>
       <button class="add-prescription" id="addPrescription"><i data-lucide="plus"></i> Add Prescription</button>
       <datalist id="hcpcsOptions"></datalist>
