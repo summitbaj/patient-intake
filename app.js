@@ -830,72 +830,127 @@ function renderEligibility(){
   renderReviewMenu();
 }
 
-// Alternate insurance layout: plans as a vertical accordion, with a coverage checklist beside them.
-// Plans start collapsed. Demo data: Apple Health came without a relationship, and Aetna was added by the user.
-const insAlt={open:-1,menuOpen:false,checks:{active:false,others:false,qualifies:false},savedAt:'',values:{},missing:{medicaid:['Relationship to insured']},addedByYou:['aetna']};
-const insAltValue=(plan,label,value)=>insAlt.values[plan.id]?.[label]??(insAlt.missing[plan.id]?.includes(label)?'':value);
-const insAltGaps=plan=>plan.fields.filter(([label,value])=>!insAltValue(plan,label,value)).length;
+// A collapsible card opens and closes from its header; its links and buttons keep working on their own.
+function setCardCollapsed(card,collapsed){card.classList.toggle('is-collapsed',collapsed);card.querySelector('[data-card-toggle]')?.setAttribute('aria-expanded',String(!collapsed));}
+document.addEventListener('click',event=>{
+  const head=event.target.closest('[data-card-toggle]');if(!head||event.target.closest('button,a,input,select'))return;
+  const card=head.closest('.review-card');setCardCollapsed(card,!card.classList.contains('is-collapsed'));
+});
+document.addEventListener('keydown',event=>{
+  const head=event.target.closest?.('[data-card-toggle]');if(!head||event.target!==head||(event.key!=='Enter'&&event.key!==' '))return;
+  event.preventDefault();const card=head.closest('.review-card');setCardCollapsed(card,!card.classList.contains('is-collapsed'));
+});
+// Second insurance layout: payer order on the left, the selected plan's details on the right, one eligibility check for all plans below.
+// Demo: Apple Health came in without the relationship to the insured, so it's filled in here like Gender in Patient Demographics.
+const insAlt={sel:0,menuOpen:false,drag:null,checklistOpen:0,missing:{medicaid:['Relationship to insured']},filled:{}};
+const insAltIsMissing=(plan,label)=>insAlt.missing[plan.id]?.includes(label);
+const insAltGaps=plan=>(insAlt.missing[plan.id]||[]).filter(label=>!insAlt.filled[plan.id]?.[label]).length;
+// View checklist: what to get right on insurance, in a drawer from the right.
+const insChecklist=[
+  ['id-card','Details match the card','Name, date of birth, member ID, group number and plan dates match the latest card. One wrong character can get the claim rejected.'],
+  ['search-check','All plans captured','Ask the patient, run insurance discovery, and check the eligibility response, which can list plans you don’t have yet.'],
+  ['list-ordered','Payer order confirmed','Coordination of benefits: the primary is billed first, then the secondary. AI sorts the plans; you confirm the order. The wrong order leads to denials.'],
+  ['calendar-check','Active on the date of service','An expired or ended plan won’t pay. The eligibility check tells you.'],
+  ['package-check','Covers the services','Active doesn’t mean covered. Make sure the insurance covers the services and items the patient will receive.']
+];
+function renderInsChecklist(){
+  $('#insChecklistBody').innerHTML=insChecklist.map(([icon,title,body],index)=>{const open=index===insAlt.checklistOpen;
+    return `<section class="ins-cl-card ${open?'open':''}"><button type="button" class="ins-cl-head" data-ins-cl="${index}" aria-expanded="${open}"><span class="ins-cl-icon"><i data-lucide="${icon}"></i></span><strong>${title}</strong><i class="ins-cl-chevron" data-lucide="chevron-down"></i></button>${open?`<p class="ins-cl-body">${body}</p>`:''}</section>`;}).join('');
+  icons();
+}
+function closeInsChecklist(){const drawer=$('#insChecklist');if(!drawer.open||drawer.classList.contains('is-closing'))return;drawer.classList.add('is-closing');setTimeout(()=>{drawer.classList.remove('is-closing');drawer.close();},200);}
 function renderInsuranceAlt(){
   const n=insurancePlans.length;
-  $('#insAltMeta').textContent=n?`${n} coverage ${n===1?'plan':'plans'}`:'No coverage plans';
-  $('#insAltPlans').innerHTML=n?insurancePlans.map((plan,index)=>{
-    const open=index===insAlt.open,memberId=plan.fields.find(([label])=>label==='Member ID')?.[1]||'',gaps=insAltGaps(plan);
-    return `<section class="ins-acc ${open?'open':''}"><button type="button" class="ins-acc-head" data-ins-acc="${index}" aria-expanded="${open}"><span class="ins-acc-title"><strong>${plan.name}</strong><span class="ins-acc-sub"><span class="plan-rank">${index===0?'<i data-lucide="star"></i>':''}${planRank(index)}</span>${memberId?`<span>· ${memberId}</span>`:''}${!plan.systemRank&&!plan.userAdded?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded||insAlt.addedByYou.includes(plan.id)?'<span class="plan-tag-new">Added by you</span>':''}${gaps?`<span class="ins-tag-missing" title="${gaps} required ${gaps===1?'field':'fields'} not found in the documents">Missing</span>`:''}</span></span><i class="ins-acc-chevron" data-lucide="chevron-down"></i></button>${open?`${insAltPlanElig(plan,index)}<dl class="ins-acc-body">${plan.fields.map(([label,value])=>{
-      // A field the documents didn't provide is filled in place, like Gender in Patient Demographics.
-      const edited=insAlt.values[plan.id]&&label in insAlt.values[plan.id],v=insAltValue(plan,label,value);
-      if(insAlt.missing[plan.id]?.includes(label)||edited){const empty=!v;return `<div class="ins-acc-missing ${empty?'':'done'}"><dt>${label}<em class="miss-chip">${empty?'Not found':'Added'}</em></dt><dd>${label==='Relationship to insured'?`<select class="input inline-input" data-ins-alt-field="${plan.id}|${label}" aria-label="${label}"><option value="">Select relationship</option>${['Self','Spouse','Child','Other'].map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`:`<input class="input inline-input" data-ins-alt-field="${plan.id}|${label}" value="${v}" placeholder="Enter ${label.toLowerCase()}" aria-label="${label}">`}</dd></div>`;}
-      return `<div><dt>${label}</dt><dd>${v||'—'}</dd></div>`;
-    }).join('')}</dl>`:''}</section>`;
+  if(insAlt.sel>=n)insAlt.sel=0;
+  const plan=insurancePlans[insAlt.sel];
+  $('#insAltPlans').innerHTML=n?insurancePlans.map((item,index)=>{
+    const rank=planRank(index),isNew=!item.systemRank&&!item.userAdded,active=index===insAlt.sel;
+    // The sparkle marks a position AI suggested; it goes away once the user moves the plan elsewhere.
+    const ai=item.aiRank===rank&&item.aiReason?`<span class="ins-alt-ai-btn" tabindex="0" data-alt-why="${item.id}" aria-label="Why AI made this ${rank.toLowerCase()}"><i data-lucide="sparkles"></i></span>`:'';
+    return `<div class="plan-row ${active?'active':''}" draggable="true" data-alt-drag="${index}" role="listitem"><span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span><button type="button" class="plan-item ${active?'active':''}" data-alt-plan="${index}" aria-label="${item.name}, ${rank}${isNew?', new, not on file':''}"><span class="plan-item-copy"><strong>${item.name}</strong><span class="ins-alt-pills"><span class="ins-alt-rank">${index===0?'<i class="ins-alt-star" data-lucide="star"></i>':''}${rank}${ai}</span>${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${item.userAdded?'<span class="plan-tag-new">Added by you</span>':''}${insAltGaps(item)?'<span class="ins-tag-missing">Missing</span>':''}</span>${item.check?`<span class="plan-coverage">${statusPill(item)}${serviceTag(item)}</span>`:''}</span></button></div>`;
   }).join(''):'<p class="empty-note">Add the patient’s insurance with “Add Insurance”.</p>';
-  const items=[
-    ['active','Insurance is active and not expired','Effective dates cover the date of service.'],
-    ['others','Checked for other insurance','Asked the patient or payer about plans not listed here.'],
-    ['qualifies',`Patient qualifies for ${state.serviceType}`,`At least one plan covers ${state.serviceType} for this patient.`]
-  ];
-  // "Other insurance" lets the user add a plan straight from the checklist.
-  $('#insAltItems').innerHTML=items.map(([key,title,hint])=>`<div class="ins-alt-item"><label><input type="checkbox" name="${key}" ${insAlt.checks[key]?'checked':''}><span><b>${title}</b><small>${hint}</small></span></label>${key==='others'?'<button type="button" class="text-btn header-link ins-alt-link" data-ins-alt-add><i data-lucide="plus"></i> Add Insurance</button>':''}</div>`).join('');
-  $('#insAltSaved').innerHTML='';
-  $('#insAltSave').disabled=!Object.values(insAlt.checks).every(Boolean);
-  // Once the checklist is saved it steps aside: plans go full width and the eligibility check takes its place.
-  $('#insurance-alt-section .ins-alt').classList.toggle('is-verified',Boolean(insAlt.savedAt));
-  $('#insAltCheck').hidden=Boolean(insAlt.savedAt);
-  const elig=$('#insAltElig');elig.hidden=!insAlt.savedAt||!n;
-  if(!elig.hidden){
-    const type=serviceTypes.find(item=>item.id===state.serviceType);
-    elig.innerHTML=`<span class="suggest-label">Check eligibility for</span><div class="ins-alt-service"><div class="service-select"><button type="button" class="service-trigger" data-ins-alt-menu aria-haspopup="listbox" aria-expanded="${insAlt.menuOpen}"><i data-lucide="${type.icon}"></i><span>${type.id}</span><i class="service-chevron" data-lucide="chevron-down"></i></button>${insAlt.menuOpen?`<div class="service-menu" role="listbox">${serviceTypes.map(item=>`<button type="button" class="service-option ${item.id===state.serviceType?'selected':''}" role="option" aria-selected="${item.id===state.serviceType}" data-ins-alt-service="${item.id}"><i data-lucide="${item.icon}"></i><span><strong>${item.id}</strong><small>${item.description}</small></span>${item.id===state.serviceType?'<i class="service-check" data-lucide="check"></i>':''}</button>`).join('')}</div>`:''}</div><span class="suggest-ai"><i data-lucide="sparkles"></i> AI suggested from the prescription</span></div><button type="button" class="small-btn primary" data-ins-alt-check-all ${state.checkingEligibility?'disabled':''}>${state.checkingEligibility?'<span class="spinner"></span> Checking…':'<i data-lucide="refresh-cw"></i> Check Eligibility'}</button>`;
+  $('#insAltConfirm').innerHTML=!n?'':state.plansConfirmed
+    ?'<span class="ins-alt-confirmed"><i data-lucide="circle-check"></i> Order confirmed</span>'
+    :'<button type="button" class="small-btn primary" data-alt-confirm><i data-lucide="check"></i> Confirm Order</button>';
+  $('#insAltName').textContent=plan?plan.name:'No insurance yet';
+  const st=plan&&planStatus(plan),checking=state.checkingPlan&&state.currentPlan===insAlt.sel,result=plan&&planResult(plan);
+  $('#insAltStatus').innerHTML=!plan?'':checking?'<span class="spinner"></span> Checking eligibility…'
+    :st?`<span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>${servicePill(plan)}<span class="ins-alt-note">${result?`${result.detail} · `:''}Checked ${plan.check.at}</span>`
+    :'<i data-lucide="circle-dashed"></i><em>Eligibility not checked yet. Status and coverage are unverified.</em>';
+  $('#insAltActions').innerHTML=!plan?'':`${plan.check&&!checking?`<button type="button" class="small-btn" data-plan-response="${insAlt.sel}"><i data-lucide="file-search"></i> View Response</button>`:''}<button type="button" class="small-btn" data-ins-alt-check-plan="${insAlt.sel}" ${checking?'disabled':''}><i data-lucide="refresh-cw"></i> ${plan.check?.service===state.serviceType?'Re-check':'Check'} This Insurance</button>`;
+  const fixes=plan?aiFixesFor(plan):{};
+  $('#insAltFields').innerHTML=!plan?'':plan.fields.map(([label,value],fieldIndex)=>insAltIsMissing(plan,label)?(()=>{
+    const v=insAlt.filled[plan.id]?.[label]||'';
+    return `<label class="ins-field ins-alt-missing ${v?'done':''}"><span class="ins-label">${label}<em class="miss-chip">${v?'Added':'Not found'}</em></span><select class="input inline-input" data-alt-missing="${fieldIndex}" aria-label="${label}"><option value="">Select relationship</option>${['Self','Spouse','Child','Other'].map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select></label>`;
+  })():`<label class="ins-field"><span class="ins-label">${label}${fixes[label]?`<span class="ins-alt-ai-btn" tabindex="0" data-alt-ai="${label}" aria-label="How AI resolved ${label}"><i class="ins-alt-ai" data-lucide="sparkles"></i></span>`:''}</span><input class="ins-input" data-alt-field="${fieldIndex}" value="${value==='Not provided'?'':value.replace(/"/g,'&quot;')}" placeholder="Not provided" aria-label="${label}" autocomplete="off"></label>`).join('');
+  const gaps=insurancePlans.reduce((sum,item)=>sum+insAltGaps(item),0),tag=$('#insAltStatusTag');
+  tag.className=`section-status ${gaps?'danger':'success'}`;
+  tag.innerHTML=gaps?`<i data-lucide="circle-x"></i> ${gaps} missing`:'<i data-lucide="circle-check"></i> Reviewed';
+  const type=serviceTypes.find(item=>item.id===state.serviceType);
+  $('#insAltElig').hidden=!n;
+  $('#insAltElig').innerHTML=`<p class="ins-alt-why"><i data-lucide="shield-question"></i><span><b>Why check?</b> The payer confirms each plan is active, flags insurance you’re missing, and shows whether the services you’ll provide are covered, before you bill.</span></p>
+    <div class="ins-alt-run"><span class="suggest-label">Check eligibility for</span><div class="service-select"><button type="button" class="service-trigger" data-ins-alt-menu aria-haspopup="listbox" aria-expanded="${insAlt.menuOpen}"><i data-lucide="${type.icon}"></i><span>${type.id}</span><i class="service-chevron" data-lucide="chevron-down"></i></button>${insAlt.menuOpen?`<div class="service-menu" role="listbox">${serviceTypes.map(item=>`<button type="button" class="service-option ${item.id===state.serviceType?'selected':''}" role="option" aria-selected="${item.id===state.serviceType}" data-ins-alt-service="${item.id}"><i data-lucide="${item.icon}"></i><span><strong>${item.id}</strong><small>${item.description}</small></span>${item.id===state.serviceType?'<i class="service-check" data-lucide="check"></i>':''}</button>`).join('')}</div>`:''}</div><span class="suggest-ai"><i data-lucide="sparkles"></i> AI suggested</span><button type="button" class="small-btn primary" data-ins-alt-check-all ${state.checkingEligibility?'disabled':''}>${state.checkingEligibility?'<span class="spinner"></span> Checking…':`<i data-lucide="shield-check"></i> Check All Insurance (${n})`}</button></div>`;
+}
+const insAltRefresh=()=>{renderInsuranceAlt();icons();};
+document.addEventListener('click',event=>{
+  const t=event.target;
+  if(insAlt.menuOpen&&!t.closest('#insAltElig .service-select')){insAlt.menuOpen=false;insAltRefresh();}
+  if(t.closest('[data-ins-alt-add]')){openAddPlan();return;}
+  if(t.closest('[data-ins-alt-checklist]')){renderInsChecklist();$('#insChecklist').showModal();return;}
+  if(t.closest('[data-ins-checklist-close]')||t===$('#insChecklist')){closeInsChecklist();return;}
+  const cl=t.closest('[data-ins-cl]');if(cl){const i=Number(cl.dataset.insCl);insAlt.checklistOpen=insAlt.checklistOpen===i?-1:i;renderInsChecklist();return;}
+  const pick=t.closest('[data-alt-plan]');if(pick){insAlt.sel=Number(pick.dataset.altPlan);insAltRefresh();return;}
+  if(t.closest('[data-alt-confirm]')){state.plansConfirmed=true;renderInsurance();toast('Payer order confirmed');return;}
+  const one=t.closest('[data-ins-alt-check-plan]');if(one){state.currentPlan=Number(one.dataset.insAltCheckPlan);checkPlanEligibility();return;}
+  if(t.closest('[data-ins-alt-check-all]')){checkEligibility();return;}
+  const option=t.closest('[data-ins-alt-service]');if(option){state.serviceType=option.dataset.insAltService;insAlt.menuOpen=false;renderEligibility();return;}
+  if(t.closest('[data-ins-alt-menu]')){insAlt.menuOpen=!insAlt.menuOpen;insAltRefresh();}
+});
+$('#insAltFields').addEventListener('input',event=>{
+  const input=event.target.closest('[data-alt-field]');if(!input)return;
+  insurancePlans[insAlt.sel].fields[+input.dataset.altField][1]=input.value.trim()||'Not provided';
+});
+$('#insAltFields').addEventListener('change',event=>{
+  const pick=event.target.closest('[data-alt-missing]');
+  if(pick){const plan=insurancePlans[insAlt.sel],label=plan.fields[+pick.dataset.altMissing][0];(insAlt.filled[plan.id]??={})[label]=pick.value;if(pick.value)plan.fields[+pick.dataset.altMissing][1]=pick.value;}
+  renderInsurance();
+});
+$('#insChecklist').addEventListener('cancel',event=>{event.preventDefault();closeInsChecklist();});
+// AI sparkles explain themselves on hover or focus, with the same tooltip as the info icons in the card above.
+function showAltAiPop(el){
+  clearTimeout(state.infoPopTimer);
+  if(el.dataset.altWhy){
+    const plan=insurancePlans.find(item=>item.id===el.dataset.altWhy);if(!plan||state.insPopKey===`why:${plan.id}`)return;
+    openInsPop(`why:${plan.id}`,el,`AI made this ${plan.aiRank.toLowerCase()}`,plan.aiReason);
+  }else{
+    const label=el.dataset.altAi;if(state.insPopKey===`ai:${label}`)return;
+    openInsPop(`ai:${label}`,el,`How AI resolved ${label}`,aiFixesFor(insurancePlans[insAlt.sel])[label]||'');
   }
 }
-// Per-plan eligibility, shown at the bottom of an expanded plan.
-function insAltPlanElig(plan,index){
-  const st=planStatus(plan),checking=state.checkingPlan&&state.currentPlan===index,result=planResult(plan);
-  const status=checking?'<span class="ins-elig-note">Checking eligibility…</span>'
-    :st?`<span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>${servicePill(plan)}<span class="ins-elig-note">${result?result.detail+' · ':''}Checked ${plan.check.at}</span>`
-    :'<span class="ins-elig-note">Eligibility not checked yet</span>';
-  return `<div class="ins-acc-elig"><div class="ins-acc-elig-status"><strong>Eligibility</strong><div>${status}</div></div><div class="ins-acc-elig-actions">${plan.check&&!checking?`<button type="button" class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View Response</button>`:''}<button type="button" class="small-btn" data-ins-alt-check-plan="${index}" ${checking?'disabled':''}>${checking?'<span class="spinner"></span> Checking…':`<i data-lucide="refresh-cw"></i> ${plan.check?.service===state.serviceType?'Re-check':'Check'} Eligibility`}</button></div></div>`;
-}
-document.addEventListener('click',event=>{
-  if(event.target.closest('[data-ins-alt-add]')){openAddPlan();return;}
-  const one=event.target.closest('[data-ins-alt-check-plan]');if(one){state.currentPlan=Number(one.dataset.insAltCheckPlan);checkPlanEligibility();return;}
-  if(event.target.closest('[data-ins-alt-check-all]')){checkEligibility();return;}
-  const head=event.target.closest('[data-ins-acc]');if(!head)return;
-  const index=Number(head.dataset.insAcc);insAlt.open=insAlt.open===index?-1:index;renderInsuranceAlt();icons();
+const altAiTrigger='[data-alt-why],[data-alt-ai]';
+document.addEventListener('pointerover',event=>{const el=event.target.closest(altAiTrigger);if(el)showAltAiPop(el);});
+document.addEventListener('pointerout',event=>{if(!event.target.closest(altAiTrigger)||event.relatedTarget?.closest?.(`${altAiTrigger},#planWhyPop`))return;hideInfoPop();});
+document.addEventListener('focusin',event=>{const el=event.target.closest(altAiTrigger);if(el)showAltAiPop(el);});
+document.addEventListener('focusout',event=>{if(event.target.closest(altAiTrigger))hideInfoPop();});
+// Drag to reorder, same as the payer order in the card above.
+$('#insAltPlans').addEventListener('dragstart',event=>{const row=event.target.closest('[data-alt-drag]');if(!row)return;insAlt.drag=+row.dataset.altDrag;row.classList.add('dragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',String(insAlt.drag));}catch(error){}});
+$('#insAltPlans').addEventListener('dragover',event=>{
+  if(insAlt.drag===null)return;event.preventDefault();
+  const row=event.target.closest('[data-alt-drag]');$$('#insAltPlans .plan-row').forEach(item=>item.classList.remove('drop-above','drop-below'));
+  if(!row||+row.dataset.altDrag===insAlt.drag)return;
+  const box=row.getBoundingClientRect();row.classList.add(event.clientY<box.top+box.height/2?'drop-above':'drop-below');
 });
-$('#insAltPlans').addEventListener('change',event=>{
-  const field=event.target.closest('[data-ins-alt-field]');if(!field)return;
-  const [id,label]=field.dataset.insAltField.split('|');(insAlt.values[id]??={})[label]=field.value.trim();renderInsuranceAlt();icons();
+$('#insAltPlans').addEventListener('drop',event=>{
+  event.preventDefault();const row=event.target.closest('[data-alt-drag]');
+  if(insAlt.drag===null||!row)return;
+  const from=insAlt.drag,target=+row.dataset.altDrag,box=row.getBoundingClientRect(),below=event.clientY>=box.top+box.height/2;
+  const ids=currentOrder(),[moved]=ids.splice(from,1);
+  let to=target+(below?1:0);if(from<to)to--;
+  ids.splice(to,0,moved);insAlt.drag=null;
+  const name=insurancePlans[from].name;
+  if(!sameOrder(ids,currentOrder())){insAlt.sel=to;setPlanOrder(ids,`${name} moved to ${planRank(to).toLowerCase()}`);}else insAltRefresh();
 });
-$('#insAltCheck').addEventListener('change',event=>{if(event.target.name in insAlt.checks){insAlt.checks[event.target.name]=event.target.checked;$('#insAltSave').disabled=!Object.values(insAlt.checks).every(Boolean);}});
-$('#insAltElig').addEventListener('click',event=>{
-  const option=event.target.closest('[data-ins-alt-service]');
-  if(option){state.serviceType=option.dataset.insAltService;insAlt.menuOpen=false;renderEligibility();return;}
-  if(event.target.closest('[data-ins-alt-menu]')){insAlt.menuOpen=!insAlt.menuOpen;renderInsuranceAlt();icons();}
-});
-document.addEventListener('click',event=>{if(insAlt.menuOpen&&!event.target.closest('#insAltElig .service-select')){insAlt.menuOpen=false;renderInsuranceAlt();icons();}});
-$('#insAltCheck').addEventListener('submit',event=>{
-  event.preventDefault();
-  insAlt.savedAt=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
-  renderInsuranceAlt();icons();toast('Coverage verified. Check eligibility next.');
-});
+$('#insAltPlans').addEventListener('dragend',()=>{insAlt.drag=null;$$('#insAltPlans .plan-row').forEach(item=>item.classList.remove('dragging','drop-above','drop-below'));});
 function renderCoverageConfirm(){
   const box=$('#coverageConfirm'),n=insurancePlans.length;
   // Removed: the "Are these all of the patient's insurance plans?" step.
@@ -1305,6 +1360,7 @@ document.addEventListener('click',event=>{
   if(target.dataset.jump){document.getElementById(target.dataset.jump).scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(target.dataset.reviewTarget){
     const destination=$(`#${target.dataset.reviewTarget}`),group=destination?.closest('details');if(group)group.open=true;
+    const card=destination?.closest('.review-card.is-collapsed');if(card)setCardCollapsed(card,false);
     if(target.dataset.newInfo){state.newInfo=state.newInfo.filter(item=>item.key!==target.dataset.newInfo);renderReviewMenu();}
     const aiItem=aiResolvedFields.find(item=>item.id===target.dataset.reviewTarget);
     if(aiItem){state.aiReviewed.add(aiItem.key);renderReviewMenu();}

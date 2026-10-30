@@ -2099,3 +2099,5 @@ dialog.confirm-dialog #manualPick .modal-sub,dialog.confirm-dialog .pc-ec .modal
 .doc-drawer-stage img{display:block;max-width:none;height:auto;background:var(--white);box-shadow:var(--fluent-depth-16)}
 .doc-drawer-zoom{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:4px;border:1px solid var(--line);border-radius:var(--fluent-corner-2);background:var(--white);box-shadow:var(--fluent-depth-8,0 2px 6px rgba(0,0,0,.12))}
 .doc-drawer-zoom .icon-btn{width:32px;height:32px}
+/* Review panel groups: 16px below each group */
+.review-group{padding-bottom:16px}
