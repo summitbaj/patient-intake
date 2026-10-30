@@ -321,8 +321,8 @@ const openFlagged=()=>flagged.filter(l=>!ui.reviewed.has(l.id));
 const first=flagged[0]||lines[0];
 const rxOf=line=>rxList.findIndex(r=>r.items.some(i=>i.lines.includes(line)));
 if(first){ui.rx=rxOf(first);ui.selected=first.id;}
-// Accordion: one prescription open at a time (the first with flagged codes), the others show as headers.
-ui.openRx.add(ui.rx);
+// Accordion: Prescription 1 starts open, plus the one with the first flagged code.
+ui.openRx.add(0);ui.openRx.add(ui.rx);
 const isOverlay=()=>matchMedia('(max-width:1280px)').matches;
 const isStacked=()=>matchMedia('(max-width:820px)').matches;
 

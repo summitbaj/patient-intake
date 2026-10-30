@@ -482,3 +482,26 @@ details.pc-crit-block[open] .pc-crit-chev{transform:rotate(180deg)}
 details.pc-crit-block[open]>summary{border-bottom:1px solid var(--line)}
 details.pc-crit-block>:not(summary){margin-left:14px;margin-right:14px}
 details.pc-crit-block>h5:first-of-type{margin-top:12px}
+
+/* Decision support note: the project's blue information box. */
+.pk-disclaimer{gap:8px;padding:8px 12px;border:1px solid var(--blue-line);border-radius:var(--radius,4px);background:var(--blue-soft);color:var(--blue);font-size:13px;line-height:18px}
+.pk-disclaimer .lucide{width:16px;height:16px;color:var(--blue)}
+/* Prescription list: no blue focus border on the current or expanded prescription. */
+.pr-acc.current{border-color:var(--line);box-shadow:none}
+/* Prescription header: 16px all round, no extra right padding. */
+.pr-acc-bar{padding:16px}
+.pr-acc-bar .pr-acc-head{padding:0}
+/* Active code: light blue background only, no border. */
+.pr-code.active{border-color:transparent;box-shadow:none}
+/* Detail cards sit flat. */
+.pcd-head,.pcd-check,.pcd-check:hover{box-shadow:none}
+/* Primary ICD-10 keeps the orange star used across the app. */
+.pc-icd .rank-primary .lucide{color:var(--primary-star);fill:currentColor}
+/* Code title card: same light blue as the active code in the list. */
+.pcd-head{background:var(--blue-soft)}
+/* Criteria tags match the other capsules: shared pill corners and a 1px tinted border. */
+.pc-crit-tag{border-radius:var(--pill-radius,4px)}
+.pc-crit-tag.applies{box-shadow:inset 0 0 0 1px var(--fluent-success-background)}
+.pc-crit-tag.none{box-shadow:inset 0 0 0 1px var(--fluent-warning-background)}
+/* Criteria headers: no coloured left stroke. */
+.pc-crit-block.payer>header,.pc-crit-block.medicare>header,details.pc-crit-block.pc-crit-block>summary{box-shadow:none}

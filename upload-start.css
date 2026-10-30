@@ -222,7 +222,7 @@ body.phase-upload #cancelUpload{display:none!important}
 
 /* Coverage order on insurance plans is plain text; Primary gets a star */
 .insurance-workspace .plan-item .plan-pills .plan-rank{display:inline-flex!important;flex-direction:row;white-space:nowrap;align-items:center;gap:4px;font-size:12px;font-weight:400;color:var(--muted)}
-.insurance-workspace .plan-item .plan-rank .lucide{flex:none;width:14px;height:14px;color:#f7630c;fill:currentColor}
+.insurance-workspace .plan-item .plan-rank .lucide{flex:none;width:14px;height:14px;color:var(--primary-star);fill:currentColor}
 /* Insurance follow-up steps sit inside the card as their own bordered cards, inset 16px */
 #insurance-section :is(.coverage-confirm,.service-suggest,.hold-banner,.elig-summary){margin:0 16px 8px;padding:12px;border:1px solid var(--line);border-radius:var(--radius)}
 #insurance-section .insurance-workspace+.coverage-confirm{margin-top:16px}
@@ -250,7 +250,7 @@ body.phase-upload #cancelUpload{display:none!important}
 .ins-acc-title strong{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ins-acc-sub{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
 .ins-acc-sub .plan-rank{display:inline-flex;align-items:center;gap:4px;font-weight:600;color:var(--text)}
-.ins-acc-sub .plan-rank .lucide{width:14px;height:14px;color:#f7630c;fill:currentColor}
+.ins-acc-sub .plan-rank .lucide{width:14px;height:14px;color:var(--primary-star);fill:currentColor}
 .ins-acc-chevron{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .2s}
 .ins-acc.open .ins-acc-chevron{transform:rotate(180deg)}
 .ins-acc-body{margin:0;padding:0 12px;border-top:1px solid var(--line)}
