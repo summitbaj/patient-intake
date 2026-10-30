@@ -374,7 +374,7 @@ function renderFooter(){
   const rx=rxList[ui.rx],ls=rx.items.flatMap(i=>i.lines),bad=ls.filter(l=>l.status!=='pass').length;
   $('#pkFooterStatus').className=`pk-footer-status ${bad?'todo':'done'}`;
   $('#pkFooterStatus').innerHTML=`<span class="pk-status-icon"><i data-lucide="${bad?'list-checks':'check'}"></i></span><span><b>${bad?`${plural(bad,'code')} flagged`:'All codes qualified'}</b><span class="v2-next">in ${esc(rx.title)}</span></span>`;
-  const label=fromOrder?'Save to order':'Start fulfillment';
+  const label=fromOrder?'Save to order':'Work Queue';
   $('#pcCreateOrder').innerHTML=`${label} <i data-lucide="arrow-right"></i>`;
   $('#pcCreateOrder').title=fromOrder?`${label} for ${rx.title}`:'Turn the prescriptions into orders, refills and appointments';
 }

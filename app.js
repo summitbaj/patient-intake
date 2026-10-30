@@ -78,7 +78,7 @@ const aiChangeFields={
   mobile:{value:'#mobileValue',label:'mobile number',row:'mobileField'}
 };
 const postIntakeRecommendation={
-  patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Start pre-check',reason:'Confirm payer qualification, coverage, and required documentation before creating the new equipment order.',alternatives:['Start fulfillment'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'},{name:'Home oxygen setup and safety education',reason:'Needed for the new oxygen concentrator prescription.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'},{name:'Oxygen concentrator and cannula',reason:'Supported by the reviewed oxygen prescription.'}],note:'Final coverage and item eligibility remain subject to payer review.'
+  patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Start pre-check',reason:'Confirm payer qualification, coverage, and required documentation before creating the new equipment order.',alternatives:['Work Queue'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'},{name:'Home oxygen setup and safety education',reason:'Needed for the new oxygen concentrator prescription.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'},{name:'Oxygen concentrator and cannula',reason:'Supported by the reviewed oxygen prescription.'}],note:'Final coverage and item eligibility remain subject to payer review.'
 };
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -1025,6 +1025,7 @@ function issueCount(){ return [state.mobile,state.provider,state.product,state.p
 function reviewItems(){
   return [
     // Eligibility checks are optional, so an unchecked plan is not a review item.
+    insurancePlans.length&&!state.plansConfirmed&&{id:'insurance-alt-section',label:'Payer order not confirmed',detail:'AI sorted the plans. Check the order and confirm it',section:'Insurance',severity:'missing'},
     !state.mobile&&{id:'mobileField',label:'Mobile phone number',detail:'Digits look blurry',section:'Contact information',severity:'warning'},
     !state.provider&&{id:'providerField',label:'Ordering physician',detail:'Not found in the NPI registry · search to add',section:'Prescription 1',severity:'missing'},
     !state.product&&{id:'rx-rx1-item-1',label:'Medicare coverage for E0601',detail:'Choose the policy that applies',section:'Prescription 1',severity:'missing',tag:'Select'}
@@ -2153,9 +2154,9 @@ async function runPrecheck(button){
   await wait(1200);
   state.precheck=precheckResults();state.precheckAt='just now';
   renderPrecheck();
-  $('#nextActionTitle').textContent='Start fulfillment';
-  $('#nextActionReason').textContent=`Pre-check ${precheckSummary(state.precheck).toLowerCase()}. Start fulfillment to create the orders, refills and appointments.`;
-  button.disabled=false;button.innerHTML='<i data-lucide="arrow-right"></i> Start fulfillment';button.dataset.postAction='Start fulfillment';
+  $('#nextActionTitle').textContent='Work Queue';
+  $('#nextActionReason').textContent=`Pre-check ${precheckSummary(state.precheck).toLowerCase()}. Send it to the Work Queue to create the orders, refills and appointments.`;
+  button.disabled=false;button.innerHTML='<i data-lucide="arrow-right"></i> Work Queue';button.dataset.postAction='Work Queue';
   $('#otherActionButtons').innerHTML='<button class="secondary-action compact" data-post-action="Run pre-check again">Run Pre-Check Again</button>';
   icons();toast(`Pre-check ${precheckSummary(state.precheck).toLowerCase()}`);
   $('#precheckResult').scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -2209,7 +2210,7 @@ function handlePostAction(action,button){
   const left=requiredReviewsLeft();
   if(left){openReviewGate(left);return;}
   if(action==='Start pre-check'||action==='Run pre-check again'){try{sessionStorage.removeItem('signeticIntakeFull');sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(intakeSnapshot()));}catch(error){}location.href='precheck.html';return;}
-  if(action==='Start fulfillment'||action==='Create order'||action==='Create order without pre-check'){startFulfillment();return;}
+  if(action==='Work Queue'||action==='Create order'||action==='Create order without pre-check'){startFulfillment();return;}
   if(action==='Schedule setup appointment'){toast('Setup appointment selected · opens scheduling');return;}
   toast(`${action} selected`);
 }
