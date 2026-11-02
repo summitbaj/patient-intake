@@ -45,8 +45,8 @@ function physicianCheck(rx){
   return {key:'physician',label:'Ordering physician',status,
     summary:!found?'Ordering physician not verified':!dmeOk?`Dr. ${esc(p.last||name)} isn’t enrolled to order DME`:`Dr. ${esc(p.last||name)} · NPI ${esc(npi)} · enrolled for DME`,
     action:!found?'Add the ordering physician from the NPI registry in the intake.':!dmeOk?'Medicare won’t pay for DME ordered by this physician. Ask for an order from an enrolled physician.':'',
-    body:`<dl class="pc-kv"><div><dt>First name</dt><dd>${esc(p.first||'—')}</dd></div><div><dt>Last name</dt><dd>${esc(p.last||'—')}</dd></div><div><dt>NPI</dt><dd>${esc(npi||'Not provided')}</dd></div><div><dt>Specialty</dt><dd>${esc(p.specialty||rx.specialty||'—')}</dd></div><div class="pc-kv-wide"><dt>Address</dt><dd>${esc(p.address||'—')}</dd></div></dl>
-      <h5>Medicare enrollment (PECOS)</h5><dl class="pc-kv pc-kv-3"><div><dt>DME</dt><dd>${yn(p.dme)}</dd></div><div><dt>PMD</dt><dd>${yn(p.pmd)}</dd></div><div><dt>PARTB</dt><dd>${yn(p.partb)}</dd></div></dl>`};
+    body:`<dl class="pc-kv pc-kv-block"><div><dt>First name</dt><dd>${esc(p.first||'—')}</dd></div><div><dt>Last name</dt><dd>${esc(p.last||'—')}</dd></div><div><dt>NPI</dt><dd>${esc(npi||'Not provided')}</dd></div><div><dt>Specialty</dt><dd>${esc(p.specialty||rx.specialty||'—')}</dd></div><div class="pc-kv-wide"><dt>Address</dt><dd>${esc(p.address||'—')}</dd></div></dl>
+      <h5>Medicare enrollment (PECOS)</h5><dl class="pc-kv pc-kv-3 pc-kv-block"><div><dt>DME</dt><dd>${yn(p.dme)}</dd></div><div><dt>PMD</dt><dd>${yn(p.pmd)}</dd></div><div><dt>PARTB</dt><dd>${yn(p.partb)}</dd></div></dl>`};
 }
 // Prior authorization (demo rules): commercial and Medicaid plans require it for the main equipment; Medicare doesn't for these codes.
 // Accessories and supplies don't need it. Only the primary and secondary payers are checked.
@@ -157,11 +157,16 @@ function sameCheck(code,matches){
 // ---------- Medical criteria (LCD checklists, demo evidence) ----------
 // Status per criterion: met · review (needs a look) · missing (not found) · later (checked after setup).
 const critPill={met:['success','Met'],review:['warning','Review'],missing:['danger','Not found'],later:['neutral','After setup'],pending:['neutral','Waiting on test']};
+// Review and missing: the icon sits in a tinted circle, so the row stands out without a coloured fill.
+const critBadge={
+  review:'<span class="pc-crit-alert review" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v8"/><path d="M12 18h.01"/></svg></span>',
+  missing:'<span class="pc-crit-alert missing" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17"/><path d="m7 7 10 10"/></svg></span>'
+};
 const critIcon={met:'circle-check',review:'triangle-alert',missing:'circle-x',later:'clock',pending:'hourglass'};
 const notYet=c=>c.status==='later'||c.status==='pending';
 const lcdLink=id=>`https://www.cms.gov/medicare-coverage-database/view/lcd.aspx?LCDid=${id.replace(/\D/g,'')}`;
 function criteriaHtml(groups){
-  return groups.map(g=>`<h5>${g.title}</h5>${g.note?`<p class="pc-note">${g.note}</p>`:''}<ol class="pc-criteria">${g.items.map(c=>{const [cls,label]=critPill[c.status];return `<li class="pc-crit ${c.status}"><i data-lucide="${critIcon[c.status]}" class="pc-crit-icon"></i><div class="pc-crit-copy"><b>${c.title}</b>${c.rule?`<small class="pc-crit-rule">${c.rule}</small>`:''}${c.evidence?`<p class="pc-crit-evidence"><span>${c.status==='missing'?'Looked in':'Evidence'}</span>${c.evidence}</p>`:''}${c.action?`<p class="pc-crit-action"><i data-lucide="arrow-right"></i>${c.action}</p>`:''}</div><span class="section-status ${cls} pc-crit-pill">${label}</span></li>`;}).join('')}</ol>`).join('');
+  return groups.map(g=>`<h5>${g.title}</h5>${g.note?`<p class="pc-note">${g.note}</p>`:''}<ol class="pc-criteria">${g.items.map(c=>{const [cls,label]=critPill[c.status];return `<li class="pc-crit ${c.status}">${critBadge[c.status]||`<i data-lucide="${critIcon[c.status]}" class="pc-crit-icon"></i>`}<div class="pc-crit-copy"><b>${c.title}</b>${c.rule?`<small class="pc-crit-rule">${c.rule}</small>`:''}${c.evidence?`<p class="pc-crit-evidence"><span>${c.status==='missing'?'Looked in':'Evidence'}</span>${c.evidence}</p>`:''}${c.action?`<p class="pc-crit-action"><i data-lucide="arrow-right"></i>${c.action}</p>`:''}</div><span class="section-status ${cls} pc-crit-pill">${label}</span></li>`;}).join('')}</ol>`).join('');
 }
 function addDays(date,days){const [m,d,y]=date.split('/').map(Number),dt=new Date(y,m-1,d+days);return `${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}/${dt.getFullYear()}`;}
 // PAP device: LCD L33718 (initial 12-week trial, then continued coverage).
