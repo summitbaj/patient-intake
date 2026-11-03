@@ -2067,8 +2067,8 @@ dialog.confirm-dialog #manualPick .modal-sub,dialog.confirm-dialog .pc-ec .modal
 
 /* Confirm before we upload the intake: 16px body, both steps sit flat on the body (no card border) */
 #resolveDialog .modal-body.extraction-issues{padding:16px}
-#resolveDialog .extraction-issues .extraction-issue,#resolveDialog .extraction-issues #documentIssue.is-locked{border:0;padding:0;background:transparent}
-#resolveDialog .extraction-issues .issue-title{margin-top:20px}
+#resolveDialog .extraction-issues .extraction-issue,#resolveDialog .extraction-issues #documentIssue.is-locked{border:0;padding:0;background:transparent;margin:16px 0 12px}
+#resolveDialog .extraction-issues .issue-title{margin-top:8px}
 
 /* Action panel once complete: no line under "Intake complete"; the Optional list starts under its own top border */
 .review-done.intake-ready{border-bottom:0}

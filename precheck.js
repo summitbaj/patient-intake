@@ -96,7 +96,7 @@ function payerBlock(plan,code,rank){
     ...(net?[['Network',`<span class="pc-net ${net.ok===false?'bad':net.ok?'ok':''}">${esc(net.label)}</span>${net.label!==ec.network?` <span class="pc-muted">${esc(ec.network)}</span>`:''}`]]:[]),
     ['Allowable',medicare?`${medicareAllowable[code]||'See fee schedule'} <span class="pc-muted">Medicare fee schedule</span>`:'Per payer contract']
   ]:[['Eligibility','Not checked in the intake']];
-  return `<div class="pc-payer"><div class="pc-payer-head"><span class="pc-payer-name"><small>${esc(rank)}</small>${esc(plan.name)}</span>${pill}</div><dl class="pc-rows">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
+  return `<div class="pc-payer"><div class="pc-payer-head"><span class="pc-payer-name">${esc(plan.name)}<small>${esc(rank)}</small></span>${pill}</div><dl class="pc-rows">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
 }
 function payerCheck(code){
   const list=billingPlans(),primary=list[0]||primaryPlan(),secondary=list[1];

@@ -528,3 +528,7 @@ details.pc-crit-block>h5:first-of-type{margin-top:12px}
 .pc-crit-alert.missing{background:var(--red-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--red) 25%,white);color:var(--red)}
 .pc-crit-alert.missing svg{width:13px;height:13px}
 .pc-crit.missing .pc-crit-copy>b{color:var(--red)}
+/* Criteria headers (Medicare / payer criteria): no background fill. */
+.pc-crit-block.payer>header,.pc-crit-block.medicare>header,details.pc-crit-block.pc-crit-block>summary{background:transparent}
+/* Payer coverage: Primary / Secondary sits under the plan name, Title Case at 10px. */
+.pc-payer-name small{font-size:10px;text-transform:none;letter-spacing:0}
