@@ -274,7 +274,7 @@ label.eo-row{cursor:pointer}
 .ful-list{display:grid;gap:12px}
 .ful-list-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 16px;margin:4px 2px 0}
 .ful-list-head h2{margin:0;font-size:16px;font-weight:600;color:var(--ink)}
-.ful-list-head small{font-size:12px;color:var(--muted)}
+.ful-list-head small{font-size:13px;color:var(--muted)}
 .ful-progress{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
 .ful-progress b{color:var(--text);font-weight:600}
 .ful-progress-bar{display:inline-block;width:96px;height:6px;border-radius:999px;background:var(--sunken);overflow:hidden}
@@ -288,7 +288,7 @@ label.eo-row{cursor:pointer}
 .ful-icon.refill{background:var(--green-soft);color:var(--green)}
 .ful-icon.add{background:var(--ai-soft,var(--blue-soft));color:var(--ai,var(--primary))}
 .ful-icon.hold,.ful-icon.skip{background:var(--sunken);color:var(--muted)}
-.ful-icon.done{background:var(--green-soft);color:var(--green)}
+.ful-icon.done{background:var(--green);color:#fff}
 .ful-title{gap:2px}
 .ful-title b{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:15px}
 .ful-title .ful-rx-tag{margin-left:0}
@@ -307,15 +307,6 @@ label.eo-row{cursor:pointer}
 .ful-hold .ful-title b,.ful-skip .ful-title b{color:var(--muted)}
 .ful-card.done{background:var(--white);opacity:.75}
 .ful-card.done .ful-title b{color:var(--muted)}
+.ful-svc-wrap{margin-top:8px}
 .ful-services{border-style:solid;background:var(--white)}
 @media(max-width:760px){.ful-items{padding-left:18px}.ful-pick,.ful-warn{margin-left:18px}}
-
-/* Design enhancement */
-.po-card,.ful-card{border-radius:4px}
-.po-scroll{background:var(--fluent-neutral-lighter-alt)}
-/* Move panel: no padding; its buttons use the app's medium size (28px, 13px semibold), as in the intake cards. */
-.ful-move-box{padding:0}
-.ful-move-box .ful-choice,.ful-pick .ful-choice{height:28px;min-height:28px;padding:0 12px;border-radius:4px;font-size:13px;font-weight:600}
-.ful-move-box .ful-cancel{height:28px;min-height:28px;padding:0 8px;font-size:13px;font-weight:600}
-/* Refill / order page: cards sit flat. */
-#eoBody .review-card,#eoBody .review-card:hover{box-shadow:none}

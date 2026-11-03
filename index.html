@@ -88,7 +88,10 @@
         </div>
       </div>
       <footer class="us-footer">
+        <a class="footer-btn us-back" id="backToRecord" href="patient-record.html?tab=documents" hidden><i data-lucide="arrow-left"></i> Back to Patient</a>
         <span class="us-footer-note" id="startFooterNote"></span>
+        <!-- Opened from a patient's Documents tab: save the files to the record without starting an intake -->
+        <button class="footer-btn" id="uploadOnly" hidden disabled title="Save to the patient’s documents without starting an intake"><i data-lucide="upload"></i> Upload Only</button>
         <button class="footer-btn primary" id="startExtract" disabled><i data-lucide="sparkles"></i> Extract</button>
       </footer>
     </section>
@@ -131,24 +134,27 @@
         <div class="data-group"><div class="compact-fields">
           <div><span>First name<i class="req" title="Required" aria-label="required">*</i></span><strong>Ashlynn</strong></div><div><span>Middle name</span><strong>—</strong></div>
           <div><span>Last name<i class="req" title="Required" aria-label="required">*</i></span><strong>Botosh</strong></div><div class="missing-cell" id="genderField"><label class="cell-label" for="genderInput">Gender<i class="req" title="Required" aria-label="required">*</i><em class="miss-chip" id="genderHint">Not found</em></label><select class="input inline-input" id="genderInput" aria-label="Gender"><option value="">Select gender</option><option>Female</option><option>Male</option><option>Other</option><option>Unknown</option></select></div>
-          <div class="ai-cell" id="dobConflict"><span class="cell-label">Date of birth<i class="req" title="Required" aria-label="required">*</i><em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved date of birth" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="dobValue">03/15/1978</strong></div>
+          <div class="ai-cell" id="dobConflict"><span class="cell-label">Date of birth<i class="req" title="Required" aria-label="required">*</i><em class="ai-chip confidence ai-confidence" hidden>Edited</em><button type="button" class="ai-info" data-ai-info aria-label="Resolved by AI. View how AI resolved date of birth" title="Resolved by AI · view details" aria-expanded="false"><i data-lucide="sparkles"></i></button></span><strong id="dobValue">03/15/1978</strong></div>
         </div></div>
       </section>
 
       <section class="review-card" id="contact-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="contact"></i></span><div><h3>Contact Information</h3><p>7 of 8 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
         <div class="data-group"><div class="compact-fields">
-          <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved mobile number" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div><span>Home phone number</span><strong>(206) 555-0142</strong></div>
+          <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence" hidden>Edited</em><button type="button" class="ai-info" data-ai-info aria-label="Resolved by AI. View how AI resolved mobile number" title="Resolved by AI · view details" aria-expanded="false"><i data-lucide="sparkles"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div><span>Home phone number</span><strong>(206) 555-0142</strong></div>
           <div class="wide"><span>Street address</span><strong>1234 Healthways Blvd, Suite 200</strong></div>
           <div><span>City</span><strong>Seattle</strong></div><div><span>State/Province</span><strong>WA</strong></div>
           <div><span>ZIP code</span><strong>98101</strong></div>
         </div></div>
       </section>
 
-      <section class="review-card is-collapsible is-collapsed" id="insurance-section">
-        <div class="card-header" data-card-toggle role="button" tabindex="0" aria-expanded="false" aria-controls="insurance-section"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on file</button><button type="button" class="text-btn header-link" id="addPlan"><i data-lucide="plus"></i> Add Insurance</button></div><span class="section-status success"><i data-lucide="circle-check"></i> Reviewed</span><i class="card-toggle-chevron" data-lucide="chevron-down"></i></div></div>
+      <section class="review-card" id="insurance-section">
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on File</button><button type="button" class="text-btn header-link" id="addPlan"><i data-lucide="plus"></i> Add Insurance</button></div><span class="section-status danger" id="insMissing" hidden></span></div></div>
+        <div class="ins-intro-row"><p class="ins-intro">Accurate, up-to-date insurance helps reduce claim denials and reimbursement delays. Review every known plan, confirm the payer order, and verify coverage for the date of service and the services being provided.</p><button type="button" class="text-btn ins-checklist-link" id="insChecklistLink" data-open-checklist><i data-lucide="list-checks"></i> View checklist</button></div>
+        <div class="ins-found-list" id="insFound" hidden></div>
+        <div class="ins-empty-state" id="insEmpty" hidden></div>
         <div class="insurance-workspace">
-          <aside class="plan-list" aria-label="Insurance coverage order"><p class="plan-list-head"><span>Coverage order</span><span class="pill info" id="orderSource"><i data-lucide="sparkles"></i> AI sorted</span></p><div class="order-hint" id="orderNotice"></div><div id="planList" role="list"></div></aside>
+          <aside class="plan-list" id="insOrder" aria-label="Payer order"><p class="plan-list-head"><span>Payer order</span><span class="pill neutral" id="orderSource">Not confirmed</span></p><div id="planList" role="list"></div><div class="order-hint cob-panel" id="orderNotice"></div></aside>
           <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
             <p class="plan-discovered" id="planDiscovered" hidden></p>
             <p class="plan-ai-note" id="planAiNote" hidden></p>
@@ -166,23 +172,24 @@
           <span class="suggest-ai" id="serviceSuggestAi"></span>
           <span class="eligibility-meta" id="eligibilityMeta"></span>
           <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check Eligibility</button>
+          <div class="ec-why" id="ecWhy"></div>
         </div>
         <div class="hold-banner" id="holdBanner" hidden></div>
         <div class="elig-summary" id="eligSummary" hidden></div>
       </section>
 
-      <section class="review-card ins-alt-card" id="insurance-alt-section">
-        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on File</button><button type="button" class="text-btn header-link" data-ins-alt-add><i data-lucide="plus"></i> Add Insurance</button></div><span class="section-status" id="insAltStatusTag"></span></div></div>
-        <div class="ins-alt-intro">
-          <p>Accurate, up-to-date insurance helps reduce claim denials and reimbursement delays. Review every known plan, confirm the payer order, and verify coverage for the date of service and the services being provided.</p><button type="button" class="text-btn ins-alt-checklist-link" data-ins-alt-checklist aria-haspopup="dialog" aria-controls="insChecklist"><i data-lucide="list-checks"></i> View checklist</button>
+      <!-- Earlier insurance layout, no longer shown -->
+      <section class="review-card ins-alt-card" id="insurance-alt-section" hidden>
+        <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insAltMeta">3 coverage plans</p></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on file</button><button type="button" class="text-btn header-link" data-ins-alt-add><i data-lucide="plus"></i> Add Insurance</button></div></div></div>
+        <div class="ins-alt">
+          <div class="ins-alt-plans" id="insAltPlans"></div>
+          <form class="ins-alt-check" id="insAltCheck">
+            <div class="ins-alt-check-head"><strong>Verify Coverage</strong><span>Confirm each item before moving on.</span></div>
+            <div class="ins-alt-items" id="insAltItems"></div>
+            <div class="ins-alt-foot"><span class="ins-alt-saved" id="insAltSaved"></span><button type="submit" class="small-btn primary" id="insAltSave" disabled>Save</button></div>
+          </form>
         </div>
-        <div class="insurance-workspace ins-alt-workspace">
-          <aside class="plan-list" aria-label="Payer order"><p class="plan-list-head"><span>Payer order</span><span class="pill info"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="insAltPlans" role="list"></div><div class="ins-alt-confirm" id="insAltConfirm"></div></aside>
-          <div class="plan-detail"><div class="plan-detail-head"><div><strong id="insAltName"></strong><p class="ins-alt-status" id="insAltStatus"></p></div><div class="plan-actions" id="insAltActions"></div></div>
-            <div class="insurance-fields" id="insAltFields"></div>
-          </div>
-        </div>
-        <div class="ins-alt-elig" id="insAltElig"></div>
+        <div class="ins-alt-elig" id="insAltElig" hidden></div>
       </section>
 
       <div id="prescriptions"></div>
@@ -364,7 +371,7 @@
         <label class="span-2"><span>Health insurance company <em>*</em></span><input class="input" name="company" required placeholder="e.g. Blue Cross Blue Shield" autocomplete="off"></label>
         <label class="span-2"><span>Plan name <em>*</em></span><input class="input" name="plan" required placeholder="e.g. Premera Blue Cross PPO"></label>
         <label><span>Insurance type <em>*</em></span><select class="input" name="type" required><option value="">Select</option><option>Commercial PPO</option><option>Commercial HMO</option><option>Medicare</option><option>Medicare Advantage</option><option>Medicaid</option><option>Medicare Supplement</option><option>TRICARE</option><option>Workers’ compensation</option><option>Other</option></select></label>
-        <label><span>Relationship to insured <em>*</em></span><select class="input" name="relationship" required><option>Self</option><option>Spouse</option><option>Child</option><option>Other</option></select></label>
+        <label><span>Relationship to insured <em>*</em></span><select class="input" name="relationship" required><option>Self</option><option>Spouse</option><option>Child</option><option>Dependent</option><option>Life partner</option><option>Other</option></select></label>
         <div class="span-2 member-field" role="group" aria-labelledby="memberIdLabel"><span class="field-title" id="memberIdLabel">Member ID <em>*</em></span><div class="member-id"><input class="input" name="prefix" placeholder="Prefix" aria-label="Member ID prefix"><input class="input" name="member" required placeholder="Member ID" aria-label="Member ID"><input class="input" name="suffix" placeholder="Suffix" aria-label="Member ID suffix"></div></div>
         <label><span>Group number</span><input class="input" name="group" placeholder="Optional"></label>
         <label><span>Coverage order</span><select class="input" name="position" id="addPlanPosition"></select></label>
@@ -386,13 +393,6 @@
     </form>
   </dialog>
 
-  <dialog class="doc-drawer ins-checklist" id="insChecklist" aria-labelledby="insChecklistTitle">
-    <header class="doc-drawer-head">
-      <div class="doc-drawer-title"><small>Insurance checklist</small><strong id="insChecklistTitle">Get these right to get paid on time.</strong></div>
-      <button class="icon-btn" type="button" data-ins-checklist-close aria-label="Close checklist" title="Close (Esc)"><i data-lucide="x"></i></button>
-    </header>
-    <div class="ins-checklist-body" id="insChecklistBody"></div>
-  </dialog>
   <dialog class="doc-drawer" id="uploadPreview" aria-labelledby="upName">
     <header class="doc-drawer-head">
       <span id="upBadge"></span>
@@ -425,6 +425,13 @@
     </header>
     <div class="dv-stage" id="dvStage"><img id="dvImage" alt=""></div>
   </dialog>
+
+  <!-- Insurance checklist: a side drawer opened from "View checklist" -->
+  <div class="ins-drawer-scrim" id="insChecklistScrim" hidden></div>
+  <aside class="ins-drawer" id="insChecklistDrawer" role="dialog" aria-modal="true" aria-labelledby="insChecklistTitle" hidden>
+    <header class="ins-drawer-head"><div><small>Insurance checklist</small><h2 id="insChecklistTitle">Get these right to get paid on time.</h2></div><button type="button" class="icon-btn" data-close-checklist aria-label="Close checklist"><i data-lucide="x"></i></button></header>
+    <div class="ins-drawer-body" id="insChecklistBody"></div>
+  </aside>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>

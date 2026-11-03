@@ -232,3 +232,13 @@ body.order-page{--pill-radius:4px}
 .order-from-intake>span{flex:1;min-width:0;display:grid}
 .order-from-intake b{color:var(--ink);font-weight:600}
 .order-from-intake .footer-btn{flex:none;text-decoration:none;height:32px;font-size:14px}
+/* Order saved: confirmation, with a way back to the Work Queue tab */
+.order-created{display:grid;justify-items:center;gap:8px;max-width:560px;margin:40px auto;padding:32px 24px;text-align:center}
+.order-created-icon{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--green-soft,#dff6dd);color:var(--green,#107c10)}
+.order-created-icon .lucide{width:28px;height:28px}
+.order-created h2{margin:6px 0 0;font-size:20px}
+.order-created p{margin:0;color:var(--muted,#605e5c);font-size:14px;line-height:1.5}
+.order-created-note{display:flex;align-items:center;gap:6px;margin-top:6px!important;padding:8px 12px;border-radius:6px;background:var(--blue-soft,#eff6fc);color:var(--ink,#323130)!important}
+.order-created-note .lucide{width:15px;height:15px;color:var(--blue,#0f6cbd)}
+.order-created-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.order-from-intake small{display:block;margin-top:2px;color:var(--muted,#605e5c)}

@@ -26,7 +26,8 @@ const selected=new Set(mode==='refill'?order?.items.filter(i=>i.refillable&&i.du
 
 function finish(){
   api.markActionDone(action.id);api.clearAction();
-  location.href=`prepare-orders.html?done=${encodeURIComponent(action.id)}`;
+  const back=action.returnTo||'prepare-orders.html';
+  location.href=`${back}${back.includes('?')?'&':'?'}done=${encodeURIComponent(action.id)}`;
 }
 
 function render(){

@@ -225,7 +225,7 @@ $('#searchForm').addEventListener('submit',event=>{event.preventDefault();if(!$(
 $('#clearSearch').addEventListener('click',()=>{$('#searchForm').reset();search.results=null;search.activeChip='';renderChips();renderResults();syncSearchButton();icons();});
 document.addEventListener('keydown',event=>{if(event.key!=='Escape'||document.querySelector('dialog[open]'))return;if(!$('#searchPanel').hidden)closeSearch();else if(!$('#intakeDrawer').hidden)closeDrawer();});
 $('#orderBack').addEventListener('click',()=>{const index=steps.findIndex(([id])=>id===order.step);if(index>0)goStep(steps[index-1][0]);});
-$('#orderContinue').addEventListener('click',()=>{const index=steps.findIndex(([id])=>id===order.step);if(index<steps.length-1){goStep(steps[index+1][0]);toast('Saved');}else toast('Order saved');});
+$('#orderContinue').addEventListener('click',()=>{const index=steps.findIndex(([id])=>id===order.step);if(index<steps.length-1){goStep(steps[index+1][0]);toast('Saved');}else orderCreated();});
 $('#cancelOrder').addEventListener('click',()=>$('#cancelOrderDialog').showModal());
 $('#cancelOrderDialog').addEventListener('close',()=>{if($('#cancelOrderDialog').returnValue!=='cancel')return;toast('Order cancelled');setTimeout(()=>{location.href='index.html';},900);});
 
@@ -248,6 +248,29 @@ goStep(steps.some(([id])=>id===startStep)?startStep:'patient');
   let action=null;try{action=JSON.parse(sessionStorage.getItem('signeticOrderAction'));}catch(error){}
   if(!action||action.route!=='new'||intake.fromAction!==action.id)return;
   const box=$('#orderFromIntake'),items=(intake.prescriptions[0]?.items||[]).map(it=>esc(it.name)).join(' · ');
-  box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From intake #${esc(intake.id)} · New order for ${esc(action.rxTitle)}</b>${items}</span><a class="footer-btn" href="prepare-orders.html?done=${encodeURIComponent(action.id)}">Done, Back to Fulfillment</a>`;
+  if(action.returnTo){box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From the Work Queue · Intake #${esc(intake.id)} · ${esc(action.rxTitle)}</b>${items}<small>Save the order on the last step. The Work Queue updates on its own.</small></span>`;box.hidden=false;icons();return;}
+  box.innerHTML=`<i data-lucide="sparkles"></i><span><b>From intake #${esc(intake.id)} · New order for ${esc(action.rxTitle)}</b>${items}</span><a class="footer-btn" href="${action.returnTo?`${action.returnTo}${action.returnTo.includes('?')?'&':'?'}`:'prepare-orders.html?'}done=${encodeURIComponent(action.id)}">Done, Back to ${action.returnTo?'Work Queue':'Fulfillment'}</a>`;
   box.hidden=false;icons();
 })();
+
+// Saving the last step creates the order. If it was opened from the Work Queue (in its own tab),
+// tell the Work Queue tab so it ticks the items off, then offer to close this tab.
+function orderCreated(){
+  let action=null;try{action=JSON.parse(sessionStorage.getItem('signeticOrderAction'));}catch(error){}
+  const fromWq=action&&action.returnTo&&intake.fromAction===action.id;
+  const orderId=action?.orderId||`ORD-${1061+Math.floor(Math.random()*20)}`;
+  const products=order.products.length?order.products.map(p=>({code:p.code,name:p.name})):(intake.prescriptions[0]?.items||[]).flatMap(it=>it.lines.map(l=>({code:l.code,name:l.description||it.name})));
+  const names=(intake.prescriptions[0]?.items||[]).map(it=>it.name);
+  if(fromWq){try{localStorage.setItem('signeticOrderEvent',JSON.stringify({actionId:action.id,orderId,title:action.rxTitle?`${action.rxTitle} · ${names.length===1?names[0]:`${names.length} items`}`:'New order',products,at:Date.now()}));}catch(error){}}
+  $('.order-footer').hidden=true;$('#orderFromIntake').hidden=true;
+  $('#orderStepper').querySelectorAll('li').forEach(li=>{li.classList.add('done');li.classList.remove('current');});
+  $('#orderContent').innerHTML=`<section class="order-card order-created">
+    <span class="order-created-icon"><i data-lucide="circle-check"></i></span>
+    <h2>Order ${orderId} created</h2>
+    <p>${esc(intake.patient.first)} ${esc(intake.patient.last)} · ${names.length?names.map(esc).join(' · '):`${products.length} products`}</p>
+    ${fromWq?'<p class="order-created-note"><i data-lucide="list-checks"></i> The Work Queue on the patient’s record is updated: these items are ticked off.</p>':''}
+    <div class="order-created-actions">${fromWq?'<button type="button" class="footer-btn primary" id="closeOrderTab">Close Tab and Return</button>':''}<a class="footer-btn" href="patient-record.html?tab=orders">View Patient’s Orders</a></div>
+  </section>`;
+  icons();toast(`Order ${orderId} created`);
+  $('#closeOrderTab')?.addEventListener('click',()=>{window.close();setTimeout(()=>{location.href='patient-record.html?tab=orders&pane=workqueue';},150);});
+}
