@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ashlynn Botosh · Contact | Signetic</title>
+  <link rel="stylesheet" href="fluent/fabric-core.min.css">
+  <link rel="stylesheet" href="fluent/fluent-tokens.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="theme-modern.css">
+  <link rel="stylesheet" href="fluent/fluent-components.css">
+  <link rel="stylesheet" href="patient-record.css?v=9">
+</head>
+<body class="ms-Fabric record-page">
+  <header class="shell-ribbon" aria-label="Signetic">
+    <div class="ribbon-start"><button class="ribbon-btn" aria-label="App launcher" title="App launcher"><i data-lucide="grip"></i></button><span class="ribbon-logo">SIGNETIC</span><span class="ribbon-portal">Manager Portal</span></div>
+    <div class="ribbon-env">SANDBOX</div>
+    <div class="ribbon-end"><button class="ribbon-btn" aria-label="Search" title="Search"><i data-lucide="search"></i></button><button class="ribbon-btn" aria-label="Create new" title="Create new"><i data-lucide="plus"></i></button><button class="ribbon-btn" aria-label="Filter" title="Filter"><i data-lucide="filter"></i></button><button class="ribbon-btn" aria-label="Settings" title="Settings"><i data-lucide="settings"></i></button><button class="ribbon-btn" aria-label="Help" title="Help"><span aria-hidden="true">?</span></button><button class="ribbon-avatar" aria-label="Account" title="Account">PS</button></div>
+  </header>
+
+  <nav class="shell-nav" id="shellNav" aria-label="Main navigation">
+    <button class="nav-toggle" id="navToggle" aria-label="Collapse navigation" aria-expanded="true" title="Collapse navigation"><i data-lucide="menu"></i></button>
+    <div class="nav-scroll">
+      <a class="nav-item" href="index.html" title="Home"><i data-lucide="house"></i><span>Home</span></a>
+      <button class="nav-item" title="Recent"><i data-lucide="clock"></i><span>Recent</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <button class="nav-item" title="Pinned"><i data-lucide="pin"></i><span>Pinned</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>Practice Management</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children"><a class="nav-item active" aria-current="page" href="#" title="Patients"><i data-lucide="users"></i><span>Patients</span></a></div>
+      </div>
+      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>DME</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children">
+          <a class="nav-item" href="#" title="DME Orders"><i data-lucide="list-checks"></i><span>DME Orders</span></a>
+          <a class="nav-item" href="#" title="Delivery Management"><i data-lucide="truck"></i><span>Delivery Management</span></a>
+          <a class="nav-item" href="#" title="Rental Management"><i data-lucide="file-clock"></i><span>Rental Management</span></a>
+        </div>
+      </div>
+      <div class="nav-group open"><button class="nav-section" aria-expanded="true" data-nav-section><span>Payment</span><i class="nav-chevron" data-lucide="chevron-down"></i></button>
+        <div class="nav-children"><a class="nav-item" href="#" title="Payment"><i data-lucide="credit-card"></i><span>Payment</span></a></div>
+      </div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Claims Processing</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>NCPDP</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Logs</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Tools</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+      <div class="nav-group"><button class="nav-section" aria-expanded="false" data-nav-section><span>Settings</span><i class="nav-chevron" data-lucide="chevron-down"></i></button></div>
+    </div>
+  </nav>
+
+  
+  <!-- Model-driven form command bar -->
+  <header class="shell-commands rec-commands" aria-label="Commands">
+    <button class="rec-cmd" aria-label="Back" onclick="history.back()"><i data-lucide="arrow-left"></i></button>
+    <span class="rec-cmd-sep"></span>
+    <button class="rec-cmd" title="Open in new window"><i data-lucide="external-link"></i></button>
+    <button class="rec-cmd"><i data-lucide="save"></i><span>Save</span></button>
+    <button class="rec-cmd"><i data-lucide="save-all"></i><span>Save &amp; Close</span></button>
+    <button class="rec-cmd"><i data-lucide="plus"></i><span>New</span></button>
+    <button class="rec-cmd"><i data-lucide="file-x"></i><span>Deactivate</span></button>
+    <button class="rec-cmd"><i data-lucide="user-plus"></i><span>Assign</span></button>
+    <button class="rec-cmd"><i data-lucide="trash-2"></i><span>Delete</span></button>
+    <button class="rec-cmd"><i data-lucide="refresh-cw"></i><span>Refresh</span></button>
+    <button class="rec-cmd rec-share"><i data-lucide="share"></i><span>Share</span><i data-lucide="chevron-down"></i></button>
+  </header>
+
+  <div class="app-body rec-body">
+    <main class="rec-form">
+      <section class="rec-header" aria-label="Contact">
+        <div class="rec-title"><h1 id="recName">Ashlynn Botosh <small>- Saved</small></h1><span>Contact</span></div>
+        <dl class="rec-header-fields">
+          <div><dd id="recMrn">PT-10482</dd><dt>Medical Record Number</dt></div>
+          <div><dd id="recPhone">(415) 220-8841</dd><dt>Mobile Phone</dt></div>
+          <div class="rec-owner"><span class="rec-avatar">W</span><span><dd><a href="#">#WORKING-MULTI-DEV-BILLING-SP</a></dd><dt>Owner</dt></span></div>
+        </dl>
+        <nav class="rec-tabs" role="tablist" aria-label="Contact form">
+          <button role="tab" data-tab="general" aria-selected="true">General</button>
+          <button role="tab" data-tab="insurance" aria-selected="false">Insurance</button>
+          <button role="tab" data-tab="appointments" aria-selected="false">Appointments</button>
+          <button role="tab" data-tab="notes" aria-selected="false">Notes</button>
+          <button role="tab" data-tab="pa" aria-selected="false">Prior Authorizations</button>
+          <button role="tab" data-tab="orders" aria-selected="false">DME Orders</button>
+          <button role="tab" data-tab="documents" aria-selected="false">Documents</button>
+          <button role="tab" data-tab="intakes" aria-selected="false">Intakes</button>
+          <button role="tab" data-tab="related" aria-selected="false">Related <i data-lucide="chevron-down"></i></button>
+        </nav>
+      </section>
+
+      <!-- General tab (existing form, unchanged) -->
+      <div class="rec-tab-panel" data-panel="general">
+        <section class="rec-section"><h2>Contact Information</h2><div class="rec-grid" id="recContact"></div></section>
+        <section class="rec-section"><h2>Address</h2><div class="rec-grid" id="recAddress"></div></section>
+      </div>
+
+      <!-- DME Orders tab (existing grid) -->
+      <div class="rec-tab-panel" data-panel="orders" hidden>
+        <section class="rec-section rec-orders"><label class="rec-search"><input type="search" placeholder="Search by HCPCS code" aria-label="Search by HCPCS code"><i data-lucide="search"></i></label><div class="rec-grid-wrap" id="recOrders"></div></section>
+      </div>
+
+      <!-- Documents tab (existing grid). Add Document opens the intake upload screen for this patient. -->
+      <div class="rec-tab-panel" data-panel="documents" hidden>
+        <section class="rec-section rec-docs"><div class="rec-docs-bar"><label class="rec-search"><input type="search" placeholder="Search documents" aria-label="Search documents" id="docSearch"><i data-lucide="search"></i></label><a class="rec-add-doc" href="index.html?screen=record-upload&amp;from=record"><i data-lucide="file-plus-2"></i> Add Document</a></div><div class="rec-grid-wrap" id="recDocs"></div></section>
+      </div>
+
+      <!-- Intakes tab: every intake for this patient -->
+      <div class="rec-tab-panel" data-panel="intakes" hidden>
+        <section class="rec-section"><div class="rec-grid-wrap" id="recIntakes"></div></section>
+      </div>
+
+      <div class="rec-tab-panel" data-panel="other" hidden>
+        <section class="rec-section rec-placeholder"><p>This tab is unchanged in the prototype.</p></section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Work Queue: a model-driven app side pane (Xrm.App.sidePanes). It sits on the right edge of the app, stays open across tabs and records, and shows a badge with the open count. -->
+  <aside class="sp" id="sidePane" aria-label="Side panes">
+    <nav class="sp-rail" aria-label="Side pane icons">
+      <button type="button" class="sp-rail-btn" data-wq-toggle aria-controls="wqPane" aria-expanded="false" title="Work Queue"><i data-lucide="list-todo"></i><b class="sp-badge" id="wqBadge" hidden></b></button>
+    </nav>
+    <section class="sp-panel" id="wqPane" aria-labelledby="wqPaneTitle" hidden>
+      <header class="sp-head"><div><h2 id="wqPaneTitle">Work Queue</h2><span id="wqPaneSub"></span></div><button type="button" class="sp-close" data-wq-toggle aria-label="Close Work Queue" title="Close"><i data-lucide="x"></i></button></header>
+      <div class="sp-body"><div class="wq" id="workQueue" aria-live="polite"></div></div>
+    </section>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="scenario.js"></script>
+  <script src="intake-demo.js"></script>
+  <script src="orders-data.js"></script>
+  <script src="patient-record.js?v=11"></script>
+  <script src="proto-nav.js"></script>
+</body>
+</html>

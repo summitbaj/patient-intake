@@ -100,12 +100,12 @@ function itemsOverview(){
 function moveChoices(entry,cards){
   const c=choice(entry),opts=[],seen=new Set([`${c.route}:${c.target||''}`]);
   const add=(value,label)=>{if(!seen.has(value)){seen.add(value);opts.push([value,label]);}};
-  cards.filter(card=>card.kind==='new'&&!card.done).forEach(card=>add(`new:${card.target}`,`Put It on ${card.label.replace('order','Order')}`));
+  cards.filter(card=>card.kind==='new'&&!card.done).forEach(card=>add(`new:${card.target}`,`Put it on ${card.label.toLowerCase()}`));
   const nextN=`n${Math.max(0,...items.filter(e=>e.ri===entry.ri&&choice(e).route==='new').map(e=>+choice(e).target.slice(1)))+1}`;
-  add(`new:${nextN}`,'Order It Separately');
-  entry.options.refill.forEach(o=>add(`refill:${o.id}`,`Refill It on ${o.id}`));
-  entry.options.addSuggested.forEach(o=>add(`add:${o.id}`,`Add It to ${o.id} (Not Shipped Yet)`));
-  add('skip:','Don’t Order It Now');
+  add(`new:${nextN}`,'Order it separately');
+  entry.options.refill.forEach(o=>add(`refill:${o.id}`,`Refill it on ${o.id}`));
+  entry.options.addSuggested.forEach(o=>add(`add:${o.id}`,`Add it to ${o.id} (not shipped yet)`));
+  add('skip:','Don’t order it now');
   return `<div class="ful-move-box" role="group" aria-label="Move ${esc(entry.item.name)}"><span>Move ${esc(entry.item.name)} to:</span>${opts.map(([v,l])=>`<button type="button" class="ful-choice" data-move-to="${v}" data-key="${entry.key}">${esc(l)}</button>`).join('')}<button type="button" class="ful-cancel" data-move-cancel>Cancel</button></div>`;
 }
 function itemRow(entry,cards,card){
@@ -114,15 +114,15 @@ function itemRow(entry,cards,card){
   const holdNote=card.kind==='hold'?(()=>{const m=api.codesOf(entry.item).flatMap(code=>api.lineMatches(code)).find(x=>x.order.editable);return m?`<small class="ful-note">On ${m.order.id} · ${esc(m.order.title)} · ${esc(m.order.statusNote)}</small>`:'';})():'';
   const related=card.kind==='new'&&api.codesOf(entry.item).some(code=>api.lineMatches(code).length)?`<small class="ful-note"><i data-lucide="link-2"></i> ${esc(entry.suggested.why)}</small>`:'';
   const canMove=!ordered(entry)&&!card.done;
-  return `<li class="ful-item"><div class="ful-item-main"><span class="ful-item-name">${esc(entry.item.name)}</span><span class="ful-item-codes">${codes}</span>${pill}${holdNote}${related}</div>${canMove?`<button type="button" class="ful-move" data-move="${entry.key}" aria-expanded="${moving===entry.key}">${card.kind==='hold'?'Order Anyway':card.kind==='skip'?'Undo':'Move'}</button>`:''}${moving===entry.key?moveChoices(entry,cards):''}</li>`;
+  return `<li class="ful-item"><div class="ful-item-main"><span class="ful-item-name">${esc(entry.item.name)}</span><span class="ful-item-codes">${codes}</span>${pill}${holdNote}${related}</div>${canMove?`<button type="button" class="ful-move" data-move="${entry.key}" aria-expanded="${moving===entry.key}">${card.kind==='hold'?'Order anyway':card.kind==='skip'?'Undo':'Move'}</button>`:''}${moving===entry.key?moveChoices(entry,cards):''}</li>`;
 }
 // Plain-language copy per card.
 function cardCopy(card){
   const order=card.target&&card.kind!=='new'?api.orderById(card.target):null;
-  if(card.kind==='new')return {icon:'file-plus',title:card.label,sub:card.entries.length>1?`${card.entries.length} items on one new order`:'1 item on a new order',button:'Create Order'};
-  if(card.kind==='refill'&&!card.target)return {icon:'refresh-cw',title:'Refill',sub:'Due on more than one order · pick one',button:'Open Refill'};
-  if(card.kind==='refill')return {icon:'refresh-cw',title:`Refill ${order.id}`,sub:`${order.title} · due now`,button:'Open Refill'};
-  if(card.kind==='add')return {icon:'list-plus',title:`Add to ${order.id}`,sub:`${order.title} · not shipped yet`,button:'Open Order'};
+  if(card.kind==='new')return {icon:'file-plus',title:card.label,sub:card.entries.length>1?`${card.entries.length} items on one new order`:'1 item on a new order',button:'Create order'};
+  if(card.kind==='refill'&&!card.target)return {icon:'refresh-cw',title:'Refill',sub:'Due on more than one order · pick one',button:'Open refill'};
+  if(card.kind==='refill')return {icon:'refresh-cw',title:`Refill ${order.id}`,sub:`${order.title} · due now`,button:'Open refill'};
+  if(card.kind==='add')return {icon:'list-plus',title:`Add to ${order.id}`,sub:`${order.title} · not shipped yet`,button:'Open order'};
   if(card.kind==='hold')return {icon:'copy-check',title:'Already ordered',sub:'On an order that hasn’t shipped · nothing to do'};
   return {icon:'pause',title:'Not ordering now',sub:'Stays on the intake · order it later'};
 }
@@ -131,7 +131,7 @@ function cardHtml(card,cards,step,isNext){
   let action='';
   if(card.done)action=`<span class="section-status success-visible"><i data-lucide="circle-check"></i> ${card.kind==='new'?'Order created':card.kind==='refill'?'Refill done':'Added'}</span>`;
   else if(card.actionable&&!card.target)action='';
-  else if(card.actionable)action=`<button class="footer-btn primary" data-open-card="${card.id}">${copy.button}</button>`;
+  else if(card.actionable)action=`<button class="footer-btn primary" data-open-card="${card.id}">${copy.button} <i data-lucide="arrow-right"></i></button>`;
   const pick=card.actionable&&!card.target?`<div class="ful-pick"><b>Which order?</b>${(card.kind==='refill'?card.entries[0].options.refill:card.entries[0].options.addSuggested).map(o=>`<button type="button" class="ful-choice" data-target="${card.entries[0].key}" data-order="${o.id}"><b>${o.id}</b> · ${esc(o.title)}</button>`).join('')}</div>`:'';
   const order=card.target&&card.kind!=='new'&&card.kind!=='hold'?api.orderById(card.target):null;
   const physician=order&&card.entries[0].rx.physician&&order.physician&&order.physician!==card.entries[0].rx.physician?`<p class="ful-warn"><i data-lucide="triangle-alert"></i> Prescribed by Dr. ${esc(card.entries[0].rx.physician)}, but ${order.id} is under Dr. ${esc(order.physician)}.</p>`:'';
