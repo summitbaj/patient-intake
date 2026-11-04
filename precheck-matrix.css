@@ -111,3 +111,6 @@ html.pc-embed .pm-footer{display:none!important}
 .pm-fix-actions .small-btn{display:inline-flex;align-items:center;gap:6px;height:28px;min-height:28px;cursor:pointer}
 .pm-fix-actions .lucide{width:14px;height:14px}
 .pm-panel-actions{padding-top:0;border-top:0}
+/* Item grouping rows: the light blue of the information boxes */
+.pm-group{background:var(--blue-soft);border-top-color:var(--blue-line)}
+.pm-group+.pm-row-group{border-top-color:var(--blue-line)}
