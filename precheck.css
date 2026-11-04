@@ -532,3 +532,13 @@ details.pc-crit-block>h5:first-of-type{margin-top:12px}
 .pc-crit-block.payer>header,.pc-crit-block.medicare>header,details.pc-crit-block.pc-crit-block>summary{background:transparent}
 /* Payer coverage: Primary / Secondary sits under the plan name, Title Case at 10px. */
 .pc-payer-name small{font-size:10px;text-transform:none;letter-spacing:0}
+
+/* Embedded in the intake's slide-in (a past intake): no app chrome, no actions */
+html.pc-embed body.intake-page{--ribbon-h:0px;--commands-h:0px;--shell-top:0px;--shell-left:0px;--nav-w:0px}
+html.pc-embed .shell-ribbon,html.pc-embed .shell-nav,html.pc-embed .shell-commands,html.pc-embed .pn,html.pc-embed .pk-footer-actions{display:none!important}
+/* Embedded: just the pre-check container, edge to edge, view only (no footer actions) */
+html.pc-embed body.intake-page{background:var(--white)}
+html.pc-embed .app-body{padding:0!important;margin:0!important}
+html.pc-embed .pq-page{padding:0!important;margin:0!important;max-width:none!important;height:100vh}
+html.pc-embed .pr-main{height:100vh;max-height:none;margin:0;border:0!important;border-radius:0!important;box-shadow:none!important}
+html.pc-embed .pr-footer{display:none!important}

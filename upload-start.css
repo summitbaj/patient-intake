@@ -310,7 +310,7 @@ body.phase-upload #cancelUpload{display:none!important}
 /* Missing plan field, like Gender in Patient Demographics: red outline, "Not found", filled in place */
 #insAltFields>label.ins-alt-missing{outline:1px solid var(--red);outline-offset:-1px;position:relative;z-index:1}
 #insAltFields>label.ins-alt-missing.done{outline-color:transparent}
-#insAltFields .ins-alt-missing .ins-label{display:flex;align-items:center;gap:6px}
+#insAltPlans .ins-alt-missing .ins-label{display:flex;align-items:center;gap:6px}
 #insAltFields .ins-alt-missing .inline-input{height:28px;margin-top:2px}
 .ins-tag-missing{display:inline-flex;align-items:center;padding:0 6px;border-radius:999px;background:var(--red-soft);color:var(--red);font-size:11px;font-weight:600;line-height:16px}
 /* Intro wraps over two lines on the left; View checklist sits on the right */
@@ -558,3 +558,248 @@ body.phase-upload #cancelUpload{display:none!important}
 /* Relationship to insured: a dropdown that looks like the other plan fields */
 .ins-field .ins-select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:24px;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 12px) 55%,calc(100% - 7px) 55%;background-size:5px 5px;background-repeat:no-repeat}
 .ins-field .ins-select:invalid,.ins-field .ins-select option[value=""]{color:var(--muted)}
+/* The first Insurance Information card is retired: the second card replaces it.
+   Its markup stays (hidden) because the shared insurance logic still renders into it. */
+#insurance-section[hidden]{display:none!important}
+
+/* Feed extracted info: the dialog's note uses the blue information box. */
+.feed-dialog .feed-note{display:flex;align-items:flex-start;gap:8px;margin:12px 0 0;padding:8px 12px;border:1px solid var(--blue-line);border-radius:var(--radius,4px);background:var(--blue-soft);color:var(--blue);font-size:13px;line-height:18px}
+.feed-dialog .feed-note .lucide{flex:none;width:16px;height:16px;margin-top:1px}
+/* A field with two values: pick one in place. */
+.compact-fields>div.has-dup{background:var(--amber-soft)}
+.dup-chip{display:inline-flex;margin-left:6px;padding:0 6px;border-radius:var(--pill-radius,4px);background:var(--amber-soft);box-shadow:inset 0 0 0 1px var(--fluent-warning-background);color:var(--amber);font-size:10px;font-style:normal;font-weight:600;line-height:16px;text-transform:none;letter-spacing:0}
+.compact-fields>div.has-dup .dup-chip{background:var(--white)}
+.dup-chip.done{background:var(--green-soft);box-shadow:inset 0 0 0 1px var(--fluent-success-background);color:var(--green)}
+.dup-pick{display:grid;gap:6px;margin-top:6px}
+.dup-opt{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius,4px);background:var(--white);cursor:pointer}
+.dup-opt:hover{border-color:var(--blue-line)}
+.dup-opt input{margin:2px 0 0;accent-color:var(--primary)}
+.dup-opt span{display:grid;gap:1px;min-width:0}
+.dup-opt b{font-size:14px;font-weight:600;color:var(--ink,var(--text));overflow-wrap:anywhere}
+.dup-opt small{font-size:12px;color:var(--muted)}
+#contact-section .compact-fields>div{align-content:start}
+
+/* Insurance: full-width plan cards. Name, rank and eligibility on the header; details only when expanded. */
+.ins-alt-list{padding:12px 16px 0}
+.ins-acc-row{grid-template-columns:16px minmax(0,1fr)}
+.ins-acc{min-width:0;border:1px solid var(--line);border-radius:4px;background:var(--white);overflow:hidden}
+.ins-acc-head{display:flex;align-items:center;gap:16px;min-height:56px;padding:10px 16px;cursor:pointer}
+.ins-acc-head:hover{background:var(--fluent-neutral-lighter-alt)}
+.ins-acc-row.open .ins-acc-head{background:var(--blue-soft)}
+.ins-acc-head:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
+.ins-acc-title{display:grid;gap:4px;min-width:0}
+.ins-acc-title strong{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ins-acc-status{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:6px 8px;margin-left:auto;font-size:12px;color:var(--muted)}
+.ins-acc-status .cov-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:var(--pill-radius,4px);font-size:12px;font-weight:600}
+.ins-acc-status .cov-chip .lucide{width:13px;height:13px}
+.ins-acc-status .cov-chip.ok{background:var(--green-soft);color:var(--green)}
+.ins-acc-status .cov-chip.bad{background:var(--red-soft);color:var(--red)}
+.ins-acc-note{display:inline-flex;align-items:center;gap:4px}
+.ins-acc-note .lucide{width:14px;height:14px}
+.ins-acc-note .spinner{width:12px;height:12px}
+.ins-acc-response{height:20px;min-height:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;line-height:20px;color:var(--primary);cursor:pointer}
+.ins-acc-response:hover{text-decoration:underline}
+.ins-acc-chevron{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .2s}
+.ins-acc-row.open .ins-acc-chevron{transform:rotate(180deg)}
+.ins-acc-body{padding:16px;border-top:1px solid var(--line)}
+.ins-acc-body .insurance-fields{margin:0;border:1px solid var(--line);border-radius:4px}
+.ins-acc-row .drag-handle{align-self:start;height:56px}
+.ins-acc .ins-alt-rank{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:400;color:var(--muted)}
+.ins-acc .ins-alt-rank .ins-alt-star{width:14px;height:14px;color:var(--primary-star,#f7630c);fill:currentColor}
+.ins-acc .ins-alt-ai-btn{display:inline-flex;align-items:center}
+.ins-acc .ins-alt-ai-btn .lucide{width:14px;height:14px;color:var(--primary)}
+#insAltConfirm{display:flex;padding-left:16px}
+/* Status: chips on top, check note + View Response below, right-aligned; the plan name never truncates */
+.ins-acc-title{flex:0 0 auto;max-width:45%}
+.ins-acc-title strong{white-space:normal}
+.ins-acc-status{flex:1 1 auto;min-width:0;display:grid;justify-items:end;gap:4px;text-align:right}
+.ins-acc-chips{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}
+.ins-acc-line{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:4px 12px}
+#insAltConfirm>.small-btn{width:auto}
+.ins-acc-status .ins-acc-response{font-size:12px}
+
+/* Status & Coverage: one overview of every plan, then check and confirm the payer order */
+#insAltConfirm:empty{display:none}
+#insurance-alt-section .ins-alt-elig{margin:16px 16px 0;padding:0;border:1px solid var(--line);border-radius:4px;background:var(--white);overflow:visible}
+.cov-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px;border-bottom:1px solid var(--line);border-radius:4px 4px 0 0;background:var(--fluent-neutral-lighter-alt)}
+.cov-title h4{margin:0;font-size:14px;font-weight:600;color:var(--text)}
+.cov-title p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+.cov-head .ins-alt-run{flex:none;gap:8px}
+.cov-head .ins-alt-run .service-trigger{width:180px}
+.cov-head .ins-alt-run .service-menu{top:calc(100% + 4px);bottom:auto;right:0;left:auto}
+#insurance-alt-section .ins-alt-elig .ins-alt-why{order:0;margin:12px 16px 0;padding:8px 12px;border:1px solid var(--blue-line);border-radius:4px;background:var(--blue-soft)}
+.cov-table{margin:12px 16px 0;border:1px solid var(--line);border-radius:4px}
+.cov-row{display:grid;grid-template-columns:92px minmax(0,1.4fr) 96px 150px minmax(220px,1fr);align-items:center;gap:12px;padding:10px 12px;font-size:13px}
+.cov-row+.cov-row{border-top:1px solid var(--line)}
+.cov-row-head{padding:8px 12px;background:var(--fluent-neutral-lighter-alt);font-size:12px;font-weight:600;color:var(--muted)}
+.cov-rank{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.cov-rank .lucide{width:14px;height:14px}.cov-rank .lucide-star{color:var(--primary-star,#f7630c);fill:currentColor}
+.cov-name{display:grid;gap:2px;min-width:0}
+.cov-name strong{font-size:13px;font-weight:600;color:var(--text)}
+.cov-name small{font-size:12px;color:var(--muted)}
+.cov-row.is-inactive .cov-name strong{color:var(--muted)}
+.cov-table .cov-chip,.ins-acc-status .cov-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:var(--pill-radius,4px);font-size:12px;font-weight:600;white-space:nowrap}
+.cov-table .cov-chip .lucide{width:13px;height:13px}
+.cov-table .cov-chip.ok{background:var(--green-soft);color:var(--green)}
+.cov-table .cov-chip.bad{background:var(--red-soft);color:var(--red)}
+.cov-dash{color:var(--muted)}
+.cov-fresh-cell{display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px}
+.cov-fresh{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap}
+.cov-fresh .lucide{width:14px;height:14px}
+.cov-fresh .spinner{width:12px;height:12px}
+.cov-fresh.saved{color:var(--text)}
+.cov-fresh.saved .lucide{color:var(--primary)}
+.cov-fresh.changed{color:var(--amber);font-weight:600}
+.cov-table .cov-response,.cov-cache .text-btn{height:20px;min-height:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;line-height:20px;color:var(--primary);cursor:pointer}
+.cov-ai{display:flex;align-items:flex-start;gap:8px;margin:12px 16px 0;padding:8px 12px;border:1px solid var(--blue-line);border-radius:4px;background:var(--blue-soft);font-size:13px;line-height:20px;color:var(--text)}
+.cov-ai .lucide{flex:none;width:16px;height:16px;margin-top:2px;color:var(--primary)}
+.cov-cache{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:10px 16px 0;font-size:12px;line-height:18px;color:var(--muted)}
+.cov-cache>.lucide{flex:none;width:14px;height:14px}
+.cov-cache>span{flex:1 1 auto;min-width:0}
+.cov-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px;padding:12px 16px;border-top:1px solid var(--line)}
+.cov-order{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:0;font-size:12px;color:var(--muted)}
+.cov-order>span{margin-right:4px}
+.cov-order b{font-weight:600;color:var(--text)}
+.cov-order .lucide{width:12px;height:12px}
+.cov-actions{display:flex;flex:none;align-items:center;gap:8px}
+
+/* ───────── Insurance as one table: expand on the left, drag on the right ───────── */
+#insurance-alt-section .ins-alt-list{padding:12px 16px 0}
+.ins-tbl-bar{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
+.ins-tbl-bar:empty{display:none}
+.ins-tbl-service{display:flex;flex:none;align-items:flex-start;gap:8px}
+.ins-tbl-service .suggest-label{font-size:13px;font-weight:600;line-height:32px;color:var(--text)}
+.ins-tbl-select{display:grid;gap:4px}
+.ins-tbl-select .service-select{position:relative}
+.ins-tbl-select .service-trigger{width:200px;height:32px;min-height:32px;background:var(--white)}
+.ins-tbl-select .service-menu{top:calc(100% + 4px);bottom:auto;left:0;right:auto;z-index:20}
+.ins-tbl-select .suggest-ai{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--primary)}
+.ins-tbl-select .suggest-ai .lucide{width:12px;height:12px}
+.ins-tbl-select .suggest-ai .text-btn{display:inline-flex;align-items:center;gap:4px;height:auto;min-height:0;padding:0;font-size:12px;font-weight:600}
+.ins-tbl-service>.small-btn{height:32px;min-height:32px}
+.ins-tbl{border:1px solid var(--line);border-radius:4px;background:var(--white)}
+.ins-row{display:grid;grid-template-columns:32px 88px minmax(0,1.5fr) 96px 124px minmax(200px,1fr) 28px;align-items:center;gap:12px;padding:10px 8px 10px 6px;font-size:13px;cursor:pointer}
+.ins-row-head{padding:8px 8px 8px 6px;border-radius:4px 4px 0 0;background:var(--fluent-neutral-lighter-alt);font-size:12px;font-weight:600;color:var(--muted);cursor:default}
+.ins-row-group{position:relative;border-top:1px solid var(--line)}
+.ins-row-group:hover>.ins-row{background:var(--fluent-neutral-lighter-alt)}
+.ins-row-group.open>.ins-row{background:var(--blue-soft)}
+.ins-row-group:last-child>.ins-row,.ins-row-group:last-child .ins-row-detail{border-radius:0 0 4px 4px}
+.ins-row-group.is-inactive .cov-name strong{color:var(--muted)}
+.ins-expand{display:grid;place-items:center;width:28px;height:28px;padding:0;border:0;border-radius:4px;background:none;color:var(--muted);cursor:pointer}
+.ins-expand:hover{background:var(--fluent-neutral-lighter);color:var(--text)}
+.ins-expand .lucide{width:16px;height:16px;transition:transform .2s}
+.ins-row-group.open .ins-expand .lucide{transform:rotate(90deg)}
+.ins-row-group.open .ins-expand{color:var(--primary)}
+.ins-drag{display:grid;place-items:center;width:24px;height:28px;color:var(--line-strong,var(--muted));cursor:grab}
+.ins-row-group:hover .ins-drag{color:var(--muted)}
+.ins-drag .lucide{width:16px;height:16px}
+.ins-row-group.dragging{opacity:.45}
+.ins-row-group.drop-above::before,.ins-row-group.drop-below::after{content:"";position:absolute;left:0;right:0;height:2px;background:var(--primary);z-index:2}
+.ins-row-group.drop-above::before{top:-1px}
+.ins-row-group.drop-below::after{bottom:-1px}
+.ins-row .cov-name strong{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.ins-row .ins-tag-missing{display:inline-flex;align-items:center;gap:3px;margin:0}
+.ins-row .ins-tag-missing .lucide{width:12px;height:12px}
+.ins-miss-hint{color:var(--red)!important}
+.ins-row .ins-alt-ai-btn .lucide{width:14px;height:14px;color:var(--primary)}
+.ins-row-detail{padding:12px 16px 16px 46px;border-top:1px solid var(--blue-line);background:var(--white)}
+.ins-row-detail .insurance-fields{margin:0;border:1px solid var(--line);border-radius:4px}
+#insAltPlans .ins-alt-missing .ins-label{display:flex;align-items:center;gap:6px}
+#insAltPlans>label.ins-alt-missing,#insAltPlans .insurance-fields>label.ins-alt-missing{outline:1px solid var(--red);outline-offset:-1px;position:relative;z-index:1}
+#insAltPlans .insurance-fields>label.ins-alt-missing.done{outline-color:transparent}
+#insAltPlans .ins-alt-missing .inline-input{height:28px;margin-top:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#insAltNotes .ins-alt-why{order:0;margin:12px 0 0;padding:8px 12px;border:1px solid var(--blue-line);border-radius:4px;background:var(--blue-soft)}
+#insAltNotes .cov-ai{margin:12px 0 0}
+#insAltNotes .cov-cache{margin:10px 0 0}
+#insAltNotes .cov-cache .text-btn{height:20px;min-height:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;color:var(--primary)}
+
+/* Payer order: ask, show the order, let the user change it */
+#insAltConfirm{display:block;margin-top:16px;padding:0}
+.po-ask{padding:16px;border:1px solid var(--line);border-radius:4px;background:var(--fluent-neutral-lighter-alt)}
+.po-ask.is-editing{border-color:var(--blue-line);background:var(--blue-soft)}
+.po-head{display:flex;align-items:flex-start;gap:12px}
+.po-icon{flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--blue-soft);box-shadow:inset 0 0 0 1px var(--blue-line);color:var(--primary)}
+.po-ask.is-editing .po-icon{background:var(--white)}
+.po-icon .lucide{width:16px;height:16px}
+.po-head h4{margin:0;font-size:14px;font-weight:600;color:var(--text)}
+.po-head p{margin:2px 0 0;font-size:12px;line-height:18px;color:var(--muted)}
+.po-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:12px 0 0;padding:0;list-style:none}
+.po-steps li{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+.po-num{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;font-weight:600}
+.po-steps li.is-inactive .po-num{background:var(--fluent-neutral-lighter);color:var(--muted)}
+.po-step-copy{display:grid;gap:2px;min-width:0}
+.po-step-copy small{font-size:12px;color:var(--muted)}
+.po-step-copy b{font-size:14px;font-weight:600;color:var(--text)}
+.po-why{display:flex;align-items:flex-start;gap:4px;margin-top:4px;font-size:12px;line-height:17px;color:var(--muted)}
+.po-why .lucide{flex:none;width:12px;height:12px;margin-top:2px;color:var(--primary)}
+.po-inactive{font-style:normal;font-weight:600;color:var(--red)}
+.po-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:12px}
+.po-actions .small-btn{height:28px;min-height:28px}
+.po-reset{display:inline-flex;align-items:center;gap:4px;margin-right:auto;padding:0;font-size:13px;font-weight:600}
+.po-reset .lucide{width:14px;height:14px}
+.po-edit{display:grid;gap:6px;margin:12px 0 0;padding:0;list-style:none}
+.po-edit li{display:flex;align-items:center;gap:12px;padding:8px 8px 8px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+.po-edit-name{display:grid;gap:1px;flex:1;min-width:0}
+.po-edit-name b{font-size:14px;font-weight:600;color:var(--text)}
+.po-edit-name small{font-size:12px;color:var(--muted)}
+.po-move{display:flex;gap:4px}
+.po-move .icon-btn{width:28px;height:28px;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+.po-move .icon-btn:disabled{opacity:.4;cursor:default}
+.po-move .lucide{width:14px;height:14px}
+.po-done{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border:1px solid var(--fluent-success-background);border-radius:4px;background:var(--green-soft);font-size:13px}
+.po-done>.lucide{width:16px;height:16px;color:var(--green)}
+.po-done>b{font-weight:600;color:var(--green)}
+.po-inline{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12px;color:var(--text)}
+.po-inline .lucide{width:12px;height:12px;color:var(--muted)}
+.po-done>.text-btn{margin-left:auto;padding:0;font-size:13px;font-weight:600}
+.ins-tbl .cov-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:var(--pill-radius,4px);font-size:12px;font-weight:600;white-space:nowrap}
+.ins-tbl .cov-chip .lucide{width:13px;height:13px}
+.ins-tbl .cov-chip.ok{background:var(--green-soft);color:var(--green)}
+.ins-tbl .cov-chip.bad{background:var(--red-soft);color:var(--red)}
+.ins-tbl .cov-response{height:20px;min-height:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;line-height:20px;color:var(--primary);cursor:pointer}
+
+
+/* ───────── Insurance balance pass ───────── */
+/* 24px between the intro (View checklist) and Plans & Coverage */
+#insurance-alt-section .ins-alt-list{padding-top:24px}
+/* Toolbar: title left; Service, dropdown, AI suggested and Check Eligibility on one centred line */
+.ins-tbl-bar{align-items:center;margin-bottom:12px}
+.ins-tbl-service{align-items:center;gap:12px}
+.ins-tbl-service .suggest-label{line-height:normal}
+.ins-tbl-service .service-select{position:relative}
+.ins-tbl-service .service-trigger{width:180px;height:32px;min-height:32px;background:var(--white)}
+.ins-tbl-service .service-menu{top:calc(100% + 4px);bottom:auto;left:0;right:auto;z-index:20}
+.ins-tbl-service .suggest-ai{display:inline-flex;align-items:center;gap:4px;height:auto;min-height:0;padding:0;border:0;background:none;font-size:12px;font-weight:600;color:var(--primary);white-space:nowrap}
+.ins-tbl-service .suggest-ai .lucide{width:14px;height:14px;fill:none}
+.ins-tbl-service>.small-btn{height:32px;min-height:32px;padding:0 12px}
+/* Table: tighter header, plan column takes the room, quieter last check */
+.ins-row{grid-template-columns:32px 96px minmax(0,2.2fr) 100px 124px minmax(150px,1fr) 28px;column-gap:16px}
+.ins-row-head{padding-top:6px;padding-bottom:6px;font-size:12px;line-height:20px}
+.ins-tbl .lucide-sparkles{fill:none}
+.ins-tbl .cov-fresh-cell{flex-direction:column;align-items:flex-start;gap:2px}
+.ins-tbl .cov-fresh,.ins-tbl .cov-fresh.saved{color:var(--muted)}
+.ins-tbl .cov-fresh .lucide,.ins-tbl .cov-fresh.saved .lucide{color:var(--muted)}
+.ins-tbl .cov-fresh.changed,.ins-tbl .cov-fresh.changed .lucide{color:var(--amber)}
+.ins-tbl .cov-response{height:18px;line-height:18px}
+/* Payer order cards: drag to reorder; the grip appears on hover */
+.po-head .po-reset{flex:none;margin:0 0 0 auto;align-self:center}
+.po-steps li{position:relative;cursor:grab;transition:border-color .15s,box-shadow .15s}
+.po-steps li:hover{border-color:var(--blue-line);box-shadow:0 2px 6px rgba(16,24,40,.06)}
+.po-steps li:active{cursor:grabbing}
+.po-grip{flex:none;display:grid;place-items:center;width:20px;height:24px;margin-left:auto;color:var(--muted);opacity:0;transition:opacity .15s}
+.po-steps li:hover .po-grip,.po-steps li:focus-within .po-grip{opacity:1}
+.po-grip .lucide{width:16px;height:16px}
+.po-steps li.dragging{opacity:.45}
+.po-steps li.drop-before::before,.po-steps li.drop-after::after{content:"";position:absolute;top:4px;bottom:4px;width:3px;border-radius:2px;background:var(--primary)}
+.po-steps li.drop-before::before{left:-6px}
+.po-steps li.drop-after::after{right:-6px}
+.po-why .lucide{fill:none}
+#sourcePanel #historyList{background:var(--fluent-neutral-lighter)}
+#historyList .history-card{background:var(--fluent-neutral-lighter-alt)}
+#historyList .history-card:hover{background:var(--white)}
+#historyList .history-codes li{background:var(--white)}
+
+/* Past Intakes tab panel */
+.history-list{padding:12px;overflow:auto}
+.history-list[hidden]{display:none!important}

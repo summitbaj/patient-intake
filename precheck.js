@@ -9,6 +9,9 @@ const esc=value=>String(value??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;'
 // Fallback used when the page is opened directly (matches the intake prototype).
 const fallbackIntake=window.signeticDemoIntake;
 let intake=fallbackIntake;
+// Opened inside the intake's slide-in (a past intake): no app chrome, no loader, read-only.
+const pcEmbed=new URLSearchParams(location.search).get('embed')==='1',pcEmbedIntake=new URLSearchParams(location.search).get('intake');
+if(pcEmbed)document.documentElement.classList.add('pc-embed');
 // The full intake (all prescriptions) is kept separately so creating an order for one prescription doesn't drop the others.
 try{
   const full=sessionStorage.getItem('signeticIntakeFull'),order=sessionStorage.getItem('signeticIntakeOrder');
@@ -432,8 +435,8 @@ document.addEventListener('keydown',event=>{
 });
 
 // Header + back links
-$('#pkTitle').innerHTML=`<span class="title-muted">Pre-check for</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>`;
-$('#pkPatient').innerHTML=`${esc((activePlans()[0]||primaryPlan()).name)} · DOB ${esc(intake.patient.dob)} · From intake #${esc(intake.id)} · <button type="button" class="pc-link" data-eligibility>View EC Response</button>`;
+$('#pkTitle').innerHTML=`<span class="title-muted">Pre-check for</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>${!pcEmbed&&typeof pastIntakes!=='undefined'?`<button type="button" class="title-history" data-past-open><i data-lucide="history"></i> ${pastIntakes.length} past intakes</button>`:''}`;
+$('#pkPatient').innerHTML=`${esc((activePlans()[0]||primaryPlan()).name)} · DOB ${esc(intake.patient.dob)} · From intake #${esc(pcEmbed&&pcEmbedIntake||intake.id)} · <button type="button" class="pc-link" data-eligibility>View EC Response</button>`;
 // Back to the live intake page, which restores the saved session.
 const backTo=fromOrder?'dme-order.html?step=products':'index.html';
 $('#pcBack').href=backTo;
@@ -450,7 +453,7 @@ render();
 
 // Pre-checking takes a moment: show progress before the results appear.
 (function precheckLoader(){
-  const main=$('.pr-main');if(!main)return;
+  const main=$('.pr-main');if(!main||pcEmbed)return;
   const steps=['Checking medical criteria','Verifying coverage and eligibility','Reviewing prior authorizations','Comparing with existing orders'];
   const veil=document.createElement('div');veil.className='pc-loader';veil.setAttribute('role','status');veil.setAttribute('aria-live','polite');
   veil.innerHTML=`<div class="pc-loader-card"><span class="ai-label"><i data-lucide="sparkles"></i> AI coverage pre-check</span><h2>Running pre-check</h2><p>Checking each HCPCS code against coverage rules. This takes a moment.</p><div class="progress-track"><span id="pcLoaderBar"></span></div><ul class="pc-loader-steps">${steps.map((step,index)=>`<li data-step="${index}"><span class="spinner"></span><i data-lucide="check"></i>${step}</li>`).join('')}</ul></div>`;

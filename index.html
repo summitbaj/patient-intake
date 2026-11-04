@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-modern.css">
   <link rel="stylesheet" href="upload-start.css">
+  <link rel="stylesheet" href="past-intakes.css">
   <link rel="stylesheet" href="fluent/fluent-components.css">
 </head>
 <body class="ms-Fabric intake-page">
@@ -100,8 +101,10 @@
       <button class="review-collapsed-tab" id="expandReview" aria-label="Open actions" title="Open actions"><i data-lucide="panel-left-open"></i><span>Action</span><b id="railCount" hidden>0</b></button>
       <div class="viewer-tabs side-tabs" role="tablist" aria-label="Actions sidebar">
         <button role="tab" id="tabReview" data-side-tab="review" aria-selected="true" aria-controls="reviewList"><i data-lucide="list-checks"></i> Action <b id="reviewTabCount">0</b></button>
+        <button role="tab" id="tabHistory" data-side-tab="history" aria-selected="false" aria-controls="historyList"><i data-lucide="history"></i> Past Intakes <b id="historyTabCount">0</b></button>
         <button class="icon-btn collapse-btn" id="collapseSources" aria-label="Close actions" title="Close actions"><i data-lucide="panel-left-close"></i></button>
       </div>
+      <div class="source-content history-list" id="historyList" role="tabpanel" aria-labelledby="tabHistory" hidden></div>
       <div class="source-content review-list" id="reviewList" role="tabpanel" aria-labelledby="tabReview">
         <div class="review-list-head"><strong id="reviewPopoverTitle">Items to review</strong><span id="reviewPopoverSub" hidden></span></div>
         <div id="reviewItems"></div>
@@ -141,14 +144,14 @@
       <section class="review-card" id="contact-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="contact"></i></span><div><h3>Contact Information</h3><p>7 of 8 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
         <div class="data-group"><div class="compact-fields">
-          <div><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence" hidden>Edited</em><button type="button" class="ai-info" data-ai-info aria-label="Resolved by AI. View how AI resolved mobile number" title="Resolved by AI · view details" aria-expanded="false"><i data-lucide="sparkles"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div><span>Home phone number</span><strong>(206) 555-0142</strong></div>
+          <div id="emailField"><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved mobile number" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div id="homePhoneField"><span>Home phone number</span><strong>(206) 555-0142</strong></div>
           <div class="wide"><span>Street address</span><strong>1234 Healthways Blvd, Suite 200</strong></div>
           <div><span>City</span><strong>Seattle</strong></div><div><span>State/Province</span><strong>WA</strong></div>
           <div><span>ZIP code</span><strong>98101</strong></div>
         </div></div>
       </section>
 
-      <section class="review-card" id="insurance-section">
+      <section class="review-card" id="insurance-section" hidden>
         <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on File</button><button type="button" class="text-btn header-link" id="addPlan"><i data-lucide="plus"></i> Add Insurance</button></div><span class="section-status danger" id="insMissing" hidden></span></div></div>
         <div class="ins-intro-row"><p class="ins-intro">Accurate, up-to-date insurance helps reduce claim denials and reimbursement delays. Review every known plan, confirm the payer order, and verify coverage for the date of service and the services being provided.</p><button type="button" class="text-btn ins-checklist-link" id="insChecklistLink" data-open-checklist><i data-lucide="list-checks"></i> View checklist</button></div>
         <div class="ins-found-list" id="insFound" hidden></div>
@@ -183,13 +186,12 @@
         <div class="ins-alt-intro">
           <p>Accurate, up-to-date insurance helps reduce claim denials and reimbursement delays. Review every known plan, confirm the payer order, and verify coverage for the date of service and the services being provided.</p><button type="button" class="text-btn ins-alt-checklist-link" data-ins-alt-checklist aria-haspopup="dialog" aria-controls="insChecklist"><i data-lucide="list-checks"></i> View checklist</button>
         </div>
-        <div class="insurance-workspace ins-alt-workspace">
-          <aside class="plan-list" aria-label="Payer order"><p class="plan-list-head"><span>Payer order</span><span class="pill info"><i data-lucide="sparkles"></i> AI sorted</span></p><div id="insAltPlans" role="list"></div><div class="ins-alt-confirm" id="insAltConfirm"></div></aside>
-          <div class="plan-detail"><div class="plan-detail-head"><div><strong id="insAltName"></strong><p class="ins-alt-status" id="insAltStatus"></p></div><div class="plan-actions" id="insAltActions"></div></div>
-            <div class="insurance-fields" id="insAltFields"></div>
-          </div>
+        <div class="ins-alt-list">
+          <div class="ins-tbl-bar" id="insAltToolbar"></div>
+          <div class="ins-tbl" id="insAltPlans" role="table" aria-label="Insurance plans in payer order"></div>
+          <div class="ins-tbl-notes" id="insAltNotes"></div>
+          <div class="ins-alt-confirm" id="insAltConfirm"></div>
         </div>
-        <div class="ins-alt-elig" id="insAltElig"></div>
       </section>
 
       <div id="prescriptions"></div>
@@ -338,6 +340,19 @@
     </form>
   </dialog>
 
+  <dialog class="confirm-dialog feed-dialog" id="feedDialog" aria-labelledby="feedTitle" aria-describedby="feedBody">
+    <form method="dialog">
+      <header class="modal-head"><h2 id="feedTitle">Add the new information to this intake?</h2></header>
+      <div class="modal-body">
+        <p id="feedBody">AI finished reading the document. Adding it may change information already on this intake.</p>
+        <p class="feed-note"><i data-lucide="info"></i><span>Some fields may end up with two values: the one on the intake and the new one. You’ll pick which to keep, right on the intake.</span></p>
+      </div>
+      <div class="confirm-actions">
+        <button class="footer-btn" value="skip">Not Now</button>
+        <button class="footer-btn primary" value="feed" autofocus>Add Information</button>
+      </div>
+    </form>
+  </dialog>
   <dialog class="confirm-dialog" id="cancelIntakeDialog" aria-labelledby="cancelIntakeTitle" aria-describedby="cancelIntakeBody">
     <form method="dialog">
       <header class="modal-head"><h2 id="cancelIntakeTitle">Cancel this intake?</h2></header>
@@ -443,6 +458,7 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="scenario.js"></script>
+  <script src="past-intakes.js"></script>
   <script src="app.js"></script>
   <script src="proto-nav.js"></script>
 </body>

@@ -1,0 +1,70 @@
+/* Past intakes: cards, the title link and the read-only pre-check slide-in. Shared by index.html and precheck.html. */
+/* ───────── Past intakes: a tab beside Action, and a link in the page title ───────── */
+.title-history{display:inline-flex;align-items:center;gap:4px;height:24px;margin-left:12px;padding:0 8px;border:1px solid var(--line);border-radius:4px;background:var(--white);font:inherit;font-size:12px;font-weight:600;color:var(--primary);vertical-align:middle;cursor:pointer}
+.title-history:hover{border-color:var(--blue-line);background:var(--blue-soft)}
+.title-history .lucide{width:14px;height:14px}
+.history-head{display:grid;gap:2px;margin:0 0 12px}
+.history-head strong{font-size:14px;font-weight:600;color:var(--text)}
+.history-head span{font-size:12px;color:var(--muted)}
+.history-items{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.history-card{padding:12px;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+.history-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.history-card-head>div{display:grid;gap:2px;min-width:0}
+.history-card-head small{font-size:12px;color:var(--muted)}
+.history-card-head b{font-size:14px;font-weight:600;color:var(--text)}
+.history-card-head .section-status{flex:none;font-size:11px;white-space:nowrap}
+.history-meta{margin:4px 0 0;font-size:12px;color:var(--muted)}
+.history-codes{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0 0;padding:0;list-style:none}
+.history-codes li{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:1px solid var(--line);border-radius:4px;background:var(--fluent-neutral-lighter-alt);font-size:12px;color:var(--text)}
+.history-codes b{font-weight:600}
+.history-services{display:flex;align-items:flex-start;gap:4px;margin:8px 0 0;font-size:12px;color:var(--muted)}
+.history-services .lucide{flex:none;width:12px;height:12px;margin-top:2px;color:var(--primary)}
+.history-pc{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.history-pc-status{display:inline-flex;align-items:flex-start;gap:6px;min-width:0}
+.history-pc-status>.lucide{flex:none;width:16px;height:16px;margin-top:1px}
+.history-pc-status.success>.lucide{color:var(--green)}
+.history-pc-status.warning>.lucide{color:var(--amber)}
+.history-pc-status.danger>.lucide{color:var(--red)}
+.history-pc-status>span{display:grid}
+.history-pc-status b{font-size:12px;font-weight:600;color:var(--text)}
+.history-pc-status small{font-size:12px;color:var(--muted)}
+.history-pc .text-btn{display:inline-flex;align-items:center;gap:4px;height:24px;min-height:0;padding:0;font-size:12px;font-weight:600}
+.history-pc .text-btn .lucide{width:14px;height:14px}
+
+/* Past pre-check: slides in from the right over the current intake */
+.pc-slide{position:fixed;inset:0 0 0 auto;width:80vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-left:1px solid var(--line);background:var(--white);box-shadow:-8px 0 32px rgba(16,24,40,.18);flex-direction:column;animation:pc-slide-in .26s cubic-bezier(.2,.7,.2,1)}
+.pc-slide[open]{display:flex}
+.pc-slide.is-closing{animation:pc-slide-out .22s ease-in forwards}
+.pc-slide::backdrop{background:rgba(16,24,40,.35)}
+@keyframes pc-slide-in{from{transform:translateX(100%)}to{transform:none}}
+@keyframes pc-slide-out{from{transform:none}to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.pc-slide,.pc-slide.is-closing{animation:none}}
+.pc-slide-head{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.pc-slide-title{display:grid;gap:2px;min-width:0}
+.pc-slide-title small{font-size:12px;color:var(--muted)}
+.pc-slide-title strong{font-size:16px;font-weight:600;color:var(--text)}
+.pc-slide-tag{display:inline-flex;align-items:center;gap:4px;margin-left:auto;padding:0 8px;height:22px;border-radius:4px;background:var(--fluent-neutral-lighter);font-size:12px;font-weight:600;color:var(--muted)}
+.pc-slide-tag .lucide{width:12px;height:12px}
+.pc-slide-head .icon-btn{color:var(--muted)}
+.pc-slide-head .icon-btn:hover{color:var(--text)}
+.pc-slide-frame{flex:1;width:100%;border:0;background:var(--fluent-neutral-lighter-alt)}
+
+/* Past intakes read as history: a subtle grey panel, and each card opens its pre-check */
+.history-card{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.history-card:hover{border-color:var(--blue-line);box-shadow:0 2px 6px rgba(16,24,40,.06)}
+.history-card:focus-visible{outline:2px solid var(--primary);outline-offset:1px}
+.history-open{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--primary)}
+.history-open .lucide{width:14px;height:14px}
+.history-card:hover .history-open{text-decoration:underline}
+
+/* Slide-in body: past intakes on the left, the selected pre-check on the right */
+.pc-slide-body{flex:1;min-height:0;display:grid;grid-template-columns:320px minmax(0,1fr)}
+.pc-slide-list{min-height:0;overflow:auto;padding:16px 12px;border-right:1px solid var(--line);background:var(--fluent-neutral-lighter)}
+.pc-slide-list .history-card,#historyList .history-card{background:var(--fluent-neutral-lighter-alt)}
+.pc-slide-list .history-card:hover,#historyList .history-card:hover{background:var(--white)}
+.pc-slide-list .history-codes li,#historyList .history-codes li{background:var(--white)}
+.pc-slide-frame{height:100%}
+.history-card.is-active,.history-card.is-active:hover{border-color:var(--primary);background:var(--white)!important;box-shadow:inset 3px 0 0 var(--primary);cursor:default}
+.history-open.is-viewing{color:var(--muted)}
+.history-card.is-active .history-open{text-decoration:none}
+@media(max-width:900px){.pc-slide-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.pc-slide-list{max-height:220px;border-right:0;border-bottom:1px solid var(--line)}}
