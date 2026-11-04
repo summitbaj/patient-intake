@@ -32,7 +32,7 @@
 .history-pc .text-btn .lucide{width:14px;height:14px}
 
 /* Past pre-check: slides in from the right over the current intake */
-.pc-slide{position:fixed;inset:0 0 0 auto;width:80vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-left:1px solid var(--line);background:var(--white);box-shadow:-8px 0 32px rgba(16,24,40,.18);flex-direction:column;animation:pc-slide-in .26s cubic-bezier(.2,.7,.2,1)}
+.pc-slide{position:fixed;inset:0 0 0 auto;width:95vw;height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-left:1px solid var(--line);background:var(--white);box-shadow:-8px 0 32px rgba(16,24,40,.18);flex-direction:column;animation:pc-slide-in .26s cubic-bezier(.2,.7,.2,1)}
 .pc-slide[open]{display:flex}
 .pc-slide.is-closing{animation:pc-slide-out .22s ease-in forwards}
 .pc-slide::backdrop{background:rgba(16,24,40,.35)}
