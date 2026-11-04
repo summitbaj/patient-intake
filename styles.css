@@ -2082,10 +2082,18 @@ dialog.confirm-dialog #manualPick .modal-sub,dialog.confirm-dialog .pc-ec .modal
 #reviewItems>.review-group.is-optional:not(:first-child){margin-left:calc(-1 * var(--space-4));margin-right:calc(-1 * var(--space-4));padding-left:var(--space-4);padding-right:var(--space-4)}
 
 /* Upload preview: a panel that slides in from the right. Header: format · name · type & added date · close. Body: page + zoom. */
-.doc-drawer{position:fixed;inset:0 0 0 auto;width:min(720px,100vw);height:100vh;max-width:none;max-height:none;margin:0;padding:0;border:0;border-left:1px solid var(--line);background:var(--white);box-shadow:var(--fluent-depth-64);display:none;flex-direction:column}
+/* Upload preview: a docked, non-modal panel under the page header. The upload screen shrinks to sit beside it and stays usable. */
+body{--preview-w:min(640px,46vw)}
+.doc-drawer{position:fixed;top:var(--shell-top);right:0;bottom:0;left:auto;width:var(--preview-w);height:auto;max-width:none;max-height:none;margin:0;padding:0;border:0;border-left:1px solid var(--line);background:var(--white);box-shadow:-8px 0 24px rgba(16,24,40,.06);display:none;flex-direction:column;z-index:60}
+body.upload-preview-open .app-body{padding-right:calc(var(--preview-w) + var(--body-pad));transition:padding-right .24s cubic-bezier(.2,.7,.2,1)}
+body .app-body{transition:padding-right .2s ease-in}
+.file-item.is-previewing{border-color:var(--blue-line,var(--fluent-theme-primary));background:var(--blue-soft,var(--fluent-theme-lighter-alt));box-shadow:inset 3px 0 0 var(--blue,var(--fluent-theme-primary))}
+.file-item.is-previewing .row-preview{opacity:1;color:var(--blue,var(--fluent-theme-primary))}
+.file-meta-row .file-type.is-pending{color:var(--muted);font-style:italic}
+@media (max-width:900px){body{--preview-w:100vw}body.upload-preview-open .app-body{padding-right:var(--body-pad)}}
 .doc-drawer[open]{display:flex;animation:drawer-in .24s cubic-bezier(.2,.7,.2,1)}
 .doc-drawer.is-closing{animation:drawer-out .2s ease-in forwards}
-.doc-drawer::backdrop{background:rgba(16,24,40,.35)}
+
 @keyframes drawer-in{from{transform:translateX(100%)}to{transform:none}}
 @keyframes drawer-out{from{transform:none}to{transform:translateX(100%)}}
 @media (prefers-reduced-motion:reduce){.doc-drawer[open],.doc-drawer.is-closing{animation:none}}

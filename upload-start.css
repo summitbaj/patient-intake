@@ -330,3 +330,231 @@ body.phase-upload #cancelUpload{display:none!important}
 .review-card.is-collapsed{padding-bottom:0!important}
 .card-toggle-chevron{flex:none;width:16px;height:16px;color:var(--muted);transition:transform .2s}
 .review-card:not(.is-collapsed) .card-toggle-chevron{transform:rotate(180deg)}
+/* Preview panel open: the upload screen narrows, so stack the two columns instead of squeezing them */
+@media(max-width:1600px){
+  body.upload-preview-open .us-grid{grid-template-columns:minmax(0,1fr);gap:20px}
+  body.upload-preview-open .us-or{flex-direction:row;align-self:auto}
+  body.upload-preview-open .us-or::before,body.upload-preview-open .us-or::after{height:1px;width:auto}
+}
+
+/* AI-resolved values: a sparkle button replaces the "AI resolved" label. Click it for how AI resolved the value. */
+.ai-info{color:var(--ai,var(--primary))}
+.ai-info:hover,.ai-info[aria-expanded=true]{background:var(--ai-soft,var(--blue-soft));color:var(--ai,var(--primary))}
+.ai-chip[hidden]{display:none}
+
+/* Completed intake: read-only until the user selects Edit */
+.review-area.is-locked [data-lock-hide],
+.review-area.is-locked .add-prescription,
+.review-area.is-locked .drag-handle,
+.review-area.is-locked #orderNotice,
+.review-area.is-locked .service-suggest,
+.review-area.is-locked .pa-add{display:none!important}
+.review-area.is-locked :is(input,select,textarea):disabled{opacity:1;color:var(--ink);-webkit-text-fill-color:var(--ink);background:transparent;border-color:transparent;box-shadow:none;cursor:default;appearance:none;-webkit-appearance:none;padding-left:0}
+.review-area.is-locked :is(input,select,textarea):disabled::placeholder{color:var(--muted);-webkit-text-fill-color:var(--muted)}
+.review-area.is-locked .plan-row{cursor:default}
+.header-notice .notice-btn-quiet{background:transparent;box-shadow:none!important;color:var(--text)}
+.header-notice .notice-btn-quiet:hover{background:var(--sunken)}
+.header-notice.is-editing .notice-icon{background:var(--amber-soft);color:var(--amber)}
+.header-notice.is-editing .notice-btn{color:var(--blue)}
+
+/* Action panel: insurance checklist — short lines to scan, detail on click */
+.ins-tips-card{margin:0 var(--space-4,12px);padding:10px 12px;border:1px solid var(--blue-line);border-radius:var(--radius);background:color-mix(in srgb,var(--blue-soft) 45%,var(--white,#fff))}
+.ins-tips-lead{margin:0 0 6px;font-size:12.5px;font-weight:600;color:var(--ink)}
+.ins-tips-list{list-style:none;margin:0;padding:0;display:grid}
+.ins-tips-list li+li{border-top:1px solid color-mix(in srgb,var(--blue-line) 60%,transparent)}
+.ins-tips-list summary{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;list-style:none}
+.ins-tips-list summary::-webkit-details-marker{display:none}
+.ins-tips-list summary b{flex:1;font-size:12.5px;font-weight:600;color:var(--ink)}
+.ins-tip-icon{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--white,#fff);box-shadow:inset 0 0 0 1px var(--blue-line);color:var(--blue)}
+.ins-tip-icon .lucide{width:12px;height:12px}
+.ins-tip-chev{width:13px;height:13px;color:var(--muted);transition:transform .15s}
+.ins-tips-list details[open] .ins-tip-chev{transform:rotate(180deg)}
+.ins-tips-list small{display:block;padding:0 0 8px 30px;font-size:11.5px;line-height:1.45;color:var(--text)}
+.ins-tips-go{display:inline-flex;align-items:center;gap:4px;margin-top:6px;padding:0;font-size:12.5px;font-weight:600}
+.ins-tips-go .lucide{width:13px;height:13px}
+/* Check eligibility bar: why EC matters */
+#insurance-section .service-suggest{flex-wrap:wrap}
+.ec-why{flex:1 1 100%;display:flex;gap:8px;align-items:flex-start;margin:-2px 0 4px;padding:0 0 10px;border-bottom:1px solid var(--line);font-size:12.5px;line-height:1.45;color:var(--text)}
+.ec-why b{color:var(--ink)}
+.ec-why>.lucide{flex:none;width:16px;height:16px;margin-top:1px;color:var(--blue)}
+.ec-why.is-checked{color:var(--muted)}
+.ec-why.is-checked>.lucide{color:var(--green)}
+.ec-why:empty{display:none}
+@container ins (max-width:820px){
+  #insurance-section .service-suggest{grid-template-areas:"why why why why" "label select . btn" ". ai ai ."}
+  #insurance-section .service-suggest .ec-why{grid-area:why}
+}
+@container ins (max-width:560px){
+  #insurance-section .service-suggest{grid-template-areas:"why why" "label label" "select btn" "ai ai"}
+}
+
+/* Action panel: jump links and foldable groups */
+.group-jump{position:sticky;top:0;z-index:3;display:flex;gap:6px;flex-wrap:wrap;padding:8px var(--space-4,12px);background:var(--surface,var(--white,#fff));border-bottom:1px solid var(--line)}
+.group-jump button{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:var(--white,#fff);font:inherit;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;white-space:nowrap}
+.group-jump button:hover{border-color:var(--blue-line);color:var(--blue)}
+.group-jump b{min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:inline-grid;place-items:center;font-size:11px;background:var(--sunken);color:var(--text)}
+.group-jump b.is-required{background:var(--red-soft);color:var(--red)}
+.review-list .group-toggle{display:flex;align-items:center;gap:6px;width:100%;border:0;background:transparent;font:inherit;text-align:left;cursor:pointer}
+.review-list .review-group-title.group-toggle{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.group-toggle:hover{color:var(--text)}
+.group-toggle>.lucide{width:14px;height:14px;flex:none;transition:transform .15s}
+.group-toggle[aria-expanded=false]>.lucide{transform:rotate(-90deg)}
+.group-toggle .group-count{margin-left:auto;min-width:18px;height:18px;padding:0 5px;border-radius:999px;display:inline-grid;place-items:center;font-size:11px;letter-spacing:0;background:var(--sunken);color:var(--text)}
+#group-required .group-count{background:var(--red-soft);color:var(--red)}
+.group-more{display:block;margin:4px var(--space-5,16px) 0;padding:6px 0;border:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;color:var(--blue);cursor:pointer}
+.group-more:hover{text-decoration:underline}
+.review-group.is-collapsed{padding-bottom:0}
+
+/* ───────── Insurance: guided review ───────── */
+.ins-intro{margin:0;padding:0 20px 14px;font-size:13px;line-height:1.5;color:var(--muted);max-width:860px}
+/* Possible missing insurance (only when a response points to one) */
+.ins-found-list{display:grid;gap:8px;margin:0 16px 14px}
+.ins-found-list[hidden]{display:none}
+.ins-found{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:var(--radius);background:var(--white)}
+.ins-found>.lucide{flex:none;width:17px;height:17px;margin-top:1px;color:var(--blue)}
+.ins-found-copy{flex:1 1 320px;min-width:0;display:grid;gap:2px;font-size:13px;line-height:1.45;color:var(--text)}
+.ins-found-copy>b{color:var(--ink);font-weight:600}
+.ins-found-copy small{font-size:12px;color:var(--muted)}
+.ins-found-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ins-found-done{display:flex;align-items:center;gap:6px;margin:0;font-size:12.5px;color:var(--muted)}
+.ins-found-done .lucide{width:14px;height:14px;color:var(--green)}
+.ins-found-done .text-btn{padding:0;font-size:12.5px}
+/* Payer order: one line of context and one button */
+.plan-rank:not(.is-confirmed){color:var(--muted)}
+.cob-panel{display:grid!important;gap:8px;margin-top:10px!important}
+.cob-line{display:flex;align-items:flex-start;flex-wrap:wrap;gap:4px 6px;margin:0;font-size:12px;line-height:1.4;color:var(--text)}
+.cob-line>.lucide{flex:none;width:13px;height:13px;margin-top:2px;color:var(--ai,var(--blue))}
+.cob-line>span{flex:1 1 120px;min-width:0}
+.cob-line b{color:var(--ink);font-weight:600}
+.cob-line .text-btn{padding:0;font-size:12px;font-weight:600;display:inline}
+.cob-line.is-done>.lucide{color:var(--green)}
+.cob-line.is-done>span{font-weight:600;color:var(--ink)}
+.cob-why{flex-basis:100%;padding-left:19px}
+.cob-why summary{cursor:pointer;width:max-content;color:var(--blue);font-weight:600}
+.cob-why ul{margin:4px 0 0;padding-left:16px;display:grid;gap:4px;color:var(--text)}
+.cob-confirm{justify-self:start;justify-content:center}
+/* Plan detail notes: conflict with the EC response, or active but service coverage not confirmed */
+.plan-discovered.is-conflict{background:var(--amber-soft)}
+.plan-discovered.is-info{background:var(--sunken);box-shadow:inset 0 0 0 1px var(--line)}
+.plan-discovered.is-info>.lucide{color:var(--muted)}
+.plan-discovered span b{margin-bottom:2px}
+/* A field that differs from the EC response: the response value and both choices, right under the field */
+.ins-field.ec-conflict .ins-input{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.ec-diff{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin-top:4px;font-size:12px;color:var(--text)}
+.ec-diff b{color:var(--ink)}
+.ec-diff .text-btn{padding:0;font-size:12px;font-weight:600}
+.cov-checked .lucide{width:13px;height:13px}
+.plan-discovered>span>b:first-child{display:block}
+
+/* "View checklist": a quiet link at the end of the intro */
+.ins-checklist-link{display:inline-flex;align-items:center;gap:4px;padding:0;font-size:12.5px;font-weight:600;white-space:nowrap}
+.ins-checklist-link .lucide{width:13px;height:13px}
+/* Payer order: sparkle explains, one button confirms */
+.cob-line{align-items:center}
+.cob-spark{flex:none;display:inline-grid;place-items:center;width:22px;height:22px;padding:0;border:0;border-radius:50%;background:var(--ai-soft,var(--blue-soft));color:var(--ai,var(--blue));cursor:pointer}
+.cob-spark:hover,.cob-spark[aria-expanded=true]{box-shadow:inset 0 0 0 1px var(--ai-line,var(--blue-line))}
+.cob-spark .lucide{width:13px;height:13px}
+.cob-line .cob-ok{color:var(--green)}
+.cob-why-list{margin:4px 0 6px;padding-left:16px;display:grid;gap:4px}
+.cob-why-note{display:block;color:var(--muted)}
+/* Eligibility: "Check This Plan" lives with the plan; the bar checks all plans */
+.plan-item .plan-why-btn{color:var(--ai,var(--blue))}
+
+/* Insurance: compact, aligned controls */
+#insurance-section :is(.plan-actions .small-btn,.cob-confirm,#checkEligibility){min-height:28px;height:28px;padding:0 10px;font-size:12.5px;font-weight:600;gap:6px;display:inline-flex;align-items:center;white-space:nowrap}
+#insurance-section :is(.plan-actions .small-btn,.cob-confirm,#checkEligibility) .lucide{width:14px;height:14px}
+#insurance-section .cob-confirm{width:100%;justify-content:center}
+#insurance-section .service-suggest{align-items:center;gap:8px 10px;padding:10px 12px}
+#insurance-section .service-suggest .suggest-label{font-size:13px;font-weight:600;color:var(--ink)}
+#insurance-section .service-suggest .service-trigger{min-height:28px;height:28px;font-size:13px}
+#insurance-section .service-suggest #checkEligibility{margin-left:auto}
+.ai-suggested{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--ai,var(--blue))}
+.ai-suggested .lucide{width:12px;height:12px}
+#insurance-section .ec-why{font-size:12.5px;margin:0 0 2px;padding-bottom:8px}
+/* No insurance yet: add a plan or mark self-pay */
+.ins-empty-state{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 16px 16px;padding:14px 16px;border:1px dashed var(--line-strong,var(--line));border-radius:var(--radius);background:var(--white)}
+.ins-empty-state[hidden]{display:none}
+.ins-empty-state>.lucide{flex:none;width:20px;height:20px;color:var(--blue)}
+.ins-empty-state>span:not(.ins-empty-actions){flex:1 1 260px;display:grid;gap:2px;font-size:13px;color:var(--muted)}
+.ins-empty-state b{color:var(--ink);font-weight:600}
+.ins-empty-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ins-empty-actions .small-btn{min-height:28px;height:28px;padding:0 10px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.ins-empty-actions .small-btn .lucide{width:14px;height:14px}
+.ins-empty-state .text-btn{padding:0;font-size:12.5px}
+.ins-checklist-link[hidden]{display:none}
+#insurance-section .insurance-workspace[hidden],#insurance-section .ins-intro[hidden]{display:none}
+/* Confirmed order: no drag handle, so the card takes the full row */
+.plan-row.is-order-locked,.insurance-workspace .plan-row.is-order-locked{grid-template-columns:minmax(0,1fr);column-gap:0}
+.plan-row.is-order-locked .plan-item{cursor:pointer}
+.plan-actions .plan-remove{display:inline-flex;align-items:center;gap:4px;padding:0 4px;font-size:12.5px;color:var(--red)}
+.plan-actions .plan-remove .lucide{width:13px;height:13px}
+/* Plan card: name on top, then rank, AI sparkle, tags, and the eligibility icon at the far right */
+.insurance-workspace .plan-item-copy strong{display:block;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.insurance-workspace .plan-item .plan-pills{width:100%;flex-wrap:nowrap}
+.ec-mark{flex:none;display:inline-grid;place-items:center;margin-left:auto;color:var(--line-strong,var(--muted))}
+.ec-mark .lucide{width:15px;height:15px}
+.ec-mark.is-done{color:var(--green)}
+.ec-mark.is-bad{color:var(--red)}
+.response-other-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.response-other-actions .small-btn{min-height:28px;height:28px;padding:0 10px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px}
+.response-other-actions .lucide{width:14px;height:14px}
+.response-other-done{color:var(--muted)}
+/* Opened from a patient's Documents tab: the patient is known, so pulling from records isn't needed */
+.from-record .us-grid{grid-template-columns:minmax(0,1fr);max-width:720px}
+.from-record .us-or,.from-record .us-grid>.us-col:last-child{display:none}
+.us-footer .us-back{margin-right:8px;display:inline-flex;align-items:center;gap:6px}
+.us-footer .us-back .lucide{width:15px;height:15px}
+.us-footer #uploadOnly{display:inline-flex;align-items:center;gap:6px}
+.us-footer #uploadOnly[hidden]{display:none}
+.us-footer #uploadOnly .lucide{width:15px;height:15px}
+
+/* ───────── Insurance: header status, intro row, checklist drawer, missing fields ───────── */
+.ins-intro-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:0 20px 14px}
+.ins-intro-row .ins-intro{padding:0;margin:0;flex:1;min-width:0}
+.ins-intro-row .ins-checklist-link{flex:none;margin-top:1px}
+#insMissing{display:inline-flex;align-items:center;gap:5px}
+#insMissing[hidden]{display:none}
+#insMissing .lucide{width:14px;height:14px}
+.plan-tag-missing{display:inline-block;margin-top:6px;padding:1px 8px;border-radius:999px;background:var(--red-soft);color:var(--red);font-size:11px;font-weight:600;width:max-content}
+.ins-field.is-missing .ins-input{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber-line)}
+.ins-field .miss-chip{margin-left:6px}
+/* Why check: under the controls, separated by a hairline */
+#insurance-section .service-suggest .ec-why{order:10;flex:1 1 100%;margin:8px 0 0;padding:10px 0 0;border-bottom:0;border-top:1px solid var(--line)}
+@container ins (max-width:820px){
+  #insurance-section .service-suggest{grid-template-areas:"label select . btn" ". ai ai ." "why why why why"!important}
+}
+@container ins (max-width:560px){
+  #insurance-section .service-suggest{grid-template-areas:"label label" "select btn" "ai ai" "why why"!important}
+}
+/* Checklist drawer */
+.ins-drawer-scrim{position:fixed;inset:0;z-index:90;background:rgba(16,24,40,.35)}
+.ins-drawer-scrim[hidden],.ins-drawer[hidden]{display:none}
+.ins-drawer{position:fixed;top:0;right:0;bottom:0;z-index:91;width:min(440px,100vw);display:flex;flex-direction:column;background:var(--white);box-shadow:-8px 0 24px rgba(0,0,0,.16);animation:ins-drawer-in .22s cubic-bezier(.2,.7,.2,1)}
+@keyframes ins-drawer-in{from{transform:translateX(100%)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.ins-drawer{animation:none}}
+.ins-drawer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:18px 16px 14px 20px;border-bottom:1px solid var(--line)}
+.ins-drawer-head small{display:block;font-size:12px;color:var(--muted)}
+.ins-drawer-head h2{margin:2px 0 0;font-size:16px;font-weight:600;color:var(--ink)}
+.ins-drawer-body{flex:1;overflow-y:auto;padding:16px;display:grid;gap:10px;align-content:start}
+.ins-ck{border:1px solid var(--line);border-radius:8px;background:var(--white)}
+.ins-ck[open]{border-color:var(--blue-line)}
+.ins-ck summary{display:flex;align-items:center;gap:12px;padding:14px;cursor:pointer;list-style:none}
+.ins-ck summary::-webkit-details-marker{display:none}
+.ins-ck summary b{flex:1;font-size:14px;font-weight:600;color:var(--ink)}
+.ins-ck-icon{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--blue-soft);color:var(--blue)}
+.ins-ck-icon .lucide{width:14px;height:14px}
+.ins-ck-chev{width:16px;height:16px;color:var(--text);transition:transform .15s}
+.ins-ck[open] .ins-ck-chev{transform:rotate(180deg)}
+.ins-ck p{margin:0;padding:0 16px 16px 54px;font-size:13px;line-height:1.55;color:var(--text)}
+/* Checklist drawer: one readable list, no expanding */
+.ins-drawer-body{padding:4px 20px 20px}
+.ins-ck-list{list-style:none;margin:0;padding:0}
+.ins-ck-list li{display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.ins-ck-list li:last-child{border-bottom:0}
+.ins-ck-list .ins-ck-icon{width:32px;height:32px}
+.ins-ck-list .ins-ck-icon .lucide{width:16px;height:16px}
+.ins-ck-list b{display:block;margin:5px 0 4px;font-size:14px;font-weight:600;color:var(--ink)}
+.ins-ck-list p{margin:0;font-size:13px;line-height:1.55;color:var(--text)}
+/* Relationship to insured: a dropdown that looks like the other plan fields */
+.ins-field .ins-select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:24px;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 12px) 55%,calc(100% - 7px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.ins-field .ins-select:invalid,.ins-field .ins-select option[value=""]{color:var(--muted)}

@@ -421,7 +421,7 @@ document.addEventListener('click',event=>{
 function openPrepareOrders(){
   const status={};lines.forEach(l=>{status[l.code]=status[l.code]==='fail'||l.status==='fail'?'fail':status[l.code]==='warn'||l.status==='warn'?'warn':'pass';});
   try{sessionStorage.setItem('signeticIntakeFull',JSON.stringify(intake));sessionStorage.setItem('signeticPrecheckStatus',JSON.stringify(status));sessionStorage.removeItem('signeticOrderPlan');}catch(error){}
-  location.href='prepare-orders.html';
+  location.href='patient-record.html?pane=workqueue&from=intake';
 }
 $('#pcCreateOrder').addEventListener('click',()=>!fromOrder?openPrepareOrders():createOrderFor(ui.rx));
 document.addEventListener('keydown',event=>{
