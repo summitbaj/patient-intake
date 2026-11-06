@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-modern.css">
   <link rel="stylesheet" href="fluent/fluent-components.css">
-  <link rel="stylesheet" href="patient-record.css?v=9">
+  <link rel="stylesheet" href="patient-record.css?v=18">
 </head>
 <body class="ms-Fabric record-page">
   <header class="shell-ribbon" aria-label="Signetic">
@@ -78,10 +78,12 @@
           <button role="tab" data-tab="pa" aria-selected="false">Prior Authorizations</button>
           <button role="tab" data-tab="orders" aria-selected="false">DME Orders</button>
           <button role="tab" data-tab="documents" aria-selected="false">Documents</button>
-          <button role="tab" data-tab="intakes" aria-selected="false">Intake Summary</button>
+          <button role="tab" data-tab="intakes" aria-selected="false">Prescriptions</button>
           <button role="tab" data-tab="related" aria-selected="false">Related <i data-lucide="chevron-down"></i></button>
         </nav>
       </section>
+      <!-- The patient's one intake, while it isn't complete yet -->
+      <section class="rec-intake-banner" id="recIntakeBanner" hidden></section>
 
       <!-- General tab (existing form, unchanged) -->
       <div class="rec-tab-panel" data-panel="general">
@@ -99,9 +101,10 @@
         <section class="rec-section rec-docs"><div class="rec-docs-bar"><label class="rec-search"><input type="search" placeholder="Search documents" aria-label="Search documents" id="docSearch"><i data-lucide="search"></i></label><a class="rec-add-doc" href="index.html?screen=record-upload&amp;from=record"><i data-lucide="file-plus-2"></i> Add Document</a></div><div class="rec-grid-wrap" id="recDocs"></div></section>
       </div>
 
-      <!-- Intakes tab: every intake for this patient -->
+      <!-- Prescriptions: the intake summary so far for this patient, then every prescription with its own readiness check -->
       <div class="rec-tab-panel" data-panel="intakes" hidden>
-        <section class="rec-section"><div class="rec-grid-wrap" id="recIntakes"></div></section>
+        <section class="rec-section ih-summary" id="ihSummary"></section>
+        <section class="rec-section"><div class="ih-head"><div><h3 class="ih-h">Prescriptions</h3><p class="ih-sub">Check readiness for a prescription before you order its items.</p></div></div><div class="rec-grid-wrap" id="recIntakes"></div></section>
       </div>
 
       <div class="rec-tab-panel" data-panel="other" hidden>
@@ -113,20 +116,25 @@
   <!-- Work Queue: a model-driven app side pane (Xrm.App.sidePanes). It sits on the right edge of the app, stays open across tabs and records, and shows a badge with the open count. -->
   <aside class="sp" id="sidePane" aria-label="Side panes">
     <nav class="sp-rail" aria-label="Side pane icons">
-      <button type="button" class="sp-rail-btn" data-wq-toggle aria-controls="wqPane" aria-expanded="false" title="Work Queue"><i data-lucide="list-todo"></i><b class="sp-badge" id="wqBadge" hidden></b></button>
+      <button type="button" class="sp-rail-btn" data-wq-toggle aria-controls="wqPane" aria-expanded="false" title="Needs Attention"><i data-lucide="list-todo"></i><b class="sp-badge" id="wqBadge" hidden></b></button>
     </nav>
     <section class="sp-panel" id="wqPane" aria-labelledby="wqPaneTitle" hidden>
-      <header class="sp-head"><div><h2 id="wqPaneTitle">Work Queue</h2><span id="wqPaneSub"></span></div><button type="button" class="sp-close" data-wq-toggle aria-label="Close Work Queue" title="Close"><i data-lucide="x"></i></button></header>
+      <header class="sp-head"><div><h2 id="wqPaneTitle">Needs Attention</h2><span id="wqPaneSub"></span></div><button type="button" class="sp-close" data-wq-toggle aria-label="Close Needs Attention" title="Close"><i data-lucide="x"></i></button></header>
       <div class="sp-body"><div class="wq" id="workQueue" aria-live="polite"></div></div>
     </section>
   </aside>
 
+  <!-- Prescription preview -->
+  <dialog class="rx-preview" id="rxPreview" aria-labelledby="rxPreviewTitle">
+    <header class="rx-preview-head"><div><strong id="rxPreviewTitle"></strong><small id="rxPreviewMeta"></small></div><button type="button" class="rx-preview-close" data-rx-preview-close aria-label="Close preview"><i data-lucide="x"></i></button></header>
+    <div class="rx-preview-stage"><img id="rxPreviewImg" alt=""></div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="scenario.js"></script>
   <script src="intake-demo.js"></script>
   <script src="orders-data.js"></script>
-  <script src="patient-record.js?v=11"></script>
-  <script src="proto-nav.js"></script>
+  <script src="patient-record.js?v=26"></script>
+  <script src="proto-nav.js?v=20261106x"></script>
 </body>
 </html>

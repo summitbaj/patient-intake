@@ -71,7 +71,7 @@ function intakeTasks(){
     });
     [...new Set(list.flatMap(e=>(e.item.docs||[]).filter(d=>!d.found&&!d.na).map(d=>d.name)))].forEach(name=>{
       const id=`doc-${ri}-${name}`;
-      tasks.push({id,kind:'doc',ri,icon:'file-up',title:`Upload ${lcFirst(name)}`,meta:'Missing from the intake',
+      tasks.push({id,kind:'doc',ri,icon:'file-up',title:`Upload ${lcFirst(name)}`,meta:'Not in the patient record yet',
         why:`Needed for ${list.filter(e=>(e.item.docs||[]).some(d=>d.name===name&&!d.found&&!d.na)).map(e=>e.item.name).join(', ')}.`,action:'Upload',canMark:true,done:wq.done.includes(id)});
     });
   });
@@ -142,14 +142,51 @@ function listView(){
   const rxBlocks=intake.prescriptions.map((rx,ri)=>{
     const list=intakeList.filter(t=>t.ri===ri);if(!list.length)return '';
     const todo=list.filter(t=>!t.done),done=list.filter(t=>t.done);
-    return `<div class="wq-rx-group"><h4>${esc(rx.title)} <span>Dr. ${esc(rx.physician||'')}${rx.date?` · ${esc(rx.date)}`:''}</span></h4>
+    return `<div class="wq-rx-group"><h4>RX-${String(231+ri).padStart(4,'0')} <span>Dr. ${esc(rx.physician||'')}${rx.date?` · ${esc(rx.date)}`:''}</span></h4>
       <ul class="wq-rows">${[...todo.filter(t=>!t.info),...todo.filter(t=>t.info)].map(taskRow).join('')}${ui.showDone?done.map(taskRow).join(''):''}</ul></div>`;
   }).join('');
   const doneCount=intakeList.filter(t=>t.done).length;
-  const intakeHtml=`<section class="wq-group"><header class="wq-group-head"><h3><a class="wq-intake-link" href="index.html?screen=complete" target="_blank" rel="noopener" title="Open the intake in a new tab">Intake ${esc(intake.id)} <i data-lucide="external-link"></i></a> <span class="wq-date">${esc(intake.completed||'')}</span> <span class="wq-count">${open||''}</span>${params.get('from')==='intake'?' <span class="wq-new">New</span>':''}</h3></header>
+  const intakeHtml=`<section class="wq-group"><header class="wq-group-head"><h3>From the intake <span class="wq-date">${esc(intake.completed||'')}</span> <span class="wq-count">${open||''}</span>${params.get('from')==='intake'?' <span class="wq-new">New</span>':''}</h3></header>
     ${rxBlocks}${doneCount?`<button type="button" class="wq-more" data-wq-show-done>${ui.showDone?'Hide':'Show'} completed (${doneCount})</button>`:''}</section>`;
   // Same rows for the rest, grouped by where the work comes from.
   return intakeHtml+taskGroup('Orders',others.filter(t=>t.group==='orders'));
+}
+// Needs Attention tab: one table, most urgent first. Each row says what to do, for which items, and when.
+const wqType={new:['Create order','file-plus'],refill:['Refill','refresh-cw'],add:['Add to order','list-plus'],dup:['Check duplicate','copy'],doc:['Upload document','file-up'],pa:['Upload PA','shield-alert']};
+const wqWhat={new:'Create the order',refill:'Refill the order',add:'Add to the order',dup:'Confirm it isn’t a duplicate',doc:'Upload the document',pa:'Upload the renewed PA'};
+function tableView(){
+  const list=allTasks().filter(t=>!t.info);
+  const rank=t=>t.done?3:t.dueState==='overdue'?0:t.kind==='dup'||t.kind==='doc'?1:2;
+  const rows=[...list].sort((a,b)=>rank(a)-rank(b));
+  const forOf=t=>t.ri!=null?`RX-${String(231+t.ri).padStart(4,'0')}`:(t.title.match(/ORD-\d+/)||[''])[0];
+  const open=list.filter(t=>!t.done).length;
+  return `<table class="na-table"><thead><tr><th>Task</th><th>Items</th><th>For</th><th>Due</th><th></th></tr></thead><tbody>${rows.map(t=>{
+    const [type,ic]=wqType[t.kind]||[t.title,t.icon];
+    const what=t.kind==='pa'||t.kind==='doc'?t.title.replace(/ · ORD-\d+/,''):wqWhat[t.kind]||t.title;
+    const items=(t.lines||[]).map(l=>`<li class="${l.done?'is-done':''}">${esc(l.text)}${l.sub?` <em>${esc(l.sub)}</em>`:''}</li>`).join('');
+    return `<tr class="${t.done?'is-done':''} ${t.dueState==='overdue'&&!t.done?'is-overdue':''}">
+      <td><span class="na-task"><span class="wq-ico is-${t.kind}"><i data-lucide="${t.done?'check':ic}"></i></span><span><b>${esc(what)}</b><small>${esc(t.meta||(t.lines?.length?`${t.lines.length} ${t.lines.length===1?'item':'items'}`:type))}</small></span></span></td>
+      <td>${items?`<ul class="na-items">${items}</ul>`:'<span class="na-muted">—</span>'}</td>
+      <td><span class="na-for">${esc(forOf(t))}</span></td>
+      <td>${t.done?'<span class="na-due is-done">Done</span>':t.due?`<span class="na-due is-${t.dueState||''}">${esc(t.due)}</span>`:'<span class="na-muted">—</span>'}</td>
+      <td class="na-act"><button type="button" class="na-btn ${t.done?'':'primary'}" data-wq-open="${esc(t.id)}">${t.done?'View':esc(t.action||'Open')}</button></td>
+    </tr>`;}).join('')}</tbody></table>${open?'':'<p class="na-empty"><i data-lucide="circle-check"></i> All caught up.</p>'}`;
+}
+function paneView(){
+  const list=allTasks().filter(t=>!t.info);
+  const rank=t=>t.done?3:t.dueState==='overdue'?0:t.kind==='dup'||t.kind==='doc'?1:2;
+  const forOf=t=>t.ri!=null?`RX-${String(231+t.ri).padStart(4,'0')}`:(t.title.match(/ORD-\d+/)||[''])[0];
+  const rows=[...list].sort((a,b)=>rank(a)-rank(b)).filter(t=>ui.showDone||!t.done);
+  const done=list.filter(t=>t.done).length;
+  return `<ul class="na-cards">${rows.map(t=>{
+    const [type,ic]=wqType[t.kind]||[t.title,t.icon];
+    const what=t.kind==='pa'||t.kind==='doc'?t.title.replace(/ · ORD-\d+/,''):wqWhat[t.kind]||t.title;
+    const items=(t.lines||[]).map(l=>`<li class="${l.done?'is-done':''}">${esc(l.text)}${l.sub?` <em>${esc(l.sub)}</em>`:''}</li>`).join('');
+    return `<li class="na-card ${t.done?'is-done':''} ${t.dueState==='overdue'&&!t.done?'is-overdue':''}">
+      <div class="na-card-top"><span class="wq-ico is-${t.kind}"><i data-lucide="${t.done?'check':ic}"></i></span><span class="na-card-title"><b>${esc(what)}</b><small>${esc(t.meta||(t.lines?.length?`${t.lines.length} ${t.lines.length===1?'item':'items'}`:type))}</small></span>${t.done?'<span class="na-due is-done">Done</span>':t.due?`<span class="na-due is-${t.dueState||''}">${esc(t.due)}</span>`:''}</div>
+      ${items?`<ul class="na-items">${items}</ul>`:''}
+      <div class="na-card-foot"><span class="na-for">${esc(forOf(t))}</span><button type="button" class="na-btn ${t.done?'':'primary'}" data-wq-open="${esc(t.id)}">${t.done?'View':esc(t.action||'Open')}</button></div>
+    </li>`;}).join('')}</ul>${done?`<button type="button" class="na-show-done" data-na-done>${ui.showDone?'Hide':'Show'} ${done} done</button>`:''}${rows.some(t=>!t.done)?'':'<p class="na-empty"><i data-lucide="circle-check"></i> All caught up.</p>'}`;
 }
 function detailView(id){
   if(id==='intake')return detailShell('Intake details',`Completed ${esc(intake.completed||'')}`,intakeDetails(),'<a class="wq-btn" href="index.html?screen=complete">Open Full Intake</a>');
@@ -192,7 +229,7 @@ function detailView(id){
 }
 const dl=rows=>`<dl class="wq-dl">${rows.filter(([,v])=>v).map(([k,v])=>`<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`;
 function detailShell(title,meta,body,actions){
-  return `<div class="wq-detail"><button type="button" class="wq-back" data-wq-back><i data-lucide="arrow-left"></i> Work Queue</button>
+  return `<div class="wq-detail"><button type="button" class="wq-back" data-wq-back><i data-lucide="arrow-left"></i> Needs Attention</button>
     <h3 class="wq-d-title">${esc(title)}</h3><p class="wq-d-meta">${esc(meta)}</p>${body}</div><footer class="wq-d-actions">${actions}</footer>`;
 }
 function intakeDetails(){
@@ -206,7 +243,7 @@ function render(){
   $('#wqPaneSub').textContent=open?`${open} open${overdue?` · ${overdue} overdue`:''}`:'All caught up';
   const box=$('#workQueue');
   box.classList.toggle('is-detail',Boolean(ui.openId));
-  box.innerHTML=ui.openId?detailView(ui.openId):listView();
+  box.innerHTML=ui.openId?detailView(ui.openId):paneView();
   icons();
 }
 
@@ -337,13 +374,80 @@ renderDocs();
 $('#docSearch').addEventListener('input',renderDocs);
 
 // ---------- Intakes tab: every intake for this patient ----------
-const intakeRows=[
-  {id:intake.id||'INT-0023',type:'Document Intake',items:(()=>{const names=intake.prescriptions.flatMap(rx=>rx.items.map(it=>it.name.split(/,| \d| with /)[0].trim()));return names.length>3?`${names.slice(0,3).join(', ')} +${names.length-3} more`:names.join(', ');})(),status:'Completed',created:'10/15/2026',by:'Marilyn Torff',updated:'10/29/2026',href:'index.html?screen=complete'},
-  {id:'INT-0019',type:'Manual Intake',items:'PAP supplies resupply',status:'Draft',created:'09/02/2026',by:'Marilyn Torff',updated:'09/03/2026',href:'index.html?screen=review'},
-  {id:'INT-0011',type:'Document Intake',items:'Nebulizer with compressor',status:'Completed',created:'02/01/2025',by:'Jordan Price',updated:'02/04/2025',href:'index.html?screen=complete'},
-  {id:'INT-0004',type:'Document Intake',items:'CPAP device, Full face mask',status:'Completed',created:'08/09/2021',by:'Jordan Price',updated:'08/12/2021',href:'index.html?screen=complete'}
+// ---------- Prescriptions tab: intake summary so far, and every prescription with its own readiness check ----------
+const rxSvc=rx=>{const codes=rx.items.flatMap(item=>api.codesOf(item));return codes.includes('E0601')?'CPAP therapy':codes.includes('E1390')?'Home oxygen':rx.items[0]?.name||'Prescription';};
+const shortItems=rx=>{const names=rx.items.map(it=>it.name.split(/,| \d| with /)[0].trim());return names.length>3?`${names.slice(0,3).join(', ')} +${names.length-3} more`:names.join(', ');};
+const rxRows=[
+  ...intake.prescriptions.filter(rx=>rx.items.length).map((rx,i)=>({id:`rx-${i}`,rxId:`RX-${String(231+i).padStart(4,'0')}`,service:rxSvc(rx),items:rx.items.map(item=>({...item,lines:(item.lines||[]).map(l=>({...l}))})),doctor:rx.physician||'',npi:rx.npi||'',icd:(rx.icd||[]).map(c=>({...c})),physician:rx.physician?`Dr. ${rx.physician}`:'—',specialty:rx.specialty||'',source:rx.source||'Entered manually',date:rx.date||'—',status:'Active',readiness:'Not checked'})),
+  {id:'rx-resupply',rxId:'RX-0198',service:'PAP resupply',doctor:'Sarah Kim',npi:'1629384756',icd:[{code:'G47.33',description:'Obstructive sleep apnea (adult)',primary:true}],physician:'Dr. Sarah Kim',specialty:'Sleep medicine',source:'Prescription · Mar 2026.pdf',date:'03/18/2026',status:'Active',readiness:'Ready',checked:'Nov 3, 2026',
+    items:[{name:'Nasal mask',qty:1,frequency:'1 per 3 months',lines:[{code:'A7034',description:'Nasal interface (mask or cannula type) used with PAP device'}]},{name:'PAP headgear',qty:1,frequency:'1 per 6 months',lines:[{code:'A7035',description:'Headgear used with PAP device'}]}]},
+  {id:'rx-neb',rxId:'RX-0112',service:'Nebulizer',doctor:'Michael Reyes',npi:'1487265930',icd:[{code:'J44.9',description:'Chronic obstructive pulmonary disease, unspecified',primary:true}],physician:'Dr. Michael Reyes',specialty:'Pulmonology',source:'Prescription · Feb 2025.pdf',date:'02/01/2025',status:'Expired',readiness:'—',
+    items:[{name:'Nebulizer with compressor',qty:1,frequency:'As needed',lines:[{code:'E0570',description:'Nebulizer, with compressor'}]}]}
 ];
-$('#recIntakes').innerHTML=`<table class="rec-table rec-intake-table"><thead><tr>${['Intake #','Type','Item / Service','Status','Created On','Created By','Updated On',''].map((h,i)=>`<th>${h}${[1,3,4,6].includes(i)?' <i data-lucide="chevron-down"></i>':''}</th>`).join('')}</tr></thead><tbody>${intakeRows.map(r=>`<tr><td><a class="rec-link" href="${r.href}" target="_blank" rel="noopener">${esc(r.id)}</a></td><td>${esc(r.type)}</td><td class="rec-items">${esc(r.items)}</td><td><span class="rec-intake-status is-${r.status.toLowerCase()}">${esc(r.status)}</span></td><td>${esc(r.created)}</td><td>${esc(r.by)}</td><td>${esc(r.updated)}</td><td class="rec-row-action"><a class="rec-link" href="precheck.html" target="_blank" rel="noopener"><i data-lucide="shield-check"></i> Pre-Check</a></td></tr>`).join('')}</tbody></table>`;
+const rxOpen=new Set();let rxEditing=null;
+// The patient's one intake. While it's open (not complete), its prescriptions wait for review and it can be resumed from here.
+const intakeProgress=(()=>{try{return JSON.parse(localStorage.getItem('signeticIntakeProgress'));}catch(error){return null;}})();
+const intakeOpen=params.get('intake')==='open'||Boolean(intakeProgress&&intakeProgress.state&&(intakeProgress.state.phase!=='upload'||(intakeProgress.documents||[]).length)&&!intakeProgress.state.everCompleted&&!intakeProgress.state.completed);
+if(intakeOpen)rxRows.filter(r=>r.id.startsWith('rx-')&&/^rx-\d/.test(r.id)).forEach(r=>{r.status='Pending review';r.readiness='—';});
+function renderIntakeBanner(){
+  const box=$('#recIntakeBanner');if(!box)return;
+  box.hidden=!intakeOpen;if(!intakeOpen)return;
+  const ps=intakeProgress?.state||{},docs=(intakeProgress?.documents||[]).length||(intake.documents||[]).length;
+  const step=ps.phase==='review'?'In review':ps.phase==='extraction'?'Confirming patient and documents':'Documents uploaded';
+  box.innerHTML=`<i data-lucide="file-clock"></i><span class="rib-copy"><b>Intake in progress</b><small>${esc(step)} · ${plural(docs,'document')}. This is ${esc(p.first)}’s intake; new documents are added to it. Finish it to check readiness for its prescriptions.</small></span><a class="rib-btn" href="index.html"><i data-lucide="arrow-right"></i> Resume Intake</a>`;
+}
+const rxCodes=r=>[...new Set(r.items.flatMap(item=>api.codesOf(item)))];
+function renderPrescriptionsTab(){
+  const pending=rxRows.filter(r=>r.status==='Pending review');
+  const active=rxRows.filter(r=>r.status==='Active'),expired=rxRows.filter(r=>r.status==='Expired');
+  const ins=(intake.insurance||[]).filter(plan=>plan.status==='Active').map(plan=>`${plan.name} (${plan.rank.toLowerCase()})`);
+  const unchecked=active.filter(r=>r.readiness==='Not checked');
+  $('#ihSummary').innerHTML=`<div class="ih-ai"><i data-lucide="sparkles"></i><div><b>Intake summary so far</b><p>${esc(p.first)} has ${plural(active.length,'active prescription')}${active.length?` (${active.map(r=>esc(r.rxId)).join(', ')})`:''}.${ins.length?` Insurance on file: ${ins.map(esc).join(', ')}.`:''} ${intakeOpen?` The intake is still in progress; ${plural(pending.length,'prescription')} from it ${pending.length===1?'is':'are'} waiting for review.`:` The intake was completed ${esc(intake.completed||'')} from ${plural((intake.documents||[]).length,'document')}.`}${unchecked.length?` ${unchecked.map(r=>esc(r.rxId)).join(' and ')} ${unchecked.length===1?'hasn’t':'haven’t'} been checked for readiness yet.`:''}</p></div></div>`;
+  const ready=r=>r.status==='Pending review'?'<span class="ih-muted">After intake</span>':r.readiness==='Ready'?`<span class="rec-intake-status is-completed">Ready</span><small class="ih-when">${esc(r.checked||'')}</small>`:r.readiness==='Not checked'?'<span class="ih-muted">Not checked</span>':'<span class="ih-muted">—</span>';
+  const itemsHtml=r=>{
+    const ed=rxEditing===r.id,inp=(k,v,ph='')=>`<input class="rx-in" data-rx-field="${k}" value="${esc(v||'')}" placeholder="${esc(ph)}">`;
+    const doc=ed?`<div class="rx-kv"><label><span>Physician</span>${inp('doctor',r.doctor,'First and last name')}</label><label><span>NPI</span>${inp('npi',r.npi,'10 digits')}</label><label><span>Specialty</span>${inp('specialty',r.specialty)}</label><label><span>Prescription date</span>${inp('date',r.date,'MM/DD/YYYY')}</label></div>`
+      :`<div class="rx-kv"><div><span>Physician</span><b>${esc(r.physician)}</b></div><div><span>NPI</span><b>${esc(r.npi||'—')}</b></div><div><span>Specialty</span><b>${esc(r.specialty||'—')}</b></div><div><span>Prescription date</span><b>${esc(r.date)}</b></div><div><span>Source</span><b>${esc(r.source)}</b></div></div>`;
+    const icd=ed?inp('icd',(r.icd||[]).map(c=>c.code).join(', '),'Codes, separated by commas')
+      :`<div class="rx-icd">${(r.icd||[]).map(c=>`<span class="rx-code"><b>${esc(c.code)}</b>${esc(c.description||'')}${c.primary?' <em>Primary</em>':''}</span>`).join('')||'<span class="ih-muted">None</span>'}</div>`;
+    const items=`<ul class="rx-item-list">${r.items.map((item,ii)=>`<li><div class="rx-item-name"><b>${esc(item.name)}</b>${ed?`<span class="rx-item-edit"><label>Qty ${`<input class="rx-in rx-in-sm" data-rx-item="${ii}" data-rx-k="qty" value="${esc(item.qty||'')}">`}</label><label>Frequency <input class="rx-in" data-rx-item="${ii}" data-rx-k="frequency" value="${esc(item.frequency||'')}"></label></span>`:[item.qty?`Qty ${esc(item.qty)}`:'',item.frequency?esc(item.frequency):''].filter(Boolean).map(t=>`<small>${t}</small>`).join('')}</div><div class="rx-item-codes">${(item.lines||[]).map(l=>`<span class="rx-code" title="${esc(l.description||'')}"><b>${esc(l.code)}</b>${esc(l.description||'')}</span>`).join('')}</div></li>`).join('')}</ul>`;
+    const bar=r.status==='Expired'?'':ed?`<div class="rx-edit-bar"><button type="button" class="rx-btn" data-rx-cancel>Cancel</button><button type="button" class="rx-btn primary" data-rx-save="${r.id}">Save</button></div>`:`<div class="rx-edit-bar"><button type="button" class="rx-btn" data-rx-edit="${r.id}"><i data-lucide="pencil"></i> Edit</button></div>`;
+    return `<tr class="rx-items-row"><td></td><td colspan="7"><div class="rx-detail">${bar}<section><h4>Ordering physician</h4>${doc}</section><section><h4>Diagnosis (ICD-10)</h4>${icd}</section><section><h4>Items prescribed</h4>${items}</section></div></td></tr>`;
+  };
+  const row=r=>{const open=rxOpen.has(r.id),codes=rxCodes(r);return `<tr class="${r.status!=='Active'?'is-expired':''} ${open?'is-open':''}">
+    <td class="rx-toggle-cell"><button type="button" class="rx-toggle" data-rx-toggle="${r.id}" aria-expanded="${open}" aria-label="${open?'Hide':'Show'} items in ${esc(r.rxId)}"><i data-lucide="chevron-right"></i></button></td>
+    <td><span class="rx-id-line"><b>${esc(r.rxId)}</b><button type="button" class="rx-eye" data-rx-preview="${r.id}" aria-label="View ${esc(r.rxId)}" title="View prescription"><i data-lucide="eye"></i></button></span><small class="ih-codes">${esc(r.source)}</small></td>
+    <td>${esc(r.physician)}${r.specialty?`<small class="ih-codes">${esc(r.specialty)}</small>`:''}</td>
+    <td>${esc(r.date)}</td>
+    <td><button type="button" class="rx-count" data-rx-toggle="${r.id}">${plural(r.items.length,'item')}</button><small class="ih-codes">${codes.slice(0,3).map(esc).join(' · ')}${codes.length>3?' …':''}</small></td>
+    <td><span class="rec-intake-status is-${r.status==='Active'?'completed':r.status==='Pending review'?'pending':'draft'}">${esc(r.status)}</span></td>
+    <td>${ready(r)}</td>
+    <td class="rec-row-action">${r.status==='Active'?`${r.readiness==='Not checked'?`<button type="button" class="rec-link ih-check" data-rx-check="${r.id}"><i data-lucide="shield-check"></i> Check Readiness</button>`:`<button type="button" class="rec-link ih-check" data-rx-check="${r.id}" data-rx-view title="Open the last readiness result. Re-check from there."><i data-lucide="eye"></i> View Readiness</button>`}`:''}</td>
+  </tr>${open?itemsHtml(r):''}`;};
+  $('#recIntakes').innerHTML=`<table class="rec-table rec-intake-table rx-table"><thead><tr>${['','Prescription','Ordering physician','Date','Items','Status','Readiness',''].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${[...pending,...active,...expired].map(row).join('')}</tbody></table>`;
+  icons();
+}
+document.addEventListener('click',event=>{
+  const ed=event.target.closest('[data-rx-edit]');if(ed){rxEditing=ed.dataset.rxEdit;rxOpen.add(rxEditing);renderPrescriptionsTab();return;}
+  if(event.target.closest('[data-rx-cancel]')){rxEditing=null;renderPrescriptionsTab();return;}
+  const sv=event.target.closest('[data-rx-save]');
+  if(sv){const r=rxRows.find(row=>row.id===sv.dataset.rxSave),box=sv.closest('.rx-detail'),val=k=>box.querySelector(`[data-rx-field="${k}"]`)?.value.trim()||'';
+    r.doctor=val('doctor');r.physician=r.doctor?`Dr. ${r.doctor.replace(/^Dr\.?\s*/i,'')}`:'—';r.npi=val('npi');r.specialty=val('specialty');r.date=val('date')||r.date;
+    const codes=val('icd').split(/[,\s]+/).filter(Boolean).map(c=>c.toUpperCase());r.icd=codes.map((code,ci)=>({code,description:(r.icd||[]).find(c=>c.code===code)?.description||'',primary:ci===0}));
+    box.querySelectorAll('[data-rx-item]').forEach(el=>{r.items[+el.dataset.rxItem][el.dataset.rxK]=el.value.trim();});
+    const wasChecked=r.readiness==='Ready';if(wasChecked){r.readiness='Not checked';r.checked='';}
+    rxEditing=null;renderPrescriptionsTab();toast(`${r.rxId} updated${wasChecked?'. Check readiness again.':''}`);return;}
+  const t=event.target.closest('[data-rx-toggle]');
+  if(t){const id=t.dataset.rxToggle;rxOpen[rxOpen.has(id)?'delete':'add'](id);renderPrescriptionsTab();return;}
+  const pv=event.target.closest('[data-rx-preview]');
+  if(pv){const r=rxRows.find(row=>row.id===pv.dataset.rxPreview);$('#rxPreviewTitle').textContent=r.rxId;$('#rxPreviewMeta').textContent=`${r.source} · ${r.physician} · ${r.date}`;$('#rxPreviewImg').src='assets/prescription.svg';$('#rxPreviewImg').alt=`Preview of ${r.source}`;$('#rxPreview').showModal();icons();return;}
+  if(event.target.closest('[data-rx-preview-close]')||event.target===$('#rxPreview')){$('#rxPreview').close();return;}
+  const b=event.target.closest('[data-rx-check]');if(!b)return;
+  const r=rxRows.find(row=>row.id===b.dataset.rxCheck);
+  try{sessionStorage.setItem('signeticReadinessServices',JSON.stringify([{id:r.rxId,codes:rxCodes(r),from:r.source}]));}catch(error){}
+  location.href=b.hasAttribute('data-rx-view')?'precheck.html?view=result':'precheck.html';
+});
+renderPrescriptionsTab();renderIntakeBanner();
 
 // Shell
 const setNavCollapsed=collapsed=>{document.body.classList.toggle('nav-collapsed',collapsed);const toggle=$('#navToggle');toggle.setAttribute('aria-expanded',String(!collapsed));toggle.setAttribute('aria-label',collapsed?'Expand navigation':'Collapse navigation');toggle.title=toggle.getAttribute('aria-label');};
@@ -364,5 +468,7 @@ function setPane(open){
 showTab(['orders','documents','intakes'].includes(params.get('tab'))?params.get('tab'):'general');
 if(params.get('uploaded'))setTimeout(()=>toast(`${plural(+params.get('uploaded'),'document')} uploaded to ${intake.patient.first}’s record`),150);
 const remembered=(()=>{try{return sessionStorage.getItem('signeticWqPane')==='1';}catch(error){return false;}})();
-setPane(params.get('pane')==='workqueue'||params.get('tab')==='workqueue'||remembered);
-if(params.get('from')==='intake')setTimeout(()=>toast('Intake complete. Here’s what to follow up on.'),150);
+setPane(params.get('pane')==='workqueue'||params.get('tab')==='workqueue'||params.get('tab')==='attention'||remembered);
+if(params.get('from')==='intake')setTimeout(()=>toast(params.get('tab')==='intakes'?'Intake complete. Check readiness for any prescription.':'Intake complete. Here’s what to follow up on.'),150);
+
+document.addEventListener('click',event=>{if(event.target.closest('[data-na-done]')){ui.showDone=!ui.showDone;render();}});

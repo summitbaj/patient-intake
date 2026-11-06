@@ -426,3 +426,146 @@ body.record-page.pane-open .rec-commands{right:calc(var(--rail-w) + var(--pane-w
 .wq-item-status.is-none{color:var(--muted);font-weight:500}
 .wq-due.is-done{color:var(--green)}
 .wq-pc-link{display:flex;justify-content:flex-end;margin:-6px 0 8px}
+
+/* ───────── Intake History: summary so far + services from intakes ───────── */
+.ih-summary,.ih-services{margin-bottom:12px}
+.ih-ai{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--blue-line,#c7e0f4);border-radius:4px;background:var(--blue-soft)}
+.ih-ai>.lucide{flex:none;width:16px;height:16px;margin-top:2px;color:var(--blue);fill:none}
+.ih-ai b{display:block;font-size:14px;font-weight:600;color:var(--ink)}
+.ih-ai p{margin:2px 0 0;font-size:13px;line-height:20px;color:var(--text)}
+.ih-h{margin:0;font-size:14px;font-weight:600;color:var(--ink)}
+.ih-sub{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+.ih-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+.ih-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border:0;border-radius:4px;background:var(--blue);color:#fff;font:600 13px/1 inherit;white-space:nowrap;cursor:pointer}
+.ih-btn:disabled{opacity:.5;cursor:default}
+.ih-btn .lucide{width:14px;height:14px}
+.ih-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.ih-svc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white);cursor:pointer}
+.ih-svc:has(input:checked){border-color:var(--blue);background:var(--blue-soft)}
+.ih-svc.is-off{cursor:default;background:var(--sunken,#faf9f8)}
+.ih-svc input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--blue)}
+.ih-svc-copy{display:grid;gap:1px;min-width:0}
+.ih-svc-copy b{font-size:13px;font-weight:600;color:var(--ink)}
+.ih-svc-copy small{font-size:12px;color:var(--muted)}
+.ih-svc-from{grid-column:2;font-size:11.5px;color:var(--muted)}
+.ih-tag{display:inline-block;padding:0 6px;border-radius:999px;background:#fff4ce;color:#8a5a00;font-size:11px;font-weight:600}
+.ih-past{margin-top:10px}
+.ih-past summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:8px}
+/* Prescriptions tab */
+.rec-intake-table td b{display:block;font-weight:600;color:var(--ink)}
+.ih-codes{display:block;margin-top:2px;font-size:12px;color:var(--muted)}
+.ih-muted{color:var(--muted)}
+.ih-when{display:block;margin-top:3px;font-size:11.5px;color:var(--muted)}
+.ih-check{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--blue);cursor:pointer;white-space:nowrap}
+.ih-check .lucide{width:14px;height:14px}
+.rec-intake-table tr.is-expired td{color:var(--muted)}
+/* Prescriptions table: expand to see items, preview the prescription */
+.rx-table .rx-toggle-cell{width:36px;padding-right:0}
+.rx-toggle{display:grid;place-items:center;width:26px;height:26px;padding:0;border:0;border-radius:4px;background:none;color:var(--muted);cursor:pointer}
+.rx-toggle:hover{background:var(--sunken,#f3f2f1);color:var(--ink)}
+.rx-toggle .lucide{width:16px;height:16px;transition:transform .15s}
+.rx-table tr.is-open .rx-toggle .lucide{transform:rotate(90deg)}
+.rx-table tr.is-open>td{background:var(--blue-soft)}
+.rx-src{display:inline-flex;align-items:center;gap:4px;margin-top:3px;padding:0;border:0;background:none;font:inherit;font-size:12px;color:var(--blue);cursor:pointer}
+.rx-src:hover{text-decoration:underline}
+.rx-src .lucide{width:12px;height:12px}
+.rx-count{padding:0;border:0;background:none;font:inherit;font-weight:600;color:var(--blue);cursor:pointer}
+.rx-table .rec-row-action{white-space:nowrap}
+.rx-table .rec-row-action .ih-check+.ih-check{margin-left:14px}
+.rx-items-row>td{padding-top:0!important;background:var(--blue-soft)}
+.rx-item-list{display:grid;gap:6px;margin:0 0 12px;padding:0;list-style:none}
+.rx-item-list li{display:grid;grid-template-columns:minmax(180px,1fr) minmax(0,2fr);gap:6px 16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white)}
+.rx-item-name{display:grid;gap:2px}
+.rx-item-name b{font-weight:600;color:var(--ink)}
+.rx-item-name small{font-size:12px;color:var(--muted)}
+.rx-item-codes{display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start}
+.rx-code{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:2px 8px 2px 2px;border:1px solid var(--line);border-radius:4px;font-size:12px;color:var(--text)}
+.rx-code b{padding:1px 6px;border-radius:3px;background:var(--sunken,#f3f2f1);font-weight:600;color:var(--ink)}
+.rx-preview{width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 48px);padding:0;border:1px solid var(--line);border-radius:6px;box-shadow:0 16px 48px rgba(0,0,0,.2)}
+.rx-preview::backdrop{background:rgba(16,24,40,.4)}
+.rx-preview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.rx-preview-head strong{display:block;font-size:15px;font-weight:600;color:var(--ink)}
+.rx-preview-head small{font-size:12.5px;color:var(--muted)}
+.rx-preview-close{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:4px;background:none;color:var(--muted);cursor:pointer}
+.rx-preview-close:hover{background:var(--sunken,#f3f2f1)}
+.rx-preview-stage{padding:16px;background:var(--sunken,#f3f2f1);overflow:auto;max-height:calc(100vh - 140px)}
+.rx-preview-stage img{display:block;width:100%;height:auto;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+/* The patient's one intake, while it's in progress */
+.rec-intake-banner{display:flex;align-items:center;gap:12px;margin:0 0 12px;padding:12px 16px;border:1px solid #f0d58a;border-radius:4px;background:#fff8e6}
+.rec-intake-banner[hidden]{display:none}
+.rec-intake-banner>.lucide{flex:none;width:18px;height:18px;color:#8a5a00}
+.rib-copy{display:grid;gap:2px;flex:1;min-width:0}
+.rib-copy b{font-size:14px;font-weight:600;color:var(--ink)}
+.rib-copy small{font-size:12.5px;line-height:18px;color:var(--text)}
+.rib-btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:4px;background:var(--blue);color:#fff;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap}
+.rib-btn .lucide{width:14px;height:14px}
+.rec-intake-status.is-pending{background:#fff4ce;color:#8a5a00}
+.rx-id-line{display:inline-flex;align-items:center;gap:6px}
+.rx-id-line b{display:inline!important}
+.rx-eye{display:grid;place-items:center;width:26px;height:26px;padding:0;border:0;border-radius:4px;background:none;color:var(--blue);cursor:pointer}
+.rx-eye:hover{background:var(--blue-soft)}
+.rx-eye .lucide{width:16px;height:16px}
+/* Prescription detail: everything collected in the intake, editable */
+.rx-detail{display:grid;gap:12px;margin:0 0 12px;padding:12px 14px;border:1px solid var(--line);border-radius:4px;background:var(--white);position:relative}
+.rx-detail section{display:grid;gap:6px}
+.rx-detail h4{margin:0;font-size:12px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--muted)}
+.rx-kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px 16px}
+.rx-kv>div,.rx-kv>label{display:grid;gap:2px;min-width:0}
+.rx-kv span{font-size:12px;color:var(--muted)}
+.rx-kv b{font-size:13px;font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+.rx-icd{display:flex;flex-wrap:wrap;gap:6px}
+.rx-code em{margin-left:4px;font-style:normal;font-weight:600;color:var(--blue)}
+.rx-detail .rx-item-list{margin:0}
+.rx-detail .rx-item-list li{background:var(--sunken,#faf9f8)}
+.rx-in{height:30px;padding:0 8px;border:1px solid var(--line);border-radius:4px;background:#fff;font:inherit;font-size:13px;color:var(--ink);min-width:0}
+.rx-in:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.rx-in-sm{width:56px}
+.rx-item-edit{display:flex;flex-wrap:wrap;gap:8px 12px;margin-top:4px;font-size:12px;color:var(--muted)}
+.rx-item-edit label{display:inline-flex;align-items:center;gap:6px}
+.rx-edit-bar{position:absolute;top:10px;right:12px;display:flex;gap:8px}
+.rx-btn{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 12px;border:1px solid var(--line);border-radius:4px;background:#fff;font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.rx-btn .lucide{width:13px;height:13px}
+.rx-btn.primary{border-color:var(--blue);background:var(--blue);color:#fff}
+/* Needs Attention as a tab */
+.rec-tab-count{display:inline-grid;place-items:center;min-width:18px;height:18px;margin-left:4px;padding:0 5px;border-radius:999px;background:var(--blue);color:#fff;font-size:11px;font-weight:600}
+.rec-tab-count[hidden]{display:none}
+.rec-attention{max-width:760px}
+/* Needs Attention tab as a table: Task | Items | For | Due | action */
+.rec-attention{max-width:none}
+.na-table{width:100%;border-collapse:collapse;border:1px solid var(--line);border-radius:4px;background:var(--white);font-size:13px}
+.na-table th{padding:8px 12px;border-bottom:1px solid var(--line);background:var(--sunken,#faf9f8);font-size:12px;font-weight:600;text-align:left;color:var(--muted)}
+.na-table td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+.na-table tr:last-child td{border-bottom:0}
+.na-table tr.is-overdue td:first-child{box-shadow:inset 3px 0 0 var(--red)}
+.na-table tr.is-done td{color:var(--muted)}
+.na-task{display:flex;align-items:flex-start;gap:10px}
+.na-task .wq-ico{flex:none}
+.na-task>span:last-child{display:grid;gap:2px}
+.na-task b{font-weight:600;color:var(--ink)}
+.na-task small{font-size:12px;color:var(--muted)}
+.na-items{display:grid;gap:4px;margin:0;padding:0;list-style:none}
+.na-items li{line-height:18px;color:var(--text)}
+.na-items li em{font-style:normal;color:var(--muted);font-size:12px}
+.na-items li.is-done{color:var(--muted);text-decoration:line-through}
+.na-for{display:inline-block;padding:1px 8px;border-radius:4px;background:var(--sunken,#f3f2f1);font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap}
+.na-due{font-weight:600;white-space:nowrap}
+.na-due.is-overdue{color:var(--red)}.na-due.is-soon{color:#8a5a00}.na-due.is-done{color:var(--green)}
+.na-muted{color:var(--muted)}
+.na-act{text-align:right;white-space:nowrap}
+.na-btn{height:30px;padding:0 12px;border:1px solid var(--line);border-radius:4px;background:#fff;font:inherit;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.na-btn.primary{border-color:var(--blue);background:var(--blue);color:#fff}
+.na-empty{display:flex;align-items:center;gap:6px;margin:10px 0 0;color:var(--green);font-weight:600}
+/* Needs Attention side pane: one card per task — what to do, items, for which RX/order, due, one action */
+.na-cards{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.na-card{padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--white)}
+.na-card.is-overdue{border-left:3px solid var(--red)}
+.na-card.is-done{opacity:.7}
+.na-card-top{display:flex;align-items:flex-start;gap:10px}
+.na-card-top .wq-ico{flex:none}
+.na-card-title{display:grid;gap:2px;flex:1;min-width:0}
+.na-card-title b{font-size:13.5px;font-weight:600;color:var(--ink)}
+.na-card-title small{font-size:12px;color:var(--muted)}
+.na-card .na-items{margin:8px 0 0 42px;font-size:12.5px}
+.na-card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:10px 0 0 42px}
+.na-card .na-btn{height:28px;font-size:12.5px}
+.na-show-done{margin-top:10px;padding:0;border:0;background:none;font:inherit;font-size:12.5px;font-weight:600;color:var(--blue);cursor:pointer}

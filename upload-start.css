@@ -803,3 +803,588 @@ body.phase-upload #cancelUpload{display:none!important}
 /* Past Intakes tab panel */
 .history-list{padding:12px;overflow:auto}
 .history-list[hidden]{display:none!important}
+
+/* ───────── Insurance in three steps: verify, check eligibility, confirm order ───────── */
+#insurance-alt-section .ins-alt-list{display:grid;gap:12px;padding:16px}
+#insurance-alt-section .ins-alt-intro>p{color:var(--text)}
+/* Progress strip under the intro */
+.ins-progress{display:flex;gap:0;margin:12px 16px 0;padding:0;list-style:none;counter-reset:none}
+.ins-progress:empty{display:none}
+.ins-progress li{flex:1;position:relative;min-width:0}
+.ins-progress li+li::before{content:"";position:absolute;top:13px;left:-12px;width:24px;height:2px;background:var(--line)}
+.ins-progress li.is-done+li::before{background:var(--green)}
+.ins-progress a{display:flex;align-items:center;gap:8px;padding:2px 16px 2px 0;font-size:13px;font-weight:600;color:var(--muted);text-decoration:none}
+.ins-progress li+li a{padding-left:16px}
+.ins-progress a:hover span:last-child{text-decoration:underline}
+.ins-progress-num{flex:none;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1px solid var(--line);background:var(--white);font-size:12px;color:var(--muted)}
+.ins-progress-num .lucide{width:14px;height:14px}
+.ins-progress li.is-current a{color:var(--text)}
+.ins-progress li.is-current .ins-progress-num{border-color:var(--primary);background:var(--primary);color:#fff}
+.ins-progress li.is-done a{color:var(--text)}
+.ins-progress li.is-done .ins-progress-num{border-color:var(--green);background:var(--green);color:#fff}
+/* Step cards */
+.ins-step{border:1px solid var(--line);border-radius:6px;background:var(--white);scroll-margin-top:80px;transition:border-color .15s,box-shadow .15s}
+.ins-step.is-current{border-color:var(--blue-line);box-shadow:0 0 0 1px var(--blue-line)}
+.ins-step-head{display:flex;align-items:flex-start;gap:12px;padding:12px 16px}
+.ins-step-num{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);background:var(--white);font-size:13px;font-weight:600;color:var(--muted)}
+.ins-step-num .lucide{width:16px;height:16px}
+.ins-step.is-current .ins-step-num{border-color:var(--primary);background:var(--primary);color:#fff}
+.ins-step.is-done .ins-step-num{border-color:var(--green);background:var(--green);color:#fff}
+.ins-step-copy{flex:1;min-width:0}
+.ins-step-copy h4{margin:0;font-size:14px;font-weight:600;line-height:20px;color:var(--text)}
+.ins-step-copy p{margin:2px 0 0;font-size:13px;line-height:18px;color:var(--muted)}
+.ins-step-state{flex:none;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;line-height:18px;background:var(--fluent-neutral-lighter-alt);color:var(--muted)}
+.ins-step.is-current .ins-step-state{background:var(--blue-soft);color:var(--primary)}
+.ins-step.is-done .ins-step-state{background:var(--green-soft);color:var(--green)}
+.ins-step-body{padding:0 16px 16px 56px}
+.ins-step-body:has(> :only-child:empty){display:none}
+.ins-step.is-done:not(#insStepVerify) .ins-step-head{padding-bottom:12px}
+/* Step 1 footer */
+.ins-step-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.ins-step-foot:empty{display:none}
+.ins-step-hint{display:flex;align-items:center;gap:6px;margin:0;font-size:13px;color:var(--muted)}
+.ins-step-hint .lucide{flex:none;width:16px;height:16px}
+.ins-step-hint.is-ok{color:var(--green)}
+.ins-step-hint.is-warn{color:var(--red)}
+.ins-step-foot .small-btn{flex:none;height:32px;min-height:32px}
+.ins-step-foot .text-btn{flex:none;padding:0;font-size:13px;font-weight:600}
+/* Step 2: service + check, then what the check answers */
+#insStepCheck .ins-tbl-bar{justify-content:flex-start;margin:0}
+#insStepCheck .ins-tbl-service{flex-wrap:wrap}
+.ins-answers{display:grid;gap:0;margin:12px 0 0;padding:0;list-style:none;border:1px solid var(--line);border-radius:4px}
+.ins-answer{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;font-size:13px;line-height:18px}
+.ins-answer+.ins-answer{border-top:1px solid var(--line)}
+.ins-answer>.lucide{flex:none;width:16px;height:16px;margin-top:1px}
+.ins-answer>span{display:grid;gap:2px;flex:1;min-width:0}
+.ins-answer b{font-weight:600;color:var(--text)}
+.ins-answer small{font-size:12px;line-height:17px;color:var(--muted)}
+.ins-answer>.text-btn{flex:none;padding:0;font-size:13px;font-weight:600}
+.ins-answer.is-ask>.lucide{color:var(--muted)}
+.ins-answer.is-ask b{font-weight:600}
+.ins-answer.is-ok>.lucide{color:var(--green)}
+.ins-answer.is-warn{background:var(--amber-soft)}
+.ins-answer.is-warn>.lucide{color:var(--amber)}
+.ins-answer.is-wait>.lucide{color:var(--primary);animation:ins-spin 1s linear infinite}
+@keyframes ins-spin{to{transform:rotate(360deg)}}
+/* Step 3: payer order sits inside the step, no extra box */
+#insStepOrder #insAltConfirm{margin:0}
+#insStepOrder .po-ask{padding:0;border:0;background:none}
+#insStepOrder .po-steps{margin-top:0}
+#insStepOrder .po-actions{justify-content:flex-start}
+.po-source{display:inline-flex;align-items:center;gap:4px;margin-right:auto;font-size:12px;color:var(--muted)}
+.po-source .lucide{width:14px;height:14px;color:var(--primary);fill:none}
+#insStepOrder .po-reset{margin-right:8px}
+@media (max-width:720px){
+  .ins-step-body{padding-left:16px}
+  .ins-progress a span:last-child{display:none}
+  .ins-step-foot{flex-direction:column;align-items:stretch}
+}
+
+/* ───────── Insurance: "Before you continue" under the plan list and details ───────── */
+#insurance-alt-section[hidden]{display:none!important}
+.ins-next{margin:16px 16px 8px;border:1px solid var(--line);border-radius:var(--radius,4px);background:var(--white)}
+.ins-next[hidden]{display:none}
+.ins-next-title{margin:0;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--fluent-neutral-lighter-alt);font-size:13px;font-weight:600;color:var(--text)}
+.ins-next-row{display:flex;align-items:center;gap:12px;padding:12px 16px}
+.ins-next-row+.ins-next-row{border-top:1px solid var(--line)}
+.ins-next-row:empty{display:none}
+.ins-next-mark{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--fluent-neutral-lighter-alt);color:var(--muted)}
+.ins-next-mark .lucide{width:16px;height:16px}
+.ins-next-mark.is-done{background:var(--green-soft);color:var(--green)}
+.ins-next-mark.is-warn{background:var(--amber-soft);color:var(--amber)}
+.ins-next-copy{flex:1 1 auto;display:grid;gap:2px;min-width:0}
+.ins-next-copy>b{font-size:13px;font-weight:600;line-height:20px;color:var(--text)}
+.ins-next-copy>small{display:flex;flex-wrap:wrap;align-items:center;gap:2px 0;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-next-copy .is-ok{color:var(--green);font-weight:600}
+.ins-next-copy .is-warn{color:var(--amber);font-weight:600}
+.ins-next-copy .text-btn{height:auto;min-height:0;margin-left:6px;padding:0;font-size:12.5px;font-weight:600}
+.ins-next-sep{margin:0 8px;color:var(--muted)}
+.ins-next-actions{flex:none;display:flex;align-items:center;gap:10px}
+.ins-next-actions .service-select{position:relative}
+.ins-next-actions .service-trigger{width:160px;min-height:28px;height:28px;font-size:13px;background:var(--white)}
+.ins-next-actions .service-menu{top:auto;bottom:calc(100% + 4px);left:auto;right:0}
+.ins-next-actions .suggest-ai{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap}
+.ins-next-actions .suggest-ai .lucide{width:13px;height:13px;color:var(--primary)}
+.ins-next-actions .suggest-ai .text-btn{display:inline-flex;align-items:center;gap:4px;padding:0;font-size:12px}
+.ins-next-actions .small-btn{min-height:28px;height:28px;padding:0 10px;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.ins-next-actions .small-btn .lucide{width:14px;height:14px}
+.ins-next-actions>.text-btn{padding:0;font-size:13px;font-weight:600}
+@container ins (max-width:720px){
+  .ins-next-row{flex-wrap:wrap}
+  .ins-next-copy{flex-basis:calc(100% - 40px)}
+  .ins-next-actions{flex-wrap:wrap;margin-left:40px}
+}
+
+/* ───────── Insurance · Part 1: cards show the last eligibility check, View response beside it ───────── */
+/* The card box wraps the select button and the eligibility line, so "View response" is a real link inside the card */
+#insurance-section .plan-card{min-width:0;border:1px solid var(--line);border-radius:var(--fluent-corner-2,4px);background:var(--white);overflow:hidden;transition:border-color .15s}
+#insurance-section .plan-card:hover{border-color:var(--line-strong,var(--muted))}
+#insurance-section .plan-card:has(>.plan-item.active){border-color:var(--blue);background:var(--blue-soft)}
+#insurance-section .plan-list .plan-card>.plan-item{width:100%;border:0!important;border-radius:0;background:transparent!important;box-shadow:none!important;padding-bottom:6px!important}
+#insurance-section .plan-ec{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;padding:0 var(--space-5,12px) var(--space-5,12px);font-size:12px;line-height:18px;color:var(--muted)}
+#insurance-section .plan-ec .lucide{width:13px;height:13px;flex:none}
+#insurance-section .plan-ec .text-btn{height:auto;min-height:0;padding:0;font-size:12px;font-weight:600}
+#insurance-section .plan-ec.is-loading{color:var(--primary);font-weight:600}
+#insurance-section .plan-ec .spinner{width:12px;height:12px}
+#insurance-section .plan-row.is-extracting .plan-card{background:var(--fluent-neutral-lighter-alt)}
+/* Fields are read-only while a new card for this insurance extracts */
+#insurance-section .ins-extracting-note{display:flex;align-items:center;gap:8px;margin:0 0 10px;padding:8px 12px;border:1px solid var(--blue-line);border-radius:4px;background:var(--blue-soft);font-size:13px;color:var(--text)}
+#insurance-section .ins-extracting-note[hidden]{display:none}
+#insurance-section .ins-extracting-note .spinner{position:static!important;width:14px!important;height:14px!important;min-width:14px;flex:none;margin:0!important}
+#insurance-section .plan-detail.is-extracting #insuranceFields{position:relative;pointer-events:none}
+#insurance-section .plan-detail.is-extracting #insuranceFields .ins-input{color:transparent;border-radius:3px;background:linear-gradient(90deg,var(--fluent-neutral-lighter-alt) 25%,var(--fluent-neutral-lighter,#f3f2f1) 50%,var(--fluent-neutral-lighter-alt) 75%);background-size:200% 100%;animation:ins-shimmer 1.2s linear infinite}
+@keyframes ins-shimmer{to{background-position:-200% 0}}
+/* "Go to fix" highlight */
+#insurance-section .ins-field.is-flash{animation:ins-flash 1.8s ease-out;position:relative;z-index:1}
+@keyframes ins-flash{0%,40%{box-shadow:inset 0 0 0 2px var(--red);background:var(--red-soft)}100%{box-shadow:inset 0 0 0 0 transparent;background:transparent}}
+
+/* ───────── Insurance · Part 2: Insurance summary ───────── */
+.ins-sum{margin:16px 16px 8px;border:1px solid var(--line);border-radius:var(--radius,4px);background:var(--white)}
+.ins-sum[hidden]{display:none}
+.ins-sum-head{padding:12px 16px}
+.ins-sum-head h4{margin:0;font-size:14px;font-weight:600;line-height:20px;color:var(--text)}
+.ins-sum-head p{margin:2px 0 0;font-size:13px;line-height:18px;color:var(--muted)}
+.ins-sum-table{margin:0 16px;border:1px solid var(--line);border-radius:4px}
+.ins-sum-row{display:grid;grid-template-columns:minmax(0,1.5fr) 110px minmax(200px,1fr) minmax(0,1.1fr);align-items:center;gap:12px;padding:10px 12px;font-size:13px}
+.ins-sum-row-head{padding:6px 12px;border-radius:4px 4px 0 0;background:var(--fluent-neutral-lighter-alt);font-size:12px;font-weight:600;color:var(--muted)}
+.ins-sum-item{border-top:1px solid var(--line)}
+.ins-sum-name{display:grid;gap:1px;min-width:0}
+.ins-sum-name small{font-size:12px;color:var(--muted)}
+.ins-sum-name b{font-weight:600;color:var(--text);overflow-wrap:anywhere}
+.ins-sum-detail{font-size:12px;color:var(--muted)}
+.ins-sum-svc-head{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.ins-sum-svc-head .service-select{position:relative;display:inline-block}
+.ins-sum-svc-head .service-trigger{width:auto;min-width:96px;height:24px;min-height:24px;padding:0 6px;gap:4px;font-size:12px;font-weight:600;background:var(--white)}
+.ins-sum-svc-head .service-trigger .lucide{width:13px;height:13px}
+.ins-sum-svc-head .service-menu{display:block;top:calc(100% + 4px);bottom:auto;left:0;right:auto;font-weight:400}
+.ins-sum-svc-head .service-menu[hidden]{display:none}
+.ins-sum-svc-head .suggest-ai{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap}
+.ins-sum-svc-head .suggest-ai .lucide{width:12px;height:12px}
+.ins-sum-svc-head .suggest-ai .text-btn{display:inline-flex;align-items:center;gap:3px;height:auto;min-height:0;padding:0;font-size:11px}
+/* Status chips */
+.ins-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap}
+.ins-chip .lucide{width:13px;height:13px;stroke-width:3}
+.ins-chip.is-ok{background:var(--green-soft);color:var(--green)}
+.ins-chip.is-bad{background:var(--red-soft);color:var(--red)}
+.ins-chip.is-unknown{background:var(--fluent-neutral-lighter-alt);color:var(--muted)}
+.ins-chip.is-wait{background:var(--blue-soft);color:var(--primary)}
+.ins-chip .spinner{width:11px;height:11px}
+/* Error row */
+.ins-sum-item.is-error{box-shadow:inset 3px 0 0 var(--red);background:color-mix(in srgb,var(--red-soft) 45%,white)}
+.ins-sum-error{display:flex;align-items:flex-start;gap:8px;padding:0 12px 10px;font-size:12.5px;line-height:18px;color:var(--red)}
+.ins-sum-error .lucide{flex:none;width:15px;height:15px;margin-top:1px}
+.ins-sum-error span{flex:1;min-width:0;color:var(--text)}
+.ins-sum-error .text-btn{flex:none;height:auto;min-height:0;padding:0;font-size:12.5px;font-weight:600}
+/* Guidance + the one button */
+.ins-sum-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px}
+.ins-sum-copy{min-width:0;display:grid;gap:2px}
+.ins-sum-guide{display:flex;align-items:center;gap:6px;margin:0;font-size:13px;line-height:18px;color:var(--text)}
+.ins-sum-guide:empty{display:none}
+.ins-sum-guide .lucide{width:16px;height:16px;flex:none}
+.ins-sum-guide.is-ok{color:var(--green);font-weight:600}
+.ins-sum-guide.is-error{color:var(--red)}
+.ins-sum-run{margin:0;font-size:12px;line-height:17px;color:var(--muted)}
+.ins-sum-run:empty{display:none}
+.ins-sum-foot #checkEligibility{flex:none;height:32px;min-height:32px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.ins-sum-foot #checkEligibility .lucide{width:15px;height:15px}
+/* Order confirmed */
+.ins-sum-confirm{display:flex;align-items:flex-start;gap:10px;margin:0;padding:12px 16px;border-top:1px solid var(--line);font-size:13px;line-height:18px;color:var(--text);cursor:pointer}
+.ins-sum-confirm[hidden]{display:none}
+.ins-sum-confirm input{flex:none;width:16px;height:16px;margin:1px 0 0;accent-color:var(--primary)}
+.ins-sum-confirm span{display:grid;gap:1px}
+.ins-sum-confirm b{font-weight:600}
+.ins-sum-confirm.is-checked b{color:var(--green)}
+@container ins (max-width:760px){
+  .ins-sum-row{grid-template-columns:auto auto minmax(0,1fr);gap:6px 8px}
+  .ins-sum-row>.ins-sum-name,.ins-sum-row>.ins-sum-detail{grid-column:1/-1}
+  .ins-sum-row-head{grid-template-columns:minmax(0,1fr)}
+  .ins-sum-row-head>span:not(.ins-sum-svc-head){display:none}
+  .ins-sum-foot{flex-direction:column;align-items:stretch}
+}
+
+/* ───────── Under the plans: AI insurance summary, then the eligibility check ───────── */
+.ins-below{display:grid;gap:12px;margin:16px 16px 8px}
+.ins-below[hidden]{display:none}
+.ins-ai{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--blue-line);border-radius:var(--radius,4px);background:var(--blue-soft)}
+.ins-ai-icon{flex:none;display:grid;place-items:center;width:20px;height:20px;margin-top:1px;color:var(--ai,var(--primary))}
+.ins-ai-icon .lucide{width:16px;height:16px;fill:none}
+.ins-ai-body{flex:1 1 auto;min-width:0}
+.ins-ai-body>b{display:block;font-size:13px;font-weight:600;line-height:20px;color:var(--text)}
+.ins-ai-body>p{margin:2px 0 0;font-size:13px;line-height:20px;color:var(--text)}
+/* Eligibility check */
+.ins-ec{border:1px solid var(--line);border-radius:var(--radius,4px);background:var(--white)}
+.ins-ec-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 14px}
+.ins-ec-copy{display:grid;gap:2px;min-width:0}
+.ins-ec-copy b{font-size:13px;font-weight:600;line-height:20px;color:var(--text)}
+.ins-ec-copy small{font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-ec-actions{flex:none;display:flex;align-items:center;gap:8px}
+.ins-ec-actions .suggest-label{font-size:13px;font-weight:600;color:var(--text)}
+.ins-ec-actions .service-select{position:relative;display:inline-block}
+.ins-ec-actions .service-trigger{width:150px;height:28px;min-height:28px;font-size:13px;background:var(--white)}
+.ins-ec-actions .service-menu{display:block;top:calc(100% + 4px);bottom:auto;left:auto;right:0}
+.ins-ec-actions .service-menu[hidden]{display:none}
+.ins-ec-actions .suggest-ai{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap}
+.ins-ec-actions .suggest-ai .lucide{width:13px;height:13px;color:var(--primary)}
+.ins-ec-actions .suggest-ai .text-btn{display:inline-flex;align-items:center;gap:4px;padding:0;font-size:12px}
+.ins-ec-actions #checkEligibility{height:28px;min-height:28px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.ins-ec-actions #checkEligibility .lucide{width:14px;height:14px}
+.ins-ec-table{margin:0 14px 12px;border:1px solid var(--line);border-radius:4px}
+.ins-ec-item+.ins-ec-item{border-top:1px solid var(--line)}
+.ins-ec-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,auto);align-items:center;gap:8px 16px;padding:10px 12px}
+.ins-ec-name{display:grid;gap:1px;min-width:0}
+.ins-ec-name small{font-size:12px;color:var(--muted)}
+.ins-ec-name b{font-size:13px;font-weight:600;color:var(--text)}
+.ins-ec-chips{display:flex;gap:6px}
+.ins-ec-when{font-size:12px;color:var(--muted);text-align:right;white-space:nowrap}
+.ins-ec-when .text-btn,.ins-ec-note .text-btn,.ins-ec-other .text-btn{display:inline;height:auto;min-height:0;padding:0;font-size:12px;font-weight:600}
+.ins-ec-note{display:flex;align-items:flex-start;gap:6px;padding:0 12px 10px;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-ec-note.is-error{color:var(--red)}
+.ins-ec-note .lucide{flex:none;width:14px;height:14px;margin-top:2px}
+.ins-ec-note span{flex:1;min-width:0}
+.ins-ec-note.is-error span{color:var(--text)}
+.ins-ec-item.is-error{box-shadow:inset 3px 0 0 var(--red)}
+.ins-ec-other{display:flex;align-items:flex-start;gap:6px;margin:0 14px 12px;font-size:12.5px;line-height:18px;color:var(--text)}
+.ins-ec-other .lucide{flex:none;width:14px;height:14px;margin-top:2px;color:var(--primary)}
+.ins-ec-meta{margin:0 14px 12px;font-size:12px;color:var(--muted)}
+.ins-ec-meta:empty{display:none}
+@container ins (max-width:820px){
+  .ins-ec-head{flex-wrap:wrap}
+  .ins-ec-actions{flex-wrap:wrap}
+  .ins-ec-row{grid-template-columns:minmax(0,1fr)}
+  .ins-ec-when{text-align:left}
+}
+/* Plan details: View response sits right after the check date */
+#insurance-section .cov-checked .cov-view{height:auto;min-height:0;padding:0;font-size:inherit;font-weight:600}
+/* A card whose new insurance file is still extracting */
+#insurance-section .plan-extracting{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;font-weight:600;color:var(--primary)}
+#insurance-section .plan-extracting .spinner{width:12px;height:12px}
+
+/* ───────── First table: insurance information only ───────── */
+#insurance-section .plan-row.is-info-only{grid-template-columns:minmax(0,1fr)}
+#insurance-section .plan-last-ec{display:block;margin-top:4px;font-size:12px;line-height:16px;color:var(--muted)}
+/* ───────── Eligibility check table: payer order, results, Confirm Order ───────── */
+.ins-ec-row{grid-template-columns:20px minmax(0,1fr) auto minmax(0,auto)}
+.ins-ec-grip{display:grid;place-items:center;width:20px;height:28px;color:var(--line-strong,var(--muted));cursor:grab}
+.ins-ec-item:hover .ins-ec-grip{color:var(--muted)}
+.ins-ec-grip .lucide{width:14px;height:14px}
+.ins-ec-item{position:relative}
+.ins-ec-item.dragging{opacity:.45}
+.ins-ec-item.drop-above::before,.ins-ec-item.drop-below::after{content:"";position:absolute;left:0;right:0;height:2px;background:var(--primary);z-index:2}
+.ins-ec-item.drop-above::before{top:-1px}
+.ins-ec-item.drop-below::after{bottom:-1px}
+.ins-ec-name small{display:inline-flex;align-items:center;gap:4px}
+.ins-ec-name small .lucide{width:12px;height:12px}
+.ins-ec-name small .lucide-star{color:var(--primary-star,#f7630c);fill:currentColor}
+.ins-ec-name .plan-why-btn{display:inline-grid;place-items:center;width:18px;height:18px;color:var(--ai,var(--primary));cursor:pointer}
+.ins-ec-name .plan-why-btn .lucide{width:12px;height:12px;fill:none}
+.ins-ec-quiet{color:var(--muted)}
+.ins-ec-order{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 14px 12px;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-ec-order>span{flex:1 1 240px;min-width:0;display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.ins-ec-order .lucide{width:13px;height:13px;color:var(--primary);fill:none}
+.ins-ec-order .text-btn{height:auto;min-height:0;padding:0;font-size:12.5px;font-weight:600}
+.ins-ec-order .small-btn{height:28px;min-height:28px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.ins-ec-order .small-btn .lucide{color:inherit;width:14px;height:14px}
+.ins-ec-order.is-done{padding:8px 12px;border:1px solid var(--fluent-success-background,var(--green-soft));border-radius:4px;background:var(--green-soft)}
+.ins-ec-order.is-done>.lucide{color:var(--green);width:16px;height:16px}
+.ins-ec-order.is-done b{color:var(--green);font-weight:600}
+@container ins (max-width:820px){.ins-ec-row{grid-template-columns:20px minmax(0,1fr)}.ins-ec-row>.ins-ec-chips,.ins-ec-row>.ins-ec-when{grid-column:2}}
+/* Eligibility check: what's wrong and what the next check will run */
+.ins-ec-status{display:flex;align-items:flex-start;gap:8px;margin:0 14px 10px;padding:8px 12px;border-radius:4px;font-size:13px;line-height:19px;color:var(--text)}
+.ins-ec-status .lucide{flex:none;width:16px;height:16px;margin-top:2px}
+.ins-ec-status b{font-weight:600}
+.ins-ec-status.is-error{border:1px solid color-mix(in srgb,var(--red) 30%,white);background:var(--red-soft)}
+.ins-ec-status.is-error .lucide{color:var(--red)}
+.ins-ec-status.is-ready{border:1px solid var(--blue-line);background:var(--blue-soft)}
+.ins-ec-status.is-ready .lucide{color:var(--primary)}
+.ins-ec-note b{font-weight:600;color:var(--red)}
+.ins-ec-note.is-ready{color:var(--primary)}
+.ins-ec-note.is-ready span{color:var(--text)}
+/* Eligibility check table: Insurance | Status | Service coverage | Last check */
+.ins-ec-row{grid-template-columns:20px minmax(0,1.4fr) 120px 140px minmax(0,1.2fr)}
+.ins-ec-row-head{padding:6px 12px;border-bottom:1px solid var(--line);border-radius:4px 4px 0 0;background:var(--fluent-neutral-lighter-alt);font-size:12px;font-weight:600;color:var(--muted)}
+.ins-ec-row-head>span:last-child{text-align:right}
+.ins-ec-cell{display:flex;align-items:center}
+.ins-ec-dash{color:var(--muted)}
+@container ins (max-width:820px){
+  .ins-ec-row{grid-template-columns:20px minmax(0,1fr) auto auto}
+  .ins-ec-row>.ins-ec-when{grid-column:2/-1;text-align:left}
+  .ins-ec-row-head>span:last-child{display:none}
+}
+/* Eligibility response: one tab per insurance */
+.response-tabs{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+.response-tabs[hidden]{display:none}
+.response-tab{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:0;border-bottom:2px solid transparent;background:none;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;cursor:pointer}
+.response-tab:hover{color:var(--text)}
+.response-tab.active{border-bottom-color:var(--primary);color:var(--text)}
+.response-tab-dot{width:8px;height:8px;border-radius:50%;flex:none}
+.response-tab-dot.ok{background:var(--green)}
+.response-tab-dot.bad{background:var(--red)}
+
+/* ───────── Eligibility check, simplified ───────── */
+.ins-ec-head{display:grid;gap:2px;padding:14px 16px 0}
+.ins-ec-head>b{font-size:14px;font-weight:600;line-height:20px;color:var(--text)}
+.ins-ec-head>small{font-size:13px;line-height:19px;color:var(--muted);max-width:640px}
+/* Service to check: label, picker, and why this one */
+.ins-ec-service{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:12px 16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--fluent-neutral-lighter-alt)}
+.ins-ec-service-label{font-size:13px;font-weight:600;color:var(--text)}
+.ins-ec-service .service-select{position:relative;display:inline-block}
+.ins-ec-service .service-trigger{width:200px;height:32px;min-height:32px;font-size:13px;background:var(--white)}
+.ins-ec-service .service-menu{display:block;top:calc(100% + 4px);bottom:auto;left:0;right:auto}
+.ins-ec-service .service-menu[hidden]{display:none}
+.ins-ec-service-hint{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:12.5px;color:var(--muted)}
+.ins-ec-service-hint .lucide{width:14px;height:14px;color:var(--primary);fill:none}
+.ins-ec-service-hint .text-btn{height:auto;min-height:0;padding:0;font-size:12.5px;font-weight:600}
+/* Table: Insurance | Status | Coverage */
+.ins-ec-table{margin:0 16px}
+.ins-ec-row,.ins-ec-row-head{grid-template-columns:20px minmax(0,1fr) 140px 140px}
+.ins-ec-row-head>span:last-child{text-align:left}
+.ins-ec-name{display:grid;gap:1px}
+.ins-ec-name b{font-size:13px;font-weight:600;color:var(--text)}
+.ins-ec-name small{font-size:12px;color:var(--muted)}
+.ins-ec-note{padding:0 12px 10px 44px;font-size:12.5px}
+.ins-ec-note .text-btn{margin-left:6px}
+/* Footer: payer order on the left, actions on the right */
+.ins-ec-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:12px 16px 14px}
+.ins-ec-order{display:flex;align-items:center;gap:10px;margin:0;font-size:12.5px;color:var(--muted)}
+.ins-ec-order:empty{display:none}
+.ins-ec-order .small-btn,.ins-ec-buttons .small-btn{height:32px;min-height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}
+.ins-ec-order .small-btn .lucide,.ins-ec-buttons .small-btn .lucide{width:14px;height:14px}
+.ins-ec-order-done{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--green)}
+.ins-ec-order-done .lucide{width:15px;height:15px}
+.ins-ec-order .text-btn{height:auto;min-height:0;padding:0;font-size:12.5px;font-weight:600}
+.ins-ec-buttons{display:flex;align-items:center;gap:8px;margin-left:auto}
+@container ins (max-width:820px){
+  .ins-ec-row,.ins-ec-row-head{grid-template-columns:20px minmax(0,1fr) 96px 104px}
+  .ins-ec-row-head>span:last-child{display:block}
+}
+/* AI sorted tag, why-sparkle per row, last check */
+.ins-ec-head-name{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ins-ec-ai-tag{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;background:var(--blue-soft);color:var(--primary);font-size:11.5px;font-weight:600}
+.ins-ec-ai-tag .lucide{width:12px;height:12px;fill:none}
+.ins-ec-ai-tag.is-user{background:var(--fluent-neutral-lighter,#f3f2f1);color:var(--muted)}
+.ins-ec-reset{height:auto;min-height:0;padding:0;font-size:12px;font-weight:600}
+.ins-ec-name small{display:inline-flex;align-items:center;gap:4px}
+.ins-ec-name .plan-why-btn{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;color:var(--ai,var(--primary));cursor:pointer}
+.ins-ec-name .plan-why-btn:hover,.ins-ec-name .plan-why-btn:focus-visible{background:var(--blue-soft)}
+.ins-ec-name .plan-why-btn .lucide{width:12px;height:12px;fill:none}
+.ins-ec-last{display:inline-flex;align-items:center;gap:5px;margin-right:4px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.ins-ec-last:empty{display:none}
+.ins-ec-last .lucide{width:14px;height:14px}
+/* Before an eligibility check the table is only the payer order */
+.ins-ec-table.is-order-only .ins-ec-row,.ins-ec-table.is-order-only .ins-ec-row-head{grid-template-columns:20px minmax(0,1fr)}
+/* Why check eligibility: four short reasons, until the first check */
+.ins-ec-why{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px;margin:10px 16px 0;padding:0;list-style:none}
+.ins-ec-why[hidden]{display:none}
+.ins-ec-why li{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-ec-why li .lucide{flex:none;width:16px;height:16px;margin-top:1px;color:var(--primary)}
+.ins-ec-why li span{display:grid;gap:1px}
+.ins-ec-why li b{font-size:13px;font-weight:600;color:var(--text)}
+@container ins (max-width:620px){.ins-ec-why{grid-template-columns:minmax(0,1fr)}}
+.ins-ec-svcs{display:flex;flex-wrap:wrap;gap:4px}
+.ins-ec-row,.ins-ec-row-head{grid-template-columns:20px minmax(0,1fr) 120px minmax(160px,1fr)}
+@container ins (max-width:820px){.ins-ec-row,.ins-ec-row-head{grid-template-columns:20px minmax(0,1fr) 96px minmax(104px,auto)}}
+
+/* ───────── Version 2 · one insurance table (index-insurance-v2.html) ───────── */
+.ins-one{display:grid;gap:0;margin:12px 16px 8px;border:1px solid var(--line);border-radius:var(--radius,4px);background:var(--white);overflow:visible}
+.ins-one[hidden]{display:none}
+.ins-one-ai{display:flex;align-items:flex-start;gap:8px;margin:0;padding:10px 14px;border-bottom:1px solid var(--blue-line);border-radius:4px 4px 0 0;background:var(--blue-soft);font-size:13px;line-height:19px;color:var(--text)}
+.ins-one-ai>.lucide{flex:none;width:16px;height:16px;margin-top:2px;color:var(--ai,var(--primary));fill:none}
+.ins-one .ins-ec{border:0;border-radius:0}
+.ins-one .ins-ec-row,.ins-one .ins-ec-row-head{grid-template-columns:20px 24px minmax(0,1fr) 120px minmax(140px,1fr)}
+.ins-one .ins-ec-row{cursor:pointer}
+.ins-one .ins-ec-row-head{cursor:default}
+.ins-one .ins-ec-item:hover>.ins-ec-row{background:var(--fluent-neutral-lighter-alt)}
+.ins-one .ins-ec-item.is-open>.ins-ec-row{background:var(--blue-soft)}
+.ins-one .ins-ec-item.is-warn{box-shadow:inset 3px 0 0 var(--amber)}
+.ins-one-toggle{display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:4px;background:none;color:var(--muted);cursor:pointer}
+.ins-one-toggle:hover{background:var(--fluent-neutral-lighter,#f3f2f1);color:var(--text)}
+.ins-one-toggle .lucide{width:16px;height:16px;transition:transform .15s}
+.ins-one .ins-ec-item.is-open .ins-one-toggle .lucide{transform:rotate(90deg)}
+.ins-one .ins-ec-name b{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.ins-tag{display:inline-flex;align-items:center;gap:4px;padding:0 6px;border:1px solid var(--line);border-radius:999px;font-size:11px;font-weight:600;line-height:17px;color:var(--muted)}
+.ins-tag.is-bad{border-color:transparent;background:var(--red-soft);color:var(--red)}
+.ins-tag.is-wait{border-color:transparent;background:var(--blue-soft);color:var(--primary)}
+.ins-tag .spinner{width:10px;height:10px}
+.ins-chip.is-warn{background:var(--amber-soft);color:var(--amber)}
+.ins-one-detail{padding:4px 14px 14px 56px;border-top:1px solid var(--blue-line);background:var(--white)}
+.ins-one-note{display:flex;align-items:flex-start;gap:6px;margin:8px 0;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-one-note .lucide{flex:none;width:14px;height:14px;margin-top:2px}
+.ins-one-note.is-warn{color:var(--text)}
+.ins-one-note.is-warn .lucide{color:var(--amber)}
+.ins-one-slot{display:grid;gap:8px;margin-top:8px}
+.ins-one-slot #insuranceFields{margin:0;border:1px solid var(--line);border-radius:4px}
+.ins-one-slot #planActions:empty{display:none}
+.ins-one-slot #planActions{display:flex;justify-content:flex-end}
+.ins-one .ins-ec-service{margin:12px 14px}
+.ins-one .ins-ec-table{margin:0 14px}
+@container ins (max-width:820px){
+  .ins-one .ins-ec-row,.ins-one .ins-ec-row-head{grid-template-columns:20px 24px minmax(0,1fr) 96px minmax(96px,auto)}
+  .ins-one-detail{padding-left:14px}
+}
+
+/* Service to check sits with the actions, under the table */
+.ins-ec-foot{padding:12px 16px 0}
+.ins-ec-foot:has(.ins-ec-order:empty){display:none}
+.ins-ec-run{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:12px 16px 14px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--fluent-neutral-lighter-alt)}
+.ins-ec-run .ins-ec-service{margin:0;padding:0;border:0;background:none}
+.ins-ec-run .service-menu{top:auto!important;bottom:calc(100% + 4px)!important}
+.ins-ec-run .ins-ec-buttons{margin-left:auto}
+.ins-one .ins-ec-run{margin:12px 14px 14px}
+.ins-one .ins-ec-foot{padding:12px 14px 0}
+/* Confirm order lives in the table header */
+.ins-ec-row-head .ins-ec-head-name{gap:8px}
+.ins-ec-confirm{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border:1px solid var(--primary);border-radius:999px;background:var(--white);font-size:11.5px;font-weight:600;color:var(--primary);cursor:pointer}
+.ins-ec-confirm:hover{background:var(--primary);color:#fff}
+.ins-ec-confirm .lucide{width:12px;height:12px}
+.ins-ec-confirmed{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;background:var(--green-soft);color:var(--green);font-size:11.5px;font-weight:600}
+.ins-ec-confirmed .lucide{width:12px;height:12px}
+/* Version 2: why the eligibility check matters, on top of the run bar */
+.ins-ec-run-why{flex:1 1 100%;display:grid;gap:2px;margin:0 0 2px;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-ec-run-why b{font-size:13px;font-weight:600;color:var(--text)}
+/* Read-only (locked) intake: keep the insurance table aligned, hide what can't be used */
+.review-area.is-locked .ins-ec-service,.review-area.is-locked .ins-ec-run-why{display:none!important}
+.review-area.is-locked .ins-ec-run{justify-content:flex-end}
+.review-area.is-locked .ins-ec-grip{visibility:hidden}
+.review-area.is-locked .ins-ec-item{cursor:default}
+.review-area.is-locked .ins-ec-run:not(:has(.ins-ec-last:not(:empty))):not(:has(#insEcView:not([hidden]))){display:none}
+
+/* ───────── Eligibility check bar, cleaned up: one quiet row under the table ───────── */
+.ins-ec-run{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 16px;margin:14px 16px 16px;padding:12px 0 0;border:0;border-top:1px solid var(--line);border-radius:0;background:none}
+.ins-one .ins-ec-run{margin:14px 14px 16px}
+.ins-ec-run-why{grid-column:1/-1;display:block;margin:0;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-ec-run-why b{display:inline;margin-right:6px;font-size:13px;font-weight:600;color:var(--text)}
+.ins-ec-run .ins-ec-service{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.ins-ec-run .ins-ec-service-label{font-size:13px;font-weight:600;color:var(--text)}
+.ins-ec-run .service-trigger{width:150px;height:30px;min-height:30px;font-size:13px}
+.ins-ai-chip{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;background:var(--blue-soft);color:var(--primary);font-size:11.5px;font-weight:600;white-space:nowrap}
+.ins-ai-chip .lucide{width:12px;height:12px;fill:none}
+.ins-ec-run .ins-ec-buttons{display:flex;align-items:center;gap:14px;margin:0}
+.ins-ec-run .ins-ec-last{margin:0;font-size:12px;color:var(--muted)}
+.ins-ec-run .ins-ec-last .lucide{display:none}
+.ins-ec-viewlink{height:auto;min-height:0;padding:0;font-size:13px;font-weight:600;white-space:nowrap}
+.ins-ec-viewlink[hidden]{display:none}
+.ins-ec-run #checkEligibility{height:32px;min-height:32px;padding:0 14px}
+@container ins (max-width:720px){.ins-ec-run{grid-template-columns:minmax(0,1fr)}.ins-ec-run .ins-ec-buttons{justify-content:flex-end}}
+/* Payer not mapped: pick the payer from the system's list */
+#insurance-section .ins-map-hint{display:block;margin-top:4px;font-size:11.5px;color:var(--muted)}
+/* Payer order question, right after the table */
+.ins-ec-foot{display:block;padding:12px 16px 0}
+.ins-one .ins-ec-foot{padding:12px 14px 0}
+.ins-ec-foot .ins-ec-order{display:block}
+.ins-po-ask{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;padding:10px 12px;border:1px solid var(--blue-line);border-radius:4px;background:var(--blue-soft)}
+.ins-po-q{display:grid;gap:2px}
+.ins-po-q b{font-size:13px;font-weight:600;color:var(--text)}
+.ins-po-q small{font-size:12.5px;color:var(--muted)}
+.ins-po-ask .small-btn{height:32px;min-height:32px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.ins-po-ask .small-btn .lucide{width:14px;height:14px}
+.ins-po-done{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0;font-size:13px;color:var(--text)}
+.ins-po-done>.lucide{width:16px;height:16px;color:var(--green)}
+.ins-po-done b{font-weight:600;color:var(--green)}
+.ins-po-done span{flex:1 1 auto;min-width:0;color:var(--muted)}
+.ins-po-done .text-btn{height:auto;min-height:0;padding:0;font-size:13px;font-weight:600}
+.ins-ec-when-row{margin-left:2px;font-size:12px;color:var(--muted)}
+.ins-ec-when-row{margin-left:2px;font-size:12px;color:var(--muted)}
+.ins-one .ins-ec-table.is-order-only .ins-ec-row,.ins-one .ins-ec-table.is-order-only .ins-ec-row-head{grid-template-columns:20px 24px minmax(0,1fr)}
+.ins-po-q{flex:1 1 320px;min-width:0}
+.ins-po-actions{display:flex;gap:8px;flex:none}
+.ins-po-actions .small-btn{height:32px;min-height:32px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.ins-po-actions .small-btn .lucide{width:14px;height:14px}
+/* Edited after the last check: check just that insurance */
+.ins-one-note.is-edit{align-items:center;color:var(--text)}
+.ins-one-note.is-edit .lucide{color:var(--primary);margin-top:0}
+.ins-one-note .text-btn,.ins-ec-note .text-btn{height:auto;min-height:0;padding:0;margin-left:8px;font-size:12.5px;font-weight:600}
+/* Eligibility response: which payer and service this is for */
+.response-tab-svc{margin-left:4px;padding:0 5px;border-radius:999px;background:var(--fluent-neutral-lighter,#f3f2f1);font-size:11px;font-weight:600;color:var(--muted)}
+.response-tab.active .response-tab-svc{background:var(--blue-soft);color:var(--primary)}
+.response-for{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px 16px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--fluent-neutral-lighter-alt)}
+.response-for>span{display:grid;gap:1px;min-width:0}
+.response-for small{font-size:11px;color:var(--muted)}
+.response-for b{font-size:13px;font-weight:600;color:var(--text);overflow-wrap:anywhere}
+/* Response tabs: never squeezed by a long response (the dialog is a flex column) */
+.response-tabs{flex:none;min-height:40px;align-items:stretch;padding:0 20px;scrollbar-width:thin}
+.response-tab{flex:none;height:40px}
+/* Eligibility response: every service this insurance was checked for */
+.response-services{margin:12px 0;border:1px solid var(--line);border-radius:4px}
+.response-services header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--fluent-neutral-lighter-alt)}
+.response-services header b{font-size:13px;font-weight:600}
+.response-services header small{font-size:12px;color:var(--muted)}
+.response-services ul{margin:0;padding:0;list-style:none}
+.response-services li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:10px;padding:10px 12px}
+.response-services li+li{border-top:1px solid var(--line)}
+.rsvc-chip{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap}
+.rsvc-chip .lucide{width:13px;height:13px;stroke-width:3}
+.rsvc-chip.ok{background:var(--green-soft);color:var(--green)}
+.rsvc-chip.bad{background:var(--red-soft);color:var(--red)}
+.rsvc-copy{display:grid;gap:2px;min-width:0}
+.rsvc-copy b{font-size:13px;font-weight:600}
+.rsvc-copy small{font-size:12px;line-height:17px;color:var(--muted)}
+.rsvc-when{font-size:11.5px;color:var(--muted);white-space:nowrap}
+
+/* After the intake: services from this and recent intakes, pick and check readiness */
+.next-svc-list{display:grid;gap:6px;margin:10px 0 12px}
+.next-svc-group{margin:6px 0 0;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.next-svc{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;align-items:start;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--white);cursor:pointer}
+.next-svc:has(input:checked){border-color:var(--blue-line);background:var(--blue-soft)}
+.next-svc input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--primary)}
+.next-svc-copy{display:grid;gap:1px;min-width:0}
+.next-svc-copy b{font-size:13px;font-weight:600;color:var(--text)}
+.next-svc-copy small{font-size:12px;color:var(--muted)}
+.next-svc-from{grid-column:2;font-size:11.5px;color:var(--muted)}
+.next-svc-empty{margin:0;font-size:12.5px;color:var(--muted)}
+#recommendedAction:disabled{opacity:.55;cursor:default}
+#tabHistory[hidden]{display:none!important}
+/* Preview an insurance card on purpose */
+.ins-eye{display:inline-grid;place-items:center;width:24px;height:24px;margin-left:2px;padding:0;border:0;border-radius:4px;background:none;color:var(--primary);cursor:pointer;vertical-align:middle}
+.ins-eye:hover{background:var(--blue-soft)}
+.ins-eye .lucide{width:15px;height:15px}
+.ins-view-card{display:inline-flex;align-items:center;gap:5px;height:auto;min-height:0;padding:0;font-size:13px;font-weight:600}
+.ins-view-card .lucide{width:14px;height:14px}
+#planActions{display:flex;align-items:center;gap:14px}
+/* Insurance intro: one message, with the checklist link as its natural next step */
+#insurance-section .ins-intro-row{display:block;padding:0 20px 14px}
+#insurance-section .ins-intro-row .ins-intro{display:flex;align-items:flex-start;gap:10px;max-width:none;margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--fluent-neutral-lighter-alt);font-size:13px;line-height:20px;color:var(--text)}
+#insurance-section .ins-intro>.lucide{flex:none;width:16px;height:16px;margin-top:2px;color:var(--primary)}
+#insurance-section .ins-intro .ins-checklist-link{display:inline-flex;align-items:center;gap:4px;height:auto;min-height:0;margin-left:2px;padding:0;font-size:13px;font-weight:600;white-space:nowrap}
+#insurance-section .ins-intro .ins-checklist-link .lucide{width:14px;height:14px}
+/* Other actions after the intake: each says why you'd go there */
+#otherActionButtons{display:grid;gap:8px}
+.secondary-action.alt-action{display:flex;align-items:center;justify-content:space-between;gap:10px;height:auto!important;min-height:0;padding:10px 12px!important;text-align:left;white-space:normal}
+.alt-action>span{display:grid;gap:3px;min-width:0}
+.alt-action b{font-size:13px;font-weight:600;color:var(--text)}
+.alt-action small{font-size:12px;font-weight:400;line-height:17px;color:var(--muted)}
+.alt-action>.lucide{flex:none;width:16px;height:16px;color:var(--muted)}
+/* Mark Complete on the "Ready to complete" card too */
+.intake-ready .ready-complete{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;height:34px;padding:0 16px;font-size:13px;font-weight:600}
+.intake-ready .ready-complete .lucide{width:15px;height:15px}
+/* AI sorted note inside the insurance table; AI summary sits after the table */
+.ins-ec-hint{display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid var(--line);background:var(--blue-soft);font-size:12.5px;color:var(--text)}
+.ins-ec-hint .lucide{flex:none;width:14px;height:14px;color:var(--ai,var(--primary));fill:none}
+.ins-one .ins-one-ai.ins-ai-after{margin:12px 14px 0;border:1px solid var(--blue-line);border-radius:4px}
+.ins-ec .ins-ai.ins-ai-after{margin:12px 16px 0}
+/* Eligibility check uses the same box as the coordination-of-benefits question, so the two steps read as a pair */
+.ins-ec-run{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin:12px 16px 14px;padding:10px 12px;border:1px solid var(--blue-line);border-top:1px solid var(--blue-line);border-radius:4px;background:var(--blue-soft)}
+.ins-one .ins-ec-run{margin:12px 14px 14px}
+.ins-ec-run .ins-ec-run-why{flex:1 1 100%;display:grid;gap:2px;margin:0;font-size:12.5px;line-height:18px;color:var(--muted)}
+.ins-ec-run .ins-ec-run-why b{display:block;margin:0;font-size:13px;font-weight:600;color:var(--text)}
+.ins-ec-run .service-trigger{background:var(--white)}
+.ins-ec-foot{padding-bottom:0}
+/* Empty sections: keep the header, say nothing is on file, offer Add */
+.sec-empty{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:14px 16px 16px;padding:14px 16px;border:1px dashed var(--line-strong,var(--line));border-radius:4px;background:var(--fluent-neutral-lighter-alt)}
+.sec-empty>.lucide{flex:none;width:20px;height:20px;color:var(--muted)}
+.sec-empty>span{display:grid;gap:2px;flex:1 1 260px;min-width:0;font-size:13px;line-height:19px;color:var(--muted)}
+.sec-empty b{font-size:14px;font-weight:600;color:var(--text)}
+.sec-empty .small-btn{height:32px;min-height:32px;padding:0 14px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+.sec-empty .small-btn .lucide{width:14px;height:14px}
+#priorAuthList .sec-empty{margin:0 0 12px}
+#addPrescription[hidden]{display:none}
+
+/* Version 2: coordination-of-benefits confirmation as a checkbox */
+.v2t-cob{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:4px;background:var(--fluent-neutral-lighter-alt);cursor:pointer}
+.v2t-cob input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--primary);flex:none}
+.v2t-cob>span{display:grid;gap:2px;flex:1;min-width:0}
+.v2t-cob b{font-size:13px;font-weight:600;color:var(--text)}
+.v2t-cob small{font-size:12.5px;line-height:18px;color:var(--muted)}
+.v2t-cob em{flex:none;font-style:normal;font-size:12px;font-weight:600;color:var(--muted)}
+.v2t-cob.is-done{border-color:transparent;background:var(--green-soft)}
+.v2t-cob.is-done em{color:var(--green)}
+.ins-one-ai[hidden]{display:none!important}

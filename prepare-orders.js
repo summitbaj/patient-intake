@@ -48,7 +48,7 @@ function itemStatus(entry){
   const s=codes.map(code=>precheckStatus[code]);
   return s.includes('fail')?'fail':s.includes('warn')?'warn':'pass';
 }
-const statusPill={warn:['warning','triangle-alert','Pre-check: needs attention'],fail:['danger','circle-x','Pre-check: not qualified'],unchecked:['neutral','shield-question','Not pre-checked']};
+const statusPill={warn:['warning','triangle-alert','Readiness: needs attention'],fail:['danger','circle-x','Readiness: not qualified'],unchecked:['neutral','shield-question','Readiness not checked']};
 
 // ---------- Cards ----------
 // For one prescription, in this order: new orders, refills, adds, already ordered, not ordering now.
@@ -157,7 +157,7 @@ function render(){
   const cards=allCards(),todo=cards.filter(c=>c.actionable&&!c.done);
   const count=k=>cards.filter(c=>c.kind===k).length;
   const summary=[[count('new'),'new order'],[count('refill'),'refill'],[count('add'),'add to an order'],[count('hold'),'already ordered']].filter(([n])=>n).map(([n,w])=>w==='already ordered'||w==='add to an order'?`${n} ${w}`:plural(n,w)).join(' · ');
-  $('#poPatient').textContent=`From intake #${intake.id}${precheckStatus?'':' · pre-check not run'}`;
+  $('#poPatient').textContent=`From intake #${intake.id}${precheckStatus?'':' · readiness not checked'}`;
   $('#poLead').innerHTML=summary?`${[[count('new'),'new order','file-plus','new'],[count('refill'),'refill','refresh-cw','refill'],[count('add'),'add to an order','list-plus','add'],[count('hold'),'already ordered','copy-check','hold']].filter(([n])=>n).map(([n,w,ic,k])=>`<span class="ful-sum ${k}"><i data-lucide="${ic}"></i> ${w==='already ordered'||w==='add to an order'?`${n} ${w}`:plural(n,w)}</span>`).join('')}`:'Nothing to order';
   const next=todo.find(c=>c.target)||null;let step=0;
   const done=cards.filter(c=>c.actionable&&c.done).length,actionable=cards.filter(c=>c.actionable).length;
@@ -192,7 +192,7 @@ function openCard(id){
 }
 
 // Back goes to the pre-check when it was run, otherwise to the intake.
-if(!precheckStatus){$('#poBack').href='index.html';$('#poBack').innerHTML='<i data-lucide="arrow-left"></i> Back to Intake';}
+if(!precheckStatus){$('#poBack').href='patient-record.html?tab=intakes';$('#poBack').innerHTML='<i data-lucide="arrow-left"></i> Back to Patient Record';}
 
 document.addEventListener('click',event=>{
   const open=event.target.closest('[data-open-card]');if(open){openCard(open.dataset.openCard);return;}

@@ -91,7 +91,7 @@ function placeholderStep(label){
 function syncPrecheckChip(){
   const pc=intake.precheck,chip=$('#headerPrecheck'),warn=pc&&pc.results.some(r=>r.status!=='pass');
   chip.className=`precheck-chip ${pc?(warn?'warn':'pass'):'none'}`;
-  chip.innerHTML=pc?`<i data-lucide="${warn?'shield-alert':'shield-check'}"></i> Pre-check: ${esc(pc.summary)}`:'<i data-lucide="shield-question"></i> Pre-check not run';
+  chip.innerHTML=pc?`<i data-lucide="${warn?'shield-alert':'shield-check'}"></i> Readiness: ${esc(pc.summary)}`:'<i data-lucide="shield-question"></i> Readiness not checked';
 }
 function productsStep(){
   const codes=prescribedCodes(),pending=codes.filter(code=>!addedFor(code).length).length;
@@ -164,10 +164,10 @@ function detailsTab(){
 }
 function precheckTab(){
   const pc=intake.precheck;
-  if(!pc)return `<div class="drawer-empty"><i data-lucide="shield-question"></i><h3>Pre-Check Wasn’t Run</h3><p>This order was created without a pre-check. Run one to confirm payer eligibility, coverage criteria and documentation.</p><a class="footer-btn primary" href="precheck.html?from=order"><i data-lucide="shield-check"></i> Run Pre-Check</a></div>`;
+  if(!pc)return `<div class="drawer-empty"><i data-lucide="shield-question"></i><h3>Readiness Wasn’t Checked</h3><p>This order was created without a readiness check. Run one to confirm payer eligibility, coverage criteria and documentation.</p><a class="footer-btn primary" href="precheck.html?from=order"><i data-lucide="shield-check"></i> Check Readiness</a></div>`;
   const warn=pc.results.some(r=>r.status!=='pass');
   return `<div class="pc-summary ${warn?'warn':'pass'}"><i data-lucide="${warn?'shield-alert':'shield-check'}"></i><span><b>${esc(pc.summary)}</b><small>Run ${esc(pc.at)} during intake ${esc(intake.id)}</small></span></div>
-    <a class="open-precheck" href="precheck.html?from=order"><i data-lucide="external-link"></i> Open full pre-check</a>
+    <a class="open-precheck" href="precheck.html?from=order"><i data-lucide="external-link"></i> Open full readiness check</a>
     <ul class="pc-list">${pc.results.map(r=>`<li class="${r.status}"><i data-lucide="${r.status==='pass'?'circle-check':r.status==='fail'?'circle-x':'triangle-alert'}"></i><span><b>${esc(r.title)}</b><small>${esc(r.detail)}</small></span></li>`).join('')}</ul>`;
 }
 function renderDrawer(tab){
@@ -208,12 +208,12 @@ document.addEventListener('click',async event=>{
   }
   if(el.dataset.removeProduct!==undefined){const [removed]=order.products.splice(+el.dataset.removeProduct,1);renderStep();toast(`${removed.name} removed`);return;}
   if(el.id==='runPrecheck'){
-    el.disabled=true;el.innerHTML='<span class="spinner"></span> Running pre-check…';
+    el.disabled=true;el.innerHTML='<span class="spinner"></span> Checking readiness…';
     await wait(1200);
     const warnings=defaultPrecheck.filter(r=>r.status==='warn').length;
     intake.precheck={summary:`Passed with ${warnings} warnings`,at:'just now',results:defaultPrecheck};
     try{sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(intake));}catch(error){}
-    syncHeader();renderDrawer('precheck');toast(`Pre-check ${intake.precheck.summary.toLowerCase()}`);
+    syncHeader();renderDrawer('precheck');toast(`Readiness: ${intake.precheck.summary.toLowerCase()}`);
   }
 });
 $('#closeIntakeDrawer').addEventListener('click',closeDrawer);

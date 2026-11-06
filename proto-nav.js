@@ -12,12 +12,15 @@
     {label:'Insurance · single plan',group:'Insurance scenarios',href:'index.html?screen=review&ins=single'},
     {label:'Insurance · payer order uncertain',group:'Insurance scenarios',href:'index.html?screen=review&ins=uncertain'},
     {label:'Insurance · none added',group:'Insurance scenarios',href:'index.html?screen=review&ins=none'},
+    {label:'No prescription or PA found',group:'Insurance scenarios',href:'index.html?screen=review&empty=rx,pa'},
     {label:'Next action · locked',group:'Patient intake',href:'index.html?screen=complete'},
     {label:'Next action · ready',group:'Patient intake',href:'index.html?screen=complete-ready'},
     {label:'Next action · auto-updating',group:'Patient intake',href:'index.html?screen=complete-stale'},
-    {label:'Pre-check',group:'After intake',href:'precheck.html'},
+    {label:'Readiness check',group:'After intake',href:'precheck.html'},
     {label:'Fulfillment',group:'After intake',href:'prepare-orders.html'},
-    {label:'Patient record · Work Queue',group:'After intake',href:'patient-record.html?pane=workqueue&from=intake'},
+    {label:'Patient record · intake in progress',group:'After intake',href:'patient-record.html?tab=intakes&intake=open'},
+    {label:'Patient record · Prescriptions',group:'After intake',href:'patient-record.html?tab=intakes'},
+    {label:'Patient record · Needs attention',group:'After intake',href:'patient-record.html?pane=workqueue&from=intake'},
     {label:'Refill · existing order screen',group:'After intake',href:'existing-order.html?screen=refill'},
     {label:'Add to order · existing order screen',group:'After intake',href:'existing-order.html?screen=add'},
     {label:'Patient information',group:'Order',href:'dme-order.html?step=patient'},
@@ -28,7 +31,12 @@
     {label:'Follow up',group:'Order',href:'dme-order.html?step=followup'}
   ];
   const params=new URLSearchParams(location.search);
-  const page=location.pathname.split('/').pop()||'index.html';
+  const rawPage=location.pathname.split('/').pop()||'index.html';
+  // Insurance design versions: Version 1 is index.html, Version 2 (one insurance table) is index-insurance-v2.html. Same screens otherwise.
+  const V2='index-insurance-v2.html',isV2=rawPage===V2;
+  const version=isV2?'2':'1',pageFor={'1':'index.html','2':V2};
+  const page=isV2?'index.html':rawPage;
+  const inVersion=href=>version==='1'?href:href.replace(/^index\.html/,pageFor[version]);
   const planConfirmed=(()=>{try{return Boolean(JSON.parse(sessionStorage.getItem('signeticOrderPlan'))?.confirmed);}catch(e){return false;}})();
   const key=page==='precheck.html'?'precheck.html':page==='dme-order.html'?`dme-order.html?step=${params.get('step')||'patient'}`
     :page==='prepare-orders.html'?`prepare-orders.html?screen=${params.get('screen')||(planConfirmed?'actions':'plan')}`
@@ -127,7 +135,7 @@
   .pn .pt-reset{height:28px;padding:0 10px;font-size:12px;color:#8fc4ff}
   .pn-path{display:grid;gap:4px}
   .pn-path-label{padding:0 4px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.55)}
-  .pn-path .pt-seg{grid-template-columns:1fr 1fr}
+  .pn-path .pt-seg{grid-template-columns:1fr 1fr}.pn-path .pt-seg.pn-seg3{grid-template-columns:repeat(3,1fr)}
   .pn .pn-path .pt-seg button{height:28px;padding:0 4px;white-space:nowrap;font-size:11px;color:rgba(255,255,255,.85)}
   .pn .pn-path .pt-seg button[aria-checked=true]{background:#fff;color:#1b2a3a}
   .pn-demo{margin:2px 0;padding:0 6px;font-size:11px;line-height:1.4;color:rgba(255,255,255,.7)}.pn-demo a{color:#8fc4ff}
@@ -149,15 +157,16 @@
 
   const root=document.createElement('div');
   root.className='pn';root.setAttribute('role','navigation');root.setAttribute('aria-label','Prototype navigator');
-  const menuItems=screens.map((s,i)=>`${i===0||screens[i-1].group!==s.group?`<div class="pn-group">${s.group}</div>`:''}<a href="${s.href}" ${i===current?'aria-current="true"':''}><span>${i+1}</span>${s.label}</a>`).join('');
+  const menuItems=screens.map((s,i)=>`${i===0||screens[i-1].group!==s.group?`<div class="pn-group">${s.group}</div>`:''}<a href="${inVersion(s.href)}" ${i===current?'aria-current="true"':''}><span>${i+1}</span>${s.label}</a>`).join('');
   root.innerHTML=`<button class="pn-open" aria-label="Show prototype navigator" title="Prototype navigator">⌘</button>
   <div class="pn-body">
     <div class="pn-head"><span class="pn-tag">Prototype</span><button class="pn-min" data-pn="min" aria-label="Hide prototype navigator" title="Hide">×</button></div>
     <button class="pn-current" data-pn="menu" aria-haspopup="true" aria-expanded="false"><b>${screens[current].label}</b><span class="pn-count">${current+1}/${screens.length}</span></button>
     <div class="pn-nav"><button class="pn-arrow" data-pn="prev" aria-label="Previous screen" title="Previous (Alt+←)">‹ Prev</button><button class="pn-arrow" data-pn="next" aria-label="Next screen" title="Next (Alt+→)">Next ›</button></div>
     <div class="pn-path"><span class="pn-path-label" id="pnPathLabel">Scenario</span><div class="pt-seg" role="radiogroup" aria-labelledby="pnPathLabel"><button role="radio" data-path="happy" title="No errors: nothing to confirm, nothing to review, every code qualifies">Happy path</button><button role="radio" data-path="issues" title="A few errors to work through: missing gender and mobile number, document conflicts, flagged codes">With issues</button></div></div>
+    <div class="pn-path pn-version"><span class="pn-path-label" id="pnVersionLabel">Design version</span><div class="pt-seg" role="radiogroup" aria-labelledby="pnVersionLabel"><button role="radio" data-version="1" title="Insurance list and details, AI summary, eligibility check table">Version 1</button><button role="radio" data-version="2" title="One insurance table: details open only when needed">Version 2</button></div></div>
     <button class="pn-theme-btn" data-pn="theme" aria-expanded="false" aria-controls="pnTheme">◐ Theme</button>
-    <p class="pn-demo" hidden>Demo view · changes aren’t saved. <a href="index.html">Open my intake</a></p>
+    <p class="pn-demo" hidden>Demo view · changes aren’t saved. <a href="${inVersion('index.html')}">Open my intake</a></p>
     <button class="pn-reset" data-pn="reset" title="Clear saved progress and start a new intake">↺ Reset prototype</button>
     <div class="pn-confirm" hidden><p>Clear all progress and start again?</p><div class="pn-nav"><button class="pn-arrow" data-pn="reset-no">Keep</button><button class="pn-arrow pn-danger" data-pn="reset-yes">Reset</button></div></div>
   </div>
@@ -195,6 +204,14 @@
     try{localStorage.setItem('signeticScenario',b.dataset.path);localStorage.removeItem('signeticIntakeProgress');sessionStorage.removeItem('signeticIntakeOrder');sessionStorage.removeItem('signeticIntakeFull');}catch(e){}
     location.reload();
   });
+  // Insurance design switch: same screen and settings, other version.
+  const versionBox=root.querySelector('.pn-version');
+  versionBox.hidden=!isIntake;
+  versionBox.querySelectorAll('[data-version]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.version===version)));
+  versionBox.addEventListener('click',event=>{
+    const b=event.target.closest('[data-version]');if(!b||b.dataset.version===version)return;
+    location.href=pageFor[b.dataset.version]+location.search+location.hash;
+  });
   root.querySelector('.pn-demo').hidden=!(page==='index.html'&&params.get('screen'));
   document.addEventListener('intake:change',syncCurrent);
 
@@ -226,7 +243,7 @@
     const input=event.target.closest('[data-color]');if(!input)return;
     theme={...themeColors(),...theme,preset:'custom',[input.dataset.color]:input.value};saveTheme();
   });
-  const go=i=>{if(i>=0&&i<screens.length)location.href=screens[i].href;};
+  const go=i=>{if(i>=0&&i<screens.length)location.href=inVersion(screens[i].href);};
   const setMenu=open=>{
     menu.hidden=!open;toggle.setAttribute('aria-expanded',String(open));
     if(open&&!themePanel.hidden)setThemeOpen(false);
@@ -288,7 +305,7 @@
     else if(act==='reset-yes'){
       window.progressReset=true;
       try{localStorage.removeItem(THEME_KEY);localStorage.removeItem('signeticIntakeProgress');sessionStorage.removeItem('signeticIntakeOrder');sessionStorage.removeItem('signeticIntakeFull');}catch(e){}
-      location.href='index.html';
+      location.href=inVersion('index.html');
     }
     else setMin(false);
   });

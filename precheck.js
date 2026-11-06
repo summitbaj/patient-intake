@@ -1,4 +1,4 @@
-// Coverage pre-check: prescriptions → items (bundle or single) → HCPCS codes.
+// Readiness check: prescriptions → items (bundle or single) → HCPCS codes.
 // Each HCPCS code is pre-checked on its own. Prescriptions are accordions on the left; the selected code’s result shows on the right.
 const $=selector=>document.querySelector(selector);
 const $$=selector=>[...document.querySelectorAll(selector)];
@@ -47,7 +47,7 @@ function physicianCheck(rx){
   const status=!found?C.warn:!dmeOk?C.fail:C.pass;
   return {key:'physician',label:'Ordering physician',status,
     summary:!found?'Ordering physician not verified':!dmeOk?`Dr. ${esc(p.last||name)} isn’t enrolled to order DME`:`Dr. ${esc(p.last||name)} · NPI ${esc(npi)} · enrolled for DME`,
-    action:!found?'Add the ordering physician from the NPI registry in the intake.':!dmeOk?'Medicare won’t pay for DME ordered by this physician. Ask for an order from an enrolled physician.':'',
+    action:!found?'Add the ordering physician from the NPI registry in the patient record.':!dmeOk?'Medicare won’t pay for DME ordered by this physician. Ask for an order from an enrolled physician.':'',
     body:`<dl class="pc-kv pc-kv-block"><div><dt>First name</dt><dd>${esc(p.first||'—')}</dd></div><div><dt>Last name</dt><dd>${esc(p.last||'—')}</dd></div><div><dt>NPI</dt><dd>${esc(npi||'Not provided')}</dd></div><div><dt>Specialty</dt><dd>${esc(p.specialty||rx.specialty||'—')}</dd></div><div class="pc-kv-wide"><dt>Address</dt><dd>${esc(p.address||'—')}</dd></div></dl>
       <h5>Medicare enrollment (PECOS)</h5><dl class="pc-kv pc-kv-3 pc-kv-block"><div><dt>DME</dt><dd>${yn(p.dme)}</dd></div><div><dt>PMD</dt><dd>${yn(p.pmd)}</dd></div><div><dt>PARTB</dt><dd>${yn(p.partb)}</dd></div></dl>`};
 }
@@ -78,8 +78,8 @@ function documentsCheck(code,rx,item){
   const have=needed.length-missingReq.length-missingRec.length;
   return {key:'documents',label:'Required documents',status:missingReq.length?C.fail:missingRec.length?C.warn:C.pass,
     summary:`${have} of ${needed.length} on file${missingReq.length||missingRec.length?` · ${[...missingReq,...missingRec].map(d=>d.paMissing?`${d.name.split(' · ')[1]} prior authorization`:d.name.replace(/ \(.*\)$/,'')).join(', ')} not found`:''}`,
-    action:missingReq.some(d=>d.paMissing)?`Get prior authorization from ${missingReq.filter(d=>d.paMissing).map(d=>d.name.split(' · ')[1]).join(' and ')} for ${code}, then add it to the intake.`
-      :missingReq.length||missingRec.length?`Upload the ${[...missingReq,...missingRec].map(d=>d.name.toLowerCase().replace(/ \(.*\)$/,'')).join(' and ')} to the intake.`:'',
+    action:missingReq.some(d=>d.paMissing)?`Get prior authorization from ${missingReq.filter(d=>d.paMissing).map(d=>d.name.split(' · ')[1]).join(' and ')} for ${code}, then add it to the patient record.`
+      :missingReq.length||missingRec.length?`Upload the ${[...missingReq,...missingRec].map(d=>d.name.toLowerCase().replace(/ \(.*\)$/,'')).join(' and ')} to the patient record.`:'',
     body:`<ul class="pc-docs">${docs.map(d=>`<li class="${d.na?'na':d.found?'ok':'bad'}"><i data-lucide="${d.na?'file-minus':d.found?'file-check':'file-x'}"></i><span><b>${esc(d.name)}${d.recommended?` <em class="pc-rec">Recommended by Medicare · ${esc(d.recommended)}</em>`:''}</b><small>${esc(d.status)}</small></span></li>`).join('')}</ul>`};
 }
 // What the payer covers for a code (demo rules) and the Medicare allowable (demo DMEPOS fee schedule amounts).
@@ -98,7 +98,7 @@ function payerBlock(plan,code,rank){
     ['Out-of-pocket',esc(ec.oop||'—')],
     ...(net?[['Network',`<span class="pc-net ${net.ok===false?'bad':net.ok?'ok':''}">${esc(net.label)}</span>${net.label!==ec.network?` <span class="pc-muted">${esc(ec.network)}</span>`:''}`]]:[]),
     ['Allowable',medicare?`${medicareAllowable[code]||'See fee schedule'} <span class="pc-muted">Medicare fee schedule</span>`:'Per payer contract']
-  ]:[['Eligibility','Not checked in the intake']];
+  ]:[['Eligibility','Not checked yet']];
   return `<div class="pc-payer"><div class="pc-payer-head"><span class="pc-payer-name">${esc(plan.name)}<small>${esc(rank)}</small></span>${pill}</div><dl class="pc-rows">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl></div>`;
 }
 function payerCheck(code){
@@ -106,12 +106,12 @@ function payerCheck(code){
   const ec=primary.eligibility,ec2=secondary?.eligibility;
   let status=C.pass,summary=`${primary.name}${secondary?` and ${secondary.name}`:''} · ${coverageFor(code).toLowerCase()}`,action='';
   const outNet=list.find(p=>networkOf(p.eligibility)?.ok===false);
-  if(!ec){status=C.warn;summary='Eligibility not checked';action='Check eligibility for DME in the intake.';}
+  if(!ec){status=C.warn;summary='Eligibility not checked';action='Check eligibility for DME.';}
   else if(!ec.eligible){status=C.fail;summary=`${primary.name} · ${ec.service} not covered`;action='Check the patient’s coverage before ordering.';}
   else if(oxygenSupply.test(code)&&!happy){status=C.fail;summary='Included in the E1390 rental';action='Don’t bill separately. Supply it with the concentrator at no charge.';}
   else if(code==='E1390'&&!happy){status=C.warn;summary='Covered once medically qualified';action='Coverage depends on the qualifying oxygen test.';}
   else if(outNet){status=C.warn;summary=`${outNet.name} · out of network`;action=`You’re out of network for ${outNet.name}. Expect a lower payment or a denial from that plan.`;}
-  else if(secondary&&!ec2){status=C.warn;summary=`${secondary.name} · eligibility not checked`;action='Check eligibility for the secondary plan in the intake.';}
+  else if(secondary&&!ec2){status=C.warn;summary=`${secondary.name} · eligibility not checked`;action='Check eligibility for the secondary plan.';}
   else if(secondary&&ec2&&!ec2.eligible){status=C.warn;summary=`${secondary.name} · ${ec2.service} not covered`;action='The secondary won’t pick up the patient’s share for this item.';}
   return {key:'payer',label:'Payer coverage',status,summary,action,
     body:`${payerBlock(primary,code,'Primary')}${secondary?payerBlock(secondary,code,'Secondary'):''}
@@ -179,7 +179,7 @@ function papCriteria(){
     {title:'Initial coverage · 12-week trial',items:[
       happy
         ?{status:'met',title:'Clinical evaluation before the sleep test',rule:'In-person or Medicare-approved telehealth visit before the test, with sleep history, a physical exam and the Epworth Sleepiness Scale or another validated inventory.',evidence:'Referral.pdf · Dr. Sarah Kim · 09/24/2026 · snoring, witnessed apneas, Epworth 14, BMI 33.1'}
-        :{status:'review',title:'Clinical evaluation before the sleep test',rule:'In-person or Medicare-approved telehealth visit before the test, with sleep history, a physical exam and the Epworth Sleepiness Scale or another validated inventory.',evidence:'Face-to-Face Notes.pdf · 10/12/2026 · Epworth 14. This visit is after the sleep test (10/08/2026).',action:'Find the evaluation dated on or before 10/08/2026 and add it to the intake.'},
+        :{status:'review',title:'Clinical evaluation before the sleep test',rule:'In-person or Medicare-approved telehealth visit before the test, with sleep history, a physical exam and the Epworth Sleepiness Scale or another validated inventory.',evidence:'Face-to-Face Notes.pdf · 10/12/2026 · Epworth 14. This visit is after the sleep test (10/08/2026).',action:'Find the evaluation dated on or before 10/08/2026 and add it to the patient record.'},
       {status:'met',title:'Qualifying sleep test',rule:'AHI or RDI ≥ 15 events/hour with at least 30 events, or 5–14 events/hour with at least 10 events plus excessive daytime sleepiness, impaired cognition, mood disorder, insomnia, hypertension, ischemic heart disease or history of stroke.',evidence:'Home sleep test (Type III) · 10/08/2026 · AHI 18.4 events/hour · 114 events over 6.2 hours'},
       {status:'met',title:'Diagnosis supports PAP therapy',rule:'Obstructive sleep apnea is on the order.',evidence:'G47.33 Obstructive sleep apnea (adult) · primary'},
       {status:'met',title:'Standard written order for the device and accessories',rule:'Patient, order date, item description, quantity, practitioner name or NPI and signature.',evidence:'Prescription.pdf · Dr. Sarah Kim · NPI 1629384756 · signed 10/12/2026'},
@@ -348,7 +348,7 @@ function renderList(){
       </div>
       ${exp?`<div class="pr-acc-body">${rx.items.map(item=>`<div class="pr-item">
         <p class="pr-item-name"><span>${esc(item.name)}</span><span class="pill ai-kind" title="Identified by AI"><i data-lucide="sparkles"></i> ${item.bundle?`Bundle · ${item.lines.length}`:'Single'}</span></p>
-        ${item.lines.length?'':'<p class="pr-nocode"><i data-lucide="info"></i> No HCPCS code yet. Add one in the review to pre-check this item.</p>'}
+        ${item.lines.length?'':'<p class="pr-nocode"><i data-lucide="info"></i> No HCPCS code yet. Add one in the prescription to check this item’s readiness.</p>'}
         ${item.lines.map(l=>{const n=issueCount(l),rev=ui.reviewed.has(l.id);return `<button class="pr-code ${l.status} ${ui.selected===l.id?'active':''}" data-code="${l.id}" aria-current="${ui.selected===l.id}"><i data-lucide="${rev?'check':statusIcon[l.status]}" class="st ${rev?'rev':''}"></i><span class="pr-code-copy"><b>${l.code}</b><span>${esc(l.description)}</span><small>${rev?'Reviewed':n?`${n} of ${l.checks.length} checks need attention`:`All ${l.checks.length} checks passed`}</small></span></button>`;}).join('')}
       </div>`).join('')}
       </div>`:''}
@@ -361,7 +361,7 @@ function renderList(){
 function matchNote(code){const ids=[...new Set((orderApi?orderApi.lineMatches(code):[]).map(m=>m.order.id))];return ids.length?`<em class="pr-match"><i data-lucide="link-2"></i> Matches ${ids.join(', ')}</em>`:'';}
 function renderDetail(){
   const line=lines[ui.selected],box=$('#prDetail');
-  if(!line||rxOf(line)!==ui.rx){box.innerHTML='<p class="pr-empty">Select a code to see its pre-check.</p>';return;}
+  if(!line||rxOf(line)!==ui.rx){box.innerHTML='<p class="pr-empty">Select a code to see its readiness.</p>';return;}
   const issues=line.checks.filter(c=>c.status!=='pass');
   const dose=[stated(line.item.qty)?`Qty ${esc(line.item.qty)}`:'',stated(line.item.frequency)?esc(line.item.frequency):''].filter(Boolean).join(' · ');
   box.innerHTML=`
@@ -382,9 +382,9 @@ function renderFooter(){
   const rx=rxList[ui.rx],ls=rx.items.flatMap(i=>i.lines),bad=ls.filter(l=>l.status!=='pass').length;
   $('#pkFooterStatus').className=`pk-footer-status ${bad?'todo':'done'}`;
   $('#pkFooterStatus').innerHTML=`<span class="pk-status-icon"><i data-lucide="${bad?'list-checks':'check'}"></i></span><span><b>${bad?`${plural(bad,'code')} flagged`:'All codes qualified'}</b><span class="v2-next">in ${esc(rx.title)}</span></span>`;
-  const label=fromOrder?'Save to order':'Work Queue';
+  const label=fromOrder?'Save to order':'Prepare Orders';   // next step after the readiness check
   $('#pcCreateOrder').innerHTML=`${label} <i data-lucide="arrow-right"></i>`;
-  $('#pcCreateOrder').title=fromOrder?`${label} for ${rx.title}`:'Turn the prescriptions into orders, refills and appointments';
+  $('#pcCreateOrder').title=fromOrder?`${label} for ${rx.title}`:'Create orders, refills and appointments from these prescriptions';
 }
 
 function render(){renderList();renderDetail();renderFooter();icons();}
@@ -403,8 +403,9 @@ function precheckForRx(i){
   if(n.pass)parts.push(`${n.pass} qualified`);if(n.warn)parts.push(`${n.warn} need${n.warn===1?'s':''} attention`);if(n.fail)parts.push(`${n.fail} not qualified`);
   return {summary:parts.join(' · '),at:'just now',results:ls.map(l=>({status:l.status,title:`${l.code} · ${l.description}`,detail:l.status==='pass'?'All checks passed':l.checks.filter(c=>c.status!=='pass').map(c=>c.summary).join(' · ')}))};
 }
-function createOrderFor(i){
-  const rx=intake.prescriptions[i];if(!rx)return;
+function createOrderFor(i,pickedIdx){
+  const full=intake.prescriptions[i];if(!full)return;
+  const rx=pickedIdx?{...full,items:full.items.filter((item,ii)=>pickedIdx.includes(ii))}:full;
   const order={...intake,prescriptions:[rx],priorAuths:(intake.priorAuths||[]).filter(pa=>rx.items.some(it=>it.lines.some(l=>l.code===pa.code))),precheck:precheckForRx(i),fromPrescription:rx.title};
   try{sessionStorage.setItem('signeticIntakeFull',JSON.stringify(intake));sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(order));}catch(error){}
   ordered.add(i);
@@ -426,7 +427,7 @@ function openPrepareOrders(){
   try{sessionStorage.setItem('signeticIntakeFull',JSON.stringify(intake));sessionStorage.setItem('signeticPrecheckStatus',JSON.stringify(status));sessionStorage.removeItem('signeticOrderPlan');}catch(error){}
   location.href='patient-record.html?pane=workqueue&from=intake';
 }
-$('#pcCreateOrder').addEventListener('click',()=>!fromOrder?openPrepareOrders():createOrderFor(ui.rx));
+$('#pcCreateOrder').addEventListener('click',()=>!fromOrder?openCreateOrder():createOrderFor(ui.rx));
 document.addEventListener('keydown',event=>{
   if(event.target.matches('input,textarea,select'))return;
   const ls=lines,i=ui.selected;
@@ -435,10 +436,10 @@ document.addEventListener('keydown',event=>{
 });
 
 // Header + back links
-$('#pkTitle').innerHTML=`<span class="title-muted">Pre-check for</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>${!pcEmbed&&typeof pastIntakes!=='undefined'?`<button type="button" class="title-history" data-past-open><i data-lucide="history"></i> ${pastIntakes.length} past intakes</button>`:''}`;
-$('#pkPatient').innerHTML=`${esc((activePlans()[0]||primaryPlan()).name)} · DOB ${esc(intake.patient.dob)} · From intake #${esc(pcEmbed&&pcEmbedIntake||intake.id)} · <button type="button" class="pc-link" data-eligibility>View EC Response</button>`;
+$('#pkTitle').innerHTML=`<span class="title-muted">Readiness check for</span> <span class="title-name">${esc(intake.patient.first)} ${esc(intake.patient.last)}</span>`;   // one intake per patient: no past intakes
+$('#pkPatient').innerHTML=`${esc((activePlans()[0]||primaryPlan()).name)} · DOB ${esc(intake.patient.dob)} · ${(()=>{try{const picked=JSON.parse(sessionStorage.getItem('signeticReadinessServices'))||[];const ids=picked.map(svc=>svc.id).filter(Boolean);return ids.length?`For ${ids.map(esc).join(', ')}`:`For ${plural(rxList.length,'prescription')}`;}catch(error){return `For ${plural(rxList.length,'prescription')}`;}})()} · <button type="button" class="pc-link" data-eligibility>View EC Response</button>`;
 // Back to the live intake page, which restores the saved session.
-const backTo=fromOrder?'dme-order.html?step=products':'index.html';
+const backTo=fromOrder?'dme-order.html?step=products':'patient-record.html?tab=intakes';   // the intake is complete: go back to the patient record
 $('#pcBack').href=backTo;
 if(fromOrder){$('#pcBack').innerHTML='<i data-lucide="arrow-left"></i> Back to order';}
 
@@ -453,10 +454,10 @@ render();
 
 // Pre-checking takes a moment: show progress before the results appear.
 (function precheckLoader(){
-  const main=$('.pr-main');if(!main||pcEmbed)return;
+  const main=$('.pr-main');if(!main||pcEmbed||new URLSearchParams(location.search).get('view')==='result')return;   // viewing the last result: no re-run
   const steps=['Checking medical criteria','Verifying coverage and eligibility','Reviewing prior authorizations','Comparing with existing orders'];
   const veil=document.createElement('div');veil.className='pc-loader';veil.setAttribute('role','status');veil.setAttribute('aria-live','polite');
-  veil.innerHTML=`<div class="pc-loader-card"><span class="ai-label"><i data-lucide="sparkles"></i> AI coverage pre-check</span><h2>Running pre-check</h2><p>Checking each HCPCS code against coverage rules. This takes a moment.</p><div class="progress-track"><span id="pcLoaderBar"></span></div><ul class="pc-loader-steps">${steps.map((step,index)=>`<li data-step="${index}"><span class="spinner"></span><i data-lucide="check"></i>${step}</li>`).join('')}</ul></div>`;
+  veil.innerHTML=`<div class="pc-loader-card"><span class="ai-label"><i data-lucide="sparkles"></i> AI readiness check</span><h2>Checking readiness</h2><p>Checking each HCPCS code against coverage rules. This takes a moment.</p><div class="progress-track"><span id="pcLoaderBar"></span></div><ul class="pc-loader-steps">${steps.map((step,index)=>`<li data-step="${index}"><span class="spinner"></span><i data-lucide="check"></i>${step}</li>`).join('')}</ul></div>`;
   main.appendChild(veil);icons();
   const items=[...veil.querySelectorAll('li')],bar=$('#pcLoaderBar'),each=750;
   items[0].classList.add('active');bar.style.width='8%';
@@ -467,3 +468,98 @@ render();
   },each*(index+1)));
   setTimeout(()=>{veil.classList.add('leaving');setTimeout(()=>veil.remove(),250);},each*steps.length+350);
 })();
+
+// ---------- Create order: a side panel like Needs Attention, for these prescriptions only ----------
+// List: one card per thing to do (create the order, refill, possible duplicate). Create Order opens the item picker.
+const coState={view:'list',rx:0,pick:null,dupOk:new Set(),dupSkip:new Set()};
+const coWord={pass:['Met','pass'],warn:['Needs review','warn'],fail:['Action required','fail']};
+const coSev={pass:0,warn:1,fail:2};
+const rxIdOf=ri=>`RX-${String(231+ri).padStart(4,'0')}`;
+const coApi=window.signeticOrders;
+function coItemStatus(item){return item.lines.reduce((w,l)=>coSev[l.status||'pass']>coSev[w]?l.status:w,'pass');}
+const coRoute=item=>{try{return coApi?.suggestRoute?coApi.suggestRoute(item):{route:'new'};}catch(error){return {route:'new'};}};
+function coTasks(){
+  const tasks=[];
+  rxList.forEach((rx,ri)=>{
+    const items=rx.items.map((item,ii)=>({item,ii,r:coRoute(item)}));
+    const news=items.filter(x=>x.r.route==='new'||coState.dupOk.has(`${ri}:${x.ii}`));
+    if(news.length)tasks.push({kind:'new',ri,icon:'file-plus',what:'Create the order',meta:`${news.length} ${news.length===1?'item':'items'}`,items:news,action:'Create Order'});
+    items.filter(x=>x.r.route==='refill').forEach(x=>{const o=coApi?.orderById?.(x.r.target);tasks.push({kind:'refill',ri,icon:'refresh-cw',what:'Refill the order',meta:o?o.title:x.r.why,items:[x],action:'Open Refill',target:x.r.target});});
+    items.filter(x=>x.r.route==='hold'&&!coState.dupOk.has(`${ri}:${x.ii}`)&&!coState.dupSkip.has(`${ri}:${x.ii}`)).forEach(x=>tasks.push({kind:'dup',ri,icon:'copy',what:'Confirm it isn’t a duplicate',meta:x.r.why.split('.')[0],items:[x],action:'Open',why:x.r.why}));
+  });
+  return tasks;
+}
+function coItemLine({item}){const st=coItemStatus(item),[word,cls]=coWord[st],codes=item.lines.map(l=>l.code).filter(Boolean);return `<li>${esc(item.name)} <em>${codes.join(', ')}</em> <span class="co-st ${cls}">· ${word}</span></li>`;}
+function renderCreateOrder(){
+  const panel=$('#coPanel');if(!panel)return;
+  const body=panel.querySelector('.co-body'),foot=panel.querySelector('.co-foot');
+  if(coState.view==='list'){
+    const tasks=coTasks();
+    const nItems=tasks.reduce((n,t)=>n+t.items.length,0),nDup=tasks.filter(t=>t.kind==='dup').length;
+    const worst=t=>t.items.map(x=>coItemStatus(x.item)).reduce((w,st)=>coSev[st]>coSev[w]?st:w,'pass');
+    const codeTags=item=>item.lines.map(l=>l.code).filter(Boolean).map(c=>`<span class="co-code">${esc(c)}</span>`).join('');
+    const actionOf=(t,ti)=>t.kind==='new'?`<button type="button" class="footer-btn primary co-act" data-co-task="${ti}">Create Order</button>`
+      :t.kind==='refill'?`<button type="button" class="footer-btn co-act is-soft" data-co-task="${ti}">Open Refill</button>`
+      :`<div class="co-menu"><button type="button" class="footer-btn co-act" data-co-menu="${ti}" aria-haspopup="menu" aria-expanded="false">Actions <i data-lucide="chevron-down"></i></button>
+          <div class="co-menu-list" role="menu" hidden><button type="button" role="menuitem" data-co-dup-skip-i="${ti}"><b>Covered by that order</b><small>Don’t order it again</small></button><button type="button" role="menuitem" data-co-dup-order-i="${ti}"><b>Order it anyway</b><small>Add it to a new order</small></button><button type="button" role="menuitem" data-co-task="${ti}"><b>See the details</b><small>Why it looks like a duplicate</small></button></div></div>`;
+    const hint={new:'',refill:t=>`Refill of ${esc(t.meta||'an existing order')}`,dup:t=>esc(t.meta||'')};
+    const groups=rxList.map((rx,ri)=>{const ts=tasks.map((t,ti)=>({t,ti})).filter(x=>x.t.ri===ri);if(!ts.length)return '';
+      const n=ts.reduce((k,x)=>k+x.t.items.length,0);
+      return `<tbody><tr class="co-grp"><th colspan="3"><span><i data-lucide="layers"></i><b>${rxIdOf(ri)}</b><span class="co-grp-meta">${[rx.physician?`Dr. ${esc(rx.physician)}`:'',rx.date?esc(rx.date):''].filter(Boolean).join(' · ')}</span><em>${n} ${n===1?'item':'items'}</em></span></th></tr>
+        ${ts.map(({t,ti})=>{const st=worst(t),[word,cls]=coWord[st];
+          return `<tr class="co-row is-${t.kind}"><td><div class="co-its">${t.items.map(({item})=>`<div class="co-it"><b>${esc(item.name)}</b><span class="co-codes">${codeTags(item)}</span></div>`).join('')}</div>
+            ${t.kind==='refill'?`<p class="co-note is-info"><i data-lucide="refresh-cw"></i>${hint.refill(t)}</p>`:t.kind==='dup'?`<p class="co-note is-warn"><i data-lucide="circle-alert"></i>${hint.dup(t)}</p>`:''}</td>
+            <td><span class="co-pill ${cls}"><i></i>${word}</span></td><td class="co-actcell">${actionOf(t,ti)}</td></tr>`;}).join('')}</tbody>`;}).join('');
+    body.innerHTML=`<p class="co-lead">What to do for ${rxList.length===1?'this prescription':`these ${rxList.length} prescriptions`} (${rxList.map((r,ri)=>rxIdOf(ri)).join(', ')}). Items are grouped by prescription; each row is one order to create, refill or check.</p>
+      ${tasks.length?`<div class="co-tablewrap"><table class="co-table"><thead><tr><th>Item & HCPCS codes</th><th>Status</th><th class="co-actcell">Action</th></tr></thead>${groups}</table></div>
+      <p class="co-foot-note"><i data-lucide="sparkles"></i>Status comes from the AI readiness check. Verify it before you act.</p>`:'<p class="co-lead">Nothing to order for these prescriptions.</p>'}`;
+    const chips=$('#coChips');if(chips)chips.innerHTML=tasks.length?`<span class="co-chip">${nItems} ${nItems===1?'item':'items'}</span><span class="co-chip">${rxList.length} ${rxList.length===1?'prescription':'prescriptions'}</span>${nDup?`<span class="co-chip is-warn">${nDup} duplicate ${nDup===1?'check':'checks'}</span>`:''}`:'';
+    foot.hidden=true;
+  }else if(coState.view==='new'){
+    const t=coTasks().find(x=>x.kind==='new'&&x.ri===coState.rx);if(!t){coState.view='list';renderCreateOrder();return;}
+    const rx=rxList[coState.rx];if(!coState.pick)coState.pick=new Set(t.items.filter(x=>coItemStatus(x.item)!=='fail').map(x=>x.ii));
+    const n=coState.pick.size;
+    body.innerHTML=`<button type="button" class="co-back" data-co-back><i data-lucide="arrow-left"></i> Prepare orders</button>
+      <h3 class="co-h">Items to order</h3>
+      <p class="co-lead">Select the items for this order. Items you leave unselected stay in Needs Attention to order later.</p>
+      <ul class="co-items">${t.items.map(({item,ii})=>{const st=coItemStatus(item),[word,cls]=coWord[st],codes=item.lines.map(l=>l.code).filter(Boolean);
+        return `<li><label class="co-item"><input type="checkbox" data-co-pick="${ii}" ${coState.pick.has(ii)?'checked':''}><span><b>${esc(item.name)}</b><small>${[codes.join(', '),item.qty?`Qty ${esc(item.qty)}`:'',item.frequency?esc(item.frequency):''].filter(Boolean).join(' · ')}</small><em class="co-st ${cls}">Readiness: ${word}</em></span></label></li>`;}).join('')}</ul>
+      <dl class="co-kv"><div><dt>Prescription</dt><dd>${rxIdOf(coState.rx)}${rx.date?` · ${esc(rx.date)}`:''}</dd></div><div><dt>Physician</dt><dd>${rx.physician?`Dr. ${esc(rx.physician)}`:'—'}</dd></div><div><dt>Diagnoses</dt><dd>${(rx.icd||[]).map(c=>esc(c.code)).join(', ')||'—'}</dd></div></dl>`;
+    foot.hidden=false;const btn=foot.querySelector('[data-co-go]');btn.disabled=!n;btn.innerHTML=`Create Order${n?` (${n} ${n===1?'item':'items'})`:''}`;
+  }else if(coState.view==='dup'){
+    const t=coState.dupTask;
+    body.innerHTML=`<button type="button" class="co-back" data-co-back><i data-lucide="arrow-left"></i> Prepare orders</button>
+      <h3 class="co-h">Possible duplicate</h3><p class="co-lead">${esc(t.why)}</p>
+      <ul class="na-items co-dup-items">${t.items.map(coItemLine).join('')}</ul>
+      <div class="co-dup-acts"><button type="button" class="footer-btn" data-co-dup-skip>Covered by that order</button><button type="button" class="footer-btn primary" data-co-dup-order>Order It Anyway</button></div>`;
+    foot.hidden=true;
+  }
+  icons();
+}
+function openCreateOrder(){
+  if(!$('#coPanel')){
+    document.body.insertAdjacentHTML('beforeend',`<div class="co-scrim" data-co-close></div><aside class="co-panel" id="coPanel" role="dialog" aria-labelledby="coTitle"><header class="co-head"><span class="co-head-ico"><i data-lucide="file-text"></i></span><div class="co-head-txt"><h2 id="coTitle">Prepare orders</h2><small><b>${esc(intake.patient.first)} ${esc(intake.patient.last)}</b> · from the readiness check</small><div class="co-chips" id="coChips"></div></div><button type="button" class="icon-btn" data-co-close aria-label="Close"><i data-lucide="x"></i></button></header><div class="co-body"></div><footer class="co-foot" hidden><button type="button" class="footer-btn primary" data-co-go>Create Order</button><button type="button" class="footer-btn" data-co-back>Back</button></footer></aside>`);
+  }
+  coState.view='list';coState.pick=null;document.body.classList.add('co-open');renderCreateOrder();
+}
+document.addEventListener('click',event=>{
+  const t=event.target;
+  if(t.closest('[data-co-close]')){document.body.classList.remove('co-open');return;}
+  if(t.closest('[data-co-back]')){coState.view='list';coState.pick=null;renderCreateOrder();return;}
+  const task=t.closest('[data-co-task]');
+  if(task){const tk=coTasks()[+task.dataset.coTask];if(!tk)return;
+    if(tk.kind==='new'){coState.view='new';coState.rx=tk.ri;coState.pick=null;renderCreateOrder();}
+    else if(tk.kind==='refill'){location.href=`existing-order.html?screen=refill${tk.target?`&order=${encodeURIComponent(tk.target)}`:''}`;}
+    else{coState.view='dup';coState.dupTask=tk;renderCreateOrder();}
+    return;}
+  const menuBtn=t.closest('[data-co-menu]');
+  document.querySelectorAll('.co-menu-list').forEach(m=>{if(!menuBtn||m.previousElementSibling!==menuBtn){m.hidden=true;m.previousElementSibling.setAttribute('aria-expanded','false');}});
+  if(menuBtn){const m=menuBtn.nextElementSibling;m.hidden=!m.hidden;menuBtn.setAttribute('aria-expanded',String(!m.hidden));return;}
+  const skipI=t.closest('[data-co-dup-skip-i]');if(skipI){const tk=coTasks()[+skipI.dataset.coDupSkipI];if(tk)tk.items.forEach(x=>coState.dupSkip.add(`${tk.ri}:${x.ii}`));renderCreateOrder();toast('Kept on the existing order. Not ordered again.');return;}
+  const ordI=t.closest('[data-co-dup-order-i]');if(ordI){const tk=coTasks()[+ordI.dataset.coDupOrderI];if(tk){tk.items.forEach(x=>coState.dupOk.add(`${tk.ri}:${x.ii}`));coState.view='new';coState.rx=tk.ri;coState.pick=null;renderCreateOrder();}return;}
+  if(t.closest('[data-co-dup-skip]')){const tk=coState.dupTask;if(tk)tk.items.forEach(x=>coState.dupSkip.add(`${tk.ri}:${x.ii}`));coState.view='list';renderCreateOrder();toast('Kept on the existing order. Not ordered again.');return;}
+  if(t.closest('[data-co-dup-order]')){const tk=coState.dupTask;tk.items.forEach(x=>coState.dupOk.add(`${tk.ri}:${x.ii}`));coState.view='new';coState.rx=tk.ri;coState.pick=null;renderCreateOrder();return;}
+  if(t.closest('[data-co-go]')){const picked=[...coState.pick].sort((a,b)=>a-b);if(picked.length)createOrderFor(coState.rx,picked);}
+});
+document.addEventListener('change',event=>{const c=event.target.closest('[data-co-pick]');if(!c)return;coState.pick[c.checked?'add':'delete'](+c.dataset.coPick);renderCreateOrder();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape')document.body.classList.remove('co-open');});

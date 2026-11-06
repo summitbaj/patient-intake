@@ -63,9 +63,11 @@ const rankOrder0=['Primary','Secondary','Tertiary'];
 const insurancePlans=[
   {id:'medicare',name:'Medicare Part B',systemRank:'Secondary',aiRank:'Primary',source:'Insurance Card.jpg',docId:'insurance',aiReason:'Aetna is a small-employer group plan (under 100 employees), so Medicare pays first.',response:{payer:'CMS Medicare (HETS)',trace:'HETS-26101594217',deductible:'$257.00',deductibleMet:'$257.00',oop:'Not applicable',network:'Medicare-enrolled supplier'},eligibility:'Active',status:'active',check:{service:'DME',at:'Oct 20, 2026 · 9:42 AM',discovered:{name:'Premera Blue Cross PPO',payer:'Premera Blue Cross',memberId:'PRM884210375',group:'GRP-77120',type:'Commercial PPO',dates:'01/01/2026 – 12/31/2026',note:'Not on this intake. Medicare’s response lists this as another active plan for the patient.'}},results:{'Clinical Services':{eligible:true,detail:'20% coinsurance after Part B deductible'},DME:{eligible:true,detail:'Part B active · 20% coinsurance after the deductible. Coverage for the prescribed items depends on documented medical necessity.'},Immunization:{eligible:true,confirmed:true,detail:'Covered at 100% for flu, pneumococcal, and COVID-19'},Counselling:{eligible:false,detail:'Requires a Medicare-enrolled behavioral health provider'}},fields:[['Insurance type','Medicare'],['Health insurance company','Medicare Health Care Plan'],['Relationship to insured','Self'],['Member ID prefix','X'],['Member ID','BCB731045298'],['Member ID suffix','03'],['Group number','Not provided'],['Effective from','12/31/2022'],['Effective to','12/30/2027']]},
   {id:'aetna',name:'Aetna Choice POS II',systemRank:'Primary',aiRank:'Secondary',source:'Insurance Card.jpg · back',docId:'insurance',aiReason:'Group number GRP-258914 is a small-employer plan, which pays after Medicare.',response:{payer:'Aetna',trace:'AET-0417-88213',deductible:'$1,500.00',deductibleMet:'$1,120.00',oop:'$4,000.00 · $1,860.00 met',network:'In network'},eligibility:'Active',status:'active',check:{service:'DME',at:'Oct 20, 2026 · 9:42 AM'},results:{'Clinical Services':{eligible:true,confirmed:true,detail:'$30 copay per visit'},DME:{eligible:true,confirmed:true,detail:'20% coinsurance · prior authorization on file for E0601'},Immunization:{eligible:true,detail:'Covered at 100% in network'},Counselling:{eligible:true,detail:'$30 copay per session'}},fields:[['Insurance type','Commercial PPO'],['Health insurance company','Aetna'],['Relationship to insured','Self'],['Member ID prefix','Z'],['Member ID','AET529187463'],['Member ID suffix','07'],['Group number','GRP-258914'],['Effective from','03/15/2025'],['Effective to','03/14/2027']]},
-  {id:'medicaid',name:'Washington Apple Health',systemRank:null,aiRank:'Tertiary',source:'Referral.pdf · p2',docId:'referral',aiReason:'Medicaid is always the payer of last resort. This plan isn’t in the system yet.',eligibility:'Inactive',status:'inactive',check:{service:'DME',at:'Oct 20, 2026 · 9:42 AM'},response:{payer:'Washington State HCA',trace:'WAHCA-7731902',deductible:'$0.00',deductibleMet:'$0.00',oop:'Not applicable',network:'Enrolled provider'},results:{'Clinical Services':{eligible:false,detail:'Coverage ended 09/30/2026'},DME:{eligible:false,detail:'Coverage ended 09/30/2026 · member not enrolled on the date of service'},Immunization:{eligible:false,detail:'Coverage ended 09/30/2026'},Counselling:{eligible:false,detail:'Coverage ended 09/30/2026'}},fields:[['Insurance type','Medicaid'],['Health insurance company','Washington State Health Care Authority'],['Relationship to insured','Not provided'],['Member ID prefix','—'],['Member ID','200458812WA'],['Member ID suffix','—'],['Group number','Not provided'],['Effective from','07/01/2026'],['Effective to','09/30/2026']]}
+  {id:'medicaid',name:'Washington Apple Health',systemRank:null,aiRank:'Tertiary',source:'Referral.pdf · p2',docId:'referral',aiReason:'Medicaid is always the payer of last resort. This plan isn’t in the system yet.',eligibility:'Inactive',status:'inactive',check:{service:'DME',at:'Oct 20, 2026 · 9:42 AM'},response:{payer:'Washington State HCA',trace:'WAHCA-7731902',deductible:'$0.00',deductibleMet:'$0.00',oop:'Not applicable',network:'Enrolled provider'},results:{'Clinical Services':{eligible:false,detail:'Coverage ended 09/30/2026'},DME:{eligible:false,detail:'Coverage ended 09/30/2026 · member not enrolled on the date of service'},Immunization:{eligible:false,detail:'Coverage ended 09/30/2026'},Counselling:{eligible:false,detail:'Coverage ended 09/30/2026'}},fields:[['Insurance type','Medicaid'],['Health insurance company','Washington State Health Care Authority'],['Relationship to insured','Self'],['Member ID prefix','—'],['Member ID','200458812WA'],['Member ID suffix','—'],['Group number','Not provided'],['Effective from','07/01/2026'],['Effective to','09/30/2026']]}
 ];
 
+// Happy path: insurance comes out of extraction clean. With issues: Apple Health's payer couldn't be matched.
+// (Removed: the "payer not mapped" demo issue.)
 insurancePlans.forEach(plan=>{if(plan.check?.discovered){plan.otherCoverage=plan.check.discovered;delete plan.check.discovered;}plan.check=null;});   // eligibility starts unchecked
 // What an eligibility response adds about coordination of benefits. Shown as evidence; it never sets the order.
 insurancePlans.find(plan=>plan.id==='medicare').cobNote='No Medicare Secondary Payer record. Medicare reports it pays first.';
@@ -81,19 +83,19 @@ insurancePlans.sort((a,b)=>(a[insSortKey]?rankOrder0.indexOf(a[insSortKey]):9)-(
   if(mode==='single')insurancePlans.splice(0,insurancePlans.length,insurancePlans.find(plan=>plan.id==='medicare'));
   if(mode==='uncertain'){insurancePlans.splice(2);insurancePlans.forEach(plan=>{plan.aiRank=null;plan.aiReason='';plan.cobNote='';});insurancePlans.sort((a,b)=>rankOrder0.indexOf(a.systemRank)-rankOrder0.indexOf(b.systemRank));}
 })();
-const state = { plansConfirmed:false, onHold:false, pendingOther:null, serviceType:'DME', checkingEligibility:false, checkingPlan:false, editingPlan:false, currentPlan:0, physicianName:true, signature:true, authAck:true, selected:'', pickerPatient:'', pickerSelection:new Set(), viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:true, provider:true, product:true, patientLinked:false, completed:false, precheck:null, precheckAt:'', knownPatient:null, docDecisionsNeeded:2, aiEdited:new Set(), aiReviewed:new Set(), cob:null };
+const state = { editingComplete:true, everCompleted:false, plansConfirmed:false, onHold:false, pendingOther:null, serviceType:'DME', checkingEligibility:false, checkingPlan:false, editingPlan:false, currentPlan:0, physicianName:true, signature:true, authAck:true, selected:'', pickerPatient:'', pickerSelection:new Set(), viewerMode:'preview', phase:'upload', extracting:false, extractionComplete:false, patientResolved:false, documentResolutions:new Set(), started:false, resolutionPending:false, dob:true, mobile:true, provider:true, product:true, patientLinked:false, completed:false, precheck:null, precheckAt:'', knownPatient:null, docDecisionsNeeded:2, aiEdited:new Set(), aiReviewed:new Set(), cob:null };
 // Conflicts AI resolved during extraction. They don't block completion, but stay listed so the user can review them.
 const aiResolvedFields=[
   {id:'dobConflict',key:'dob',label:'Date of birth',detail:'Kept 03/15/1978 · insurance card showed 03/16/1978',section:'Patient demographics'},
   {id:'mobileField',key:'mobile',label:'Mobile phone number',detail:'Blurry digits matched to patient record',section:'Contact information'},
-  {id:'insurance-alt-section',key:'coverage',label:'Insurance coverage order',detail:'Medicare set as primary · differs from system',section:'Insurance information'},
+  {id:'insurance-section',key:'coverage',label:'Insurance coverage order',detail:'Medicare set as primary · differs from system',section:'Insurance information'},
   {id:'rx-rx2-item-1',key:'mapping',label:'Oxygen concentrator mapped to E1390',detail:'AI mapped the product name to a HCPCS code',section:'Prescription 2'}
 ];
 const aiChangeFields={
   mobile:{value:'#mobileValue',label:'mobile number',row:'mobileField'}
 };
 const postIntakeRecommendation={
-  patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Start pre-check',reason:'Confirm payer qualification, coverage, and required documentation before creating the new equipment order.',alternatives:['Work Queue'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'},{name:'Home oxygen setup and safety education',reason:'Needed for the new oxygen concentrator prescription.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'},{name:'Oxygen concentrator and cannula',reason:'Supported by the reviewed oxygen prescription.'}],note:'Final coverage and item eligibility remain subject to payer review.'
+  patient:'Ashlynn Botosh',context:'Existing patient · New PAP setup',title:'New PAP therapy intake',summary:'Ashlynn has a prescription supporting PAP therapy for obstructive sleep apnea, active insurance coverage, and the clinical documents needed to begin qualification. No matching fulfilled PAP equipment order was found.',action:'Check order readiness',reason:'See if the DME order is ready to go: payer rules, coverage and required documents. Anything missing is listed before you order.',alternatives:['View prescriptions','Go to needs attention'],services:[{name:'PAP setup and education',reason:'Supports safe device use for a new therapy setup.'},{name:'Initial mask fitting',reason:'Helps select an appropriate interface before fulfillment.'},{name:'Compliance monitoring',reason:'Supports follow-up after therapy begins.'},{name:'Home oxygen setup and safety education',reason:'Needed for the new oxygen concentrator prescription.'}],dme:[{name:'CPAP device',reason:'Supported by the reviewed PAP prescription.'},{name:'Heated humidifier',reason:'Recommended as part of the initial PAP setup.'},{name:'Mask and starter supplies',reason:'Needed to begin the prescribed therapy.'},{name:'Oxygen concentrator and cannula',reason:'Supported by the reviewed oxygen prescription.'}],note:'Final coverage and item eligibility remain subject to payer review.'
 };
 const $ = selector => document.querySelector(selector);
 const $$ = selector => [...document.querySelectorAll(selector)];
@@ -180,11 +182,12 @@ const recordInIntake=file=>documents.some(item=>item.fromRecord&&(item.recordId|
 const intakeCopyOfRecord=file=>({...file,id:documents.some(item=>item.id===file.id)?`${file.id}-record`:file.id,recordId:file.id,meta:'Ready to extract',fromRecord:true});
 // New uploads have no type until extraction classifies them.
 const typePending=file=>state.phase==='upload'&&!file.fromRecord&&documents.includes(file);
-const typeLabel=file=>typePending(file)?'Type identified at extraction':docCategory(file);
+const typeLabel=file=>typePending(file)?'':docCategory(file);   // no placeholder text before extraction
 const todayLabel=()=>new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
 const addedOn=file=>file.uploadedAt||file.date||todayLabel();
 // Shared meta line for every file row (upload screen and review Files panel): type · Added date [· status]
-const fileMetaLine=(file,status='')=>`<span class="file-meta-row"><span class="file-type${typePending(file)?' is-pending':''}">${typeLabel(file)}</span><span class="file-date">Added ${addedOn(file)}</span>${status}</span>`;
+// New uploads show just when they were added; the type appears once it's known (after extraction).
+const fileMetaLine=(file,status='')=>`<span class="file-meta-row">${typePending(file)?'':`<span class="file-type">${typeLabel(file)}</span>`}<span class="file-date">Added ${addedOn(file)}</span>${status}</span>`;
 // Upload screen preview: a docked panel slides in on the right. It is non-modal, so the upload screen stays usable beside it. Header: format, name, type · added date, close. Body: the page and zoom.
 const drawerView={zoom:1};
 function applyDrawerZoom(){const image=$('#upImage');drawerView.zoom=Math.min(4,Math.max(.25,drawerView.zoom));if(image.naturalWidth)image.style.width=`${Math.round(image.naturalWidth*drawerView.zoom)}px`;$('#upZoom').textContent=`${Math.round(drawerView.zoom*100)}%`;}
@@ -196,7 +199,7 @@ function previewFile(id,fromRecord=false){
   const image=$('#upImage'),src=imageForDocument(file);
   $('#upBadge').innerHTML=formatBadge(file.name);
   $('#upName').textContent=file.name;
-  $('#upMeta').textContent=`${typeLabel(file)} · Added ${addedOn(file)}`;
+  $('#upMeta').textContent=typePending(file)?`Added ${addedOn(file)}`:`${typeLabel(file)} · Added ${addedOn(file)}`;
   image.alt=`${file.name} document preview`;
   const drawer=$('#uploadPreview');drawer.classList.remove('is-closing');if(!drawer.open)drawer.show();document.body.classList.add('upload-preview-open');
   drawerView.id=id;drawerView.src=fromRecord?'record':'';renderStartScreen();   // highlight the row being previewed
@@ -420,7 +423,7 @@ function setPhase(phase){
   workspace.classList.add(`phase-${phase}`);
   body.classList.add(`phase-${phase}`);
   document.dispatchEvent(new Event('intake:change'));
-  $('#pageTitle').innerHTML=phase==='review'?`<span class="title-muted">Review</span> <span class="title-name">${postIntakeRecommendation.patient}</span><span class="title-muted">’s intake</span><button type="button" class="title-history" data-open-history><i data-lucide="history"></i> ${pastIntakes.length} past intakes</button>`:'New Patient Intake';
+  $('#pageTitle').innerHTML=phase==='review'?`<span class="title-muted">Review</span> <span class="title-name">${postIntakeRecommendation.patient}</span><span class="title-muted">’s intake</span>`:'New Patient Intake';
   renderFileList();
   if(phase==='review'){
     syncExistingPatientFiles();
@@ -447,16 +450,48 @@ function syncExistingPatientFiles(){
 // Button labels read in Title Case; action names stay as-is because they double as keys
 const minorWords=new Set(['a','an','the','and','or','to','of','in','on','for','by','at','with','as']);
 function buttonCase(text){return text.split(' ').map((word,i)=>i&&minorWords.has(word)?word:word.split('-').map(part=>part.charAt(0).toUpperCase()+part.slice(1)).join('-')).join(' ');}
+// Services from intakes: this intake's prescriptions, plus services from recent earlier intakes. The intake only collects; readiness is checked per service.
+const serviceNameFor=rx=>{const codes=rx.items.flatMap(item=>item.lines.map(l=>l.code));return codes.includes('E0601')?'CPAP therapy':codes.includes('E1390')?'Home oxygen':rx.items[0]?.name||'Service';};
+const earlierServices=[{id:'past-resupply',name:'PAP resupply',codes:['A7034','A7035'],from:'Intake · Oct 28, 2026'}];
+state.svcPick=state.svcPick||null;
+function intakeServices(){
+  const now=prescriptions.filter(rx=>rx.items.length).map(rx=>({id:rx.id,name:serviceNameFor(rx),codes:[...new Set(rx.items.flatMap(item=>item.lines.map(l=>l.code).filter(Boolean)))],from:'This intake'}));
+  return {now,earlier:earlierServices};
+}
+function renderServiceList(){
+  const box=$('#nextServiceList');if(!box)return;
+  const {now,earlier}=intakeServices();
+  if(!state.svcPick)state.svcPick=new Set(now.map(svc=>svc.id));   // this intake's services start selected
+  const row=svc=>`<label class="next-svc"><input type="checkbox" data-svc-pick="${svc.id}" ${state.svcPick.has(svc.id)?'checked':''}><span class="next-svc-copy"><b>${svc.name}</b><small>${svc.codes.slice(0,4).join(' · ')}${svc.codes.length>4?' …':''}</small></span><span class="next-svc-from">${svc.from}</span></label>`;
+  box.innerHTML=`<p class="next-svc-group">From this intake</p>${now.map(row).join('')||'<p class="next-svc-empty">No services in this intake</p>'}${earlier.length?`<p class="next-svc-group">From earlier intakes</p>${earlier.map(row).join('')}`:''}`;
+  const n=state.svcPick.size,btn=$('#recommendedAction');
+  btn.disabled=!n;btn.dataset.postAction='Check order readiness';
+  btn.innerHTML=`<i data-lucide="shield-check"></i> ${n?`Check Readiness (${n})`:'Select a Service'}`;
+  icons();
+}
+document.addEventListener('change',event=>{const pick=event.target.closest('[data-svc-pick]');if(!pick)return;state.svcPick[pick.checked?'add':'delete'](pick.dataset.svcPick);renderServiceList();});
+document.addEventListener('click',event=>{
+  const btn=event.target.closest('#recommendedAction');if(!btn)return;
+  try{sessionStorage.setItem('signeticReadinessServices',JSON.stringify(intakeServices().now));}catch(error){}
+},true);
 function renderPostIntake(){
   const recommendation=postIntakeRecommendation;
   const summary=buildIntakeSummary();
   $('#summaryTitle').textContent=summary.title;
   $('#handoffSummary').textContent=summary.lead;
-  $('#nextActionTitle').textContent=recommendation.action;
-  $('#nextActionReason').textContent=recommendation.reason;
-  $('#recommendedAction').innerHTML=`<i data-lucide="arrow-right"></i> ${buttonCase(recommendation.action)}`;
-  $('#recommendedAction').dataset.postAction=recommendation.action;
-  $('#otherActionButtons').innerHTML=recommendation.alternatives.map(action=>`<button class="secondary-action compact" data-post-action="${action}">${buttonCase(action)}</button>`).join('');
+  // After the intake: the services that came out of it (and recent earlier intakes). Pick some, then check readiness.
+  // Check readiness covers the items in this intake. Other prescriptions are checked from the Prescriptions tab in the patient record.
+  const svcNames=intakeServices().now.map(svc=>svc.name);
+  $('#nextActionTitle').textContent='Check readiness';
+  const rxN=prescriptions.filter(rx=>rx.items.length).length;
+  $('#nextActionReason').textContent=`Check readiness for the ${rxN===1?'prescription':`${rxN} prescriptions`} in this intake. It checks payer rules, coverage and required documents before you order.`;
+  $('#nextServiceList').innerHTML='';
+  $('#recommendedAction').disabled=false;
+  $('#recommendedAction').innerHTML='<i data-lucide="shield-check"></i> Check Readiness';
+  $('#recommendedAction').dataset.postAction='Check order readiness';
+  // Each other option says when you'd want it.
+  const altWhy={'View prescriptions':'See every prescription on file, including earlier ones, and check readiness for any of them.','Go to needs attention':'See this patient’s open tasks: missing documents, refills, duplicates and overdue PA renewals.'};
+  $('#otherActionButtons').innerHTML=recommendation.alternatives.map(action=>`<button class="secondary-action compact alt-action" data-post-action="${action}"><span><b>${buttonCase(action)}</b>${altWhy[action]?`<small>${altWhy[action]}</small>`:''}</span><i data-lucide="chevron-right"></i></button>`).join('');
   const recommendationItems=items=>items.map(item=>`<li><span class="recommendation-mark"><i data-lucide="sparkles"></i></span><span><b>${item.name}</b><small>${item.reason}</small></span></li>`).join('');
   $('#recommendedServices').innerHTML=recommendationItems(recommendation.services);
   $('#recommendedDme').innerHTML=recommendationItems(recommendation.dme);
@@ -469,7 +504,7 @@ function syncNextLock(){
   const left=requiredReviewsLeft(),lock=$('#nextLock'),button=$('#recommendedAction');
   if(!lock||!button)return;
   // While the completion plays out, the next-step panel and AI summary wait, then fade in with the card.
-  const wait=left>0||Boolean(state.completing);
+  const wait=left>0||Boolean(state.completing)||(state.editingComplete&&!state.everCompleted);   // next steps only after Mark Complete
   const wasHidden=$('#nextPanel').hidden;
   $('#nextPanel').hidden=wait;
   $('#intakeSummaryCard').hidden=wait;
@@ -665,7 +700,7 @@ const orderBy=key=>[...insurancePlans].sort((a,b)=>(a[key]?rankOrder.indexOf(a[k
 const currentOrder=()=>insurancePlans.map(plan=>plan.id);
 const sameOrder=(a,b)=>a.join()===b.join();
 // The plans are judged as a unit: changing the list or a plan's details clears the confirmation and every check.
-function invalidateInsurance(){state.plansConfirmed=false;insurancePlans.forEach(plan=>{plan.check=null;plan.checkedServices={};delete plan.sig;plan.cached=false;});}
+function invalidateInsurance(){state.plansConfirmed=false;try{insAlt.verified=false;}catch(error){}insurancePlans.forEach(plan=>{plan.check=null;plan.checkedServices={};delete plan.sig;plan.cached=false;});}
 function setPlanOrder(ids,message,keepChecks=false){
   if(keepChecks)state.plansConfirmed=false;else invalidateInsurance();
   const selectedId=insurancePlans[state.currentPlan]?.id;
@@ -704,7 +739,7 @@ function insuranceReviewItems(){
   if(!insurancePlans.length&&!state.selfPay)items.push({id:'insEmpty',label:'Insurance not added',detail:'Add insurance, or mark that the patient has none',section:'Insurance information',severity:'missing'});
   insurancePlans.forEach(plan=>insConflicts(plan).forEach(c=>items.push({id:`ins-conflict-${plan.id}`,label:`${plan.name}: ${insLc(c.label)} differs`,detail:`Intake ${c.intake} · eligibility response ${c.ec}`,section:'Insurance information',severity:'warning'})));
   // Possible extra insurance and inactive plans are shown in the plan itself (card note, plan details, EC response), not as review items.
-  if(!insOrderConfirmed())items.push({id:'insOrder',label:'Payer order not confirmed',detail:insAiOrder()?'AI sorted the plans. Check the order and confirm it':'Not enough information to sort the plans',section:'Insurance information',severity:'missing'});
+  if(!insOrderConfirmed())items.push({id:'insOrder',label:'Verify coordination of benefits',detail:insAiOrder()?'Confirm all current insurances are listed and who pays first':'Ask the patient which plan pays first, then confirm the order',section:'Insurance information',severity:'missing'});
   const type=state.serviceType,checked=insurancePlans.filter(plan=>plan.check?.service===type);
   if(checked.length&&!checked.some(plan=>insCoverage(plan)==='confirmed'))items.push({id:'planPills',label:`${type} coverage not confirmed`,detail:'Active coverage doesn’t confirm the items are covered',section:'Insurance information',severity:'warning'});
   return items;
@@ -734,6 +769,15 @@ function ecMark(plan){
   const [icon,cls,text]=!st?['shield','','Eligibility not checked yet']:st==='inactive'?['shield-x','is-bad',`Inactive · eligibility checked ${plan.check.at}`]:['shield-check','is-done',`Active${cov==='confirmed'?` · ${state.serviceType} covered`:cov==='review'?` · ${state.serviceType} coverage not confirmed`:''} · eligibility checked ${plan.check.at}`];
   return `<span class="ec-mark ${cls}" role="img" aria-label="${text}" title="${text}"><i data-lucide="${icon}"></i></span>`;
 }
+// Last eligibility check date for a plan (any service), e.g. "Nov 3, 2026".
+const planCheckedAt=plan=>{const stamps=Object.values(plan.checkedServices||{});const last=plan.check?.at||stamps[stamps.length-1];return last?last.split(' · ')[0]:'';};
+// A newly uploaded insurance card that is still extracting: its card shows a loader and its fields are read-only.
+// The file name says which insurance it is (e.g. "Secondary Insurance Card.jpg"); otherwise it's the plan read from the main card.
+function planExtracting(plan,index){
+  const files=[...(state.extractingDocs||new Map()).values()].filter(name=>/insurance/i.test(name));
+  const file=files.find(name=>{const rank=rankOrder.find(r=>new RegExp(r,'i').test(name));return rank?planRank(index)===rank:plan.docId==='insurance'&&index===insurancePlans.findIndex(p=>p.docId==='insurance');});
+  return file||'';
+}
 function renderPlanList(){
   state.planWhy=state.planWhy||new Set();
   $('#planList').innerHTML=insurancePlans.map((plan,index)=>{
@@ -743,8 +787,12 @@ function renderPlanList(){
     // "Why primary?" is a small info icon beside the rank; the reason opens in a popover on demand.
     const why=aiPlaced?`<span class="plan-why-btn" role="button" tabindex="0" data-plan-why="${plan.id}" aria-label="Why AI ranks this plan ${plan.aiRank.toLowerCase()}" title="Why ${plan.aiRank.toLowerCase()}?" aria-expanded="${state.planWhyOpen===plan.id}"><i data-lucide="sparkles"></i></span>`:'';
     const conflict=insConflicts(plan).length?'<small class="plan-note warn"><i data-lucide="triangle-alert"></i> Differs from EC response</small>':'';
-    const locked=insurancePlans.length>1&&insOrderConfirmed();
-    return `<div class="plan-row ${index===state.currentPlan?'active':''} ${locked?'is-order-locked':''}" id="ins-plan-${plan.id}" draggable="${!locked}" ${locked?'':`data-drag-plan="${index}"`} role="listitem">${locked?'':'<span class="drag-handle" aria-hidden="true"><i data-lucide="grip-vertical"></i></span>'}<button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}, ${rank}${isNew?', new, not on file':''}.${insOrderConfirmed()?'':' Press Alt plus arrow keys to reorder.'}"><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-pills"><span class="plan-rank ${insOrderConfirmed()?'is-confirmed':''}">${index===0&&insOrderConfirmed()?'<i data-lucide="star"></i>':''}${rank}</span>${why}${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded?'<span class="plan-tag-new">Added by you</span>':''}${ecMark(plan)}</span>${insMissingFields(plan).length?'<span class="plan-tag-missing" title="'+insMissingFields(plan).join(', ')+' missing">Missing</span>':''}${conflict}${otherNote(plan)}</span></button></div>`;
+    const locked=false;   // reordering stays available; a new order just clears the confirmation
+    const loading=planExtracting(plan,index);
+    const at=planCheckedAt(plan);
+    const ec=loading?`<span class="plan-extracting"><span class="spinner"></span> Extracting ${loading}…</span>`
+      :'';
+    return `<div class="plan-row is-info-only ${index===state.currentPlan?'active':''} ${loading?'is-extracting':''}" id="ins-plan-${plan.id}" role="listitem"><button class="plan-item ${index===state.currentPlan?'active':''}" data-plan="${index}" aria-label="${plan.name}${isNew?', new, not on file':''}"><span class="plan-item-copy"><strong>${plan.name}</strong><span class="plan-last-ec">${rank}</span>${isNew||plan.userAdded?`<span class="plan-pills">${isNew?'<span class="plan-tag-new" title="Not in the patient’s record yet. Found in this intake.">New</span>':''}${plan.userAdded?'<span class="plan-tag-new">Added by you</span>':''}</span>`:''}${insMissingFields(plan).length?'<span class="plan-tag-missing" title="'+insMissingFields(plan).join(', ')+' missing">Missing</span>':''}${insConflicts(plan).length?`<span class="plan-tag-missing" title="${insConflicts(plan).map(c=>c.label).join(', ')} doesn’t match the payer">Error · fix ${insLc(insConflicts(plan)[0].label)}</span>`:''}${ec}</span></button></div>`;
   }).join('');
   renderOrderHint();
   icons();   // the list can re-render on its own (e.g. a drop back in place), so it draws its own grip, star and info icons
@@ -755,14 +803,15 @@ function renderOrderHint(){
   const multi=insurancePlans.length>1,confirmed=insOrderConfirmed(),ai=insAiOrder(),matches=ai&&sameOrder(ai,currentOrder());
   // Header pill: where the order came from. The reason for each plan is on its card (sparkle).
   const pill=$('#orderSource');
-  pill.hidden=!multi;
+  pill.hidden=true;   // the payer order lives in the eligibility check table
   pill.className=`pill ${confirmed?'success':matches?'info':'neutral'}`;
   pill.innerHTML=confirmed?'<i data-lucide="circle-check"></i> Confirmed':matches?'<i data-lucide="sparkles"></i> AI sorted':ai?'Custom order':'Not sorted';
   let html='';
   if(!multi)html='<p class="cob-line"><span>One plan, billed as primary.</span></p>';
+  // Confirming the order happens once, in "Before you continue" under the section.
   else if(confirmed)html='<p class="cob-line"><button type="button" class="text-btn" data-cob-change>Change order</button></p>';
   else html=`${!ai?'<p class="cob-line"><i data-lucide="circle-help"></i><span>Not enough information to sort. Check with the patient or payer.</span></p>':!matches?'<p class="cob-line"><button type="button" class="text-btn" data-cob-apply>Reset to AI order</button></p>':''}<button type="button" class="small-btn primary cob-confirm" data-cob-confirm><i data-lucide="check"></i> Confirm Order</button>`;
-  $('#orderNotice').innerHTML=html;
+  $('#orderNotice').innerHTML='';
   const fresh=insurancePlans.filter(plan=>!plan.systemRank&&!plan.userAdded).length;
   $('#insuranceMeta').textContent=`${insurancePlans.length} coverage ${insurancePlans.length===1?'plan':'plans'}${fresh?` · ${fresh} new`:''}`;
 }
@@ -771,6 +820,7 @@ function showInsuranceOnFile(){
   const onFile=insurancePlans.filter(plan=>plan.systemRank).sort((a,b)=>rankOrder.indexOf(a.systemRank)-rankOrder.indexOf(b.systemRank));
   const fresh=insurancePlans.filter(plan=>!plan.systemRank);
   const idOf=plan=>['Member ID prefix','Member ID','Member ID suffix'].map(k=>plan.fields.find(([n])=>n===k)?.[1]).filter(v=>v&&v!=='—'&&v!=='Not provided').join(' ');
+  $('#eligibilityTabs').hidden=true;$('#eligibilityTabs').innerHTML='';
   $('#eligibilityDialogTitle').textContent='Insurance on file';
   $('#eligibilityDialogMeta').textContent=`${postIntakeRecommendation.patient}’s record today, before this intake`;
   const differs=!sameOrder(currentOrder().filter(id=>onFile.some(p=>p.id===id)),onFile.map(p=>p.id));
@@ -843,12 +893,23 @@ function renderEligibilityResponse(index){
   if(!result)return;
   const type=serviceTypes.find(item=>item.id===plan.check.service),active=planStatus(plan)==='active',other=plan.otherCoverage;
   const field=label=>plan.fields.find(([name])=>name===label)?.[1]||'—';
-  $('#eligibilityDialogTitle').textContent=plan.name;
-  $('#eligibilityDialogMeta').textContent=`${planRank(index)} coverage · ${type.id} · eligibility checked ${plan.check.at}`;
+  // One tab per checked insurance, named after it.
+  const tabs=$('#eligibilityTabs'),checkedIdx=insurancePlans.map((item,i)=>planResult(item)?i:-1).filter(i=>i>=0);
+  tabs.hidden=checkedIdx.length<2;
+  tabs.innerHTML=checkedIdx.map(i=>{const item=insurancePlans[i],st=planStatus(item),ok=st==='active'&&planResult(item)?.eligible;
+    return `<button type="button" role="tab" class="response-tab ${i===index?'active':''}" aria-selected="${i===index}" data-response-tab="${i}"><span class="response-tab-dot ${ok?'ok':'bad'}" aria-hidden="true"></span>${item.name}<small class="response-tab-svc">${checkedServicesOf(item).join(', ')}</small></button>`;}).join('');
+  $('#eligibilityDialogTitle').textContent=checkedIdx.length>1?'Eligibility response':plan.name;
+  // Say exactly what this response is for: which payer, which service, when.
+  $('#eligibilityDialogMeta').innerHTML=`<span class="response-for"><span><small>Payer</small><b>${plan.response?.payer||plan.name}</b></span><span><small>Insurance</small><b>${plan.name} · ${planRank(index)}</b></span><span><small>${checkedServicesOf(plan).length>1?'Services':'Service'}</small><b>${checkedServicesOf(plan).join(', ')}</b></span><span><small>Checked</small><b>${plan.check.at}</b></span></span>`;
   const rows=[['Coverage status',active?'Active':'Inactive'],['Benefit',result.detail],['Member ID',`${field('Member ID prefix')} ${field('Member ID')} ${field('Member ID suffix')}`.replace(/—/g,'').trim()],['Group number',field('Group number')],['Plan dates',`${field('Effective from')} – ${field('Effective to')}`],['Deductible',`${plan.response.deductible} · ${plan.response.deductibleMet} met`],['Out-of-pocket maximum',plan.response.oop],['Network',plan.response.network],['Payer',plan.response.payer],['Trace number',plan.response.trace]];
   $('#eligibilityDialogBody').innerHTML=`<div class="response-status ${result.eligible?'eligible':'not-eligible'}"><i data-lucide="${result.eligible?'circle-check':'circle-x'}"></i><span><b>${active?'Active':'Inactive'} · ${type.id} ${result.eligible?'covered':'not covered'}</b>${result.detail}</span></div>${other?`<section class="response-other"><header><i data-lucide="search-check"></i><b>Other insurance found</b></header><dl class="response-list">${[['Payer',other.payer],['Insurance type',other.type],['Member ID',other.memberId],['Group number',other.group],['Plan dates',other.dates]].map(([l,v])=>`<div><dt>${l}</dt><dd>${v}</dd></div>`).join('')}</dl>${other.resolved?`<p class="response-other-done">${other.resolved==='dismissed'?'Reviewed · not added':'Added to this intake'}</p>`:`<p>Not added or verified. Check with the patient, then decide.</p><div class="response-other-actions"><button type="button" class="small-btn primary" data-other-add="${index}"><i data-lucide="plus"></i> Add Insurance</button><button type="button" class="small-btn" data-other-dismiss="${index}">Don’t Add</button></div>`}</section>`:''}<dl class="response-list">${rows.map(([label,value])=>`<div><dt>${label}</dt><dd>${value}</dd></div>`).join('')}</dl>`;
   icons();
-  $('#eligibilityDialog').showModal();
+  const svcs=checkedServicesOf(plan);
+  if(svcs.length){
+    const rowsHtml=svcs.map(id=>{const r=plan.results[id],ok=active&&r?.eligible;return `<li class="${ok?'ok':'bad'}"><span class="rsvc-chip ${ok?'ok':'bad'}"><i data-lucide="${ok?'check':'x'}"></i>${id}</span><span class="rsvc-copy"><b>${ok?'Covered':'Not covered'}</b><small>${r?.detail||''}</small></span><span class="rsvc-when">${plan.checkedServices?.[id]||''}</span></li>`;}).join('');
+    $('#eligibilityDialogBody .response-status')?.insertAdjacentHTML('afterend',`<section class="response-services"><header><b>Services checked</b><small>${svcs.length} ${svcs.length===1?'service':'services'}</small></header><ul>${rowsHtml}</ul></section>`);
+  }
+  if(!$('#eligibilityDialog').open)$('#eligibilityDialog').showModal();
 }
 
 // Section-level: a response points to another plan. Staff decide; nothing is added for them.
@@ -870,7 +931,7 @@ function serviceTag(plan){
 
 function renderInsurance(index=state.currentPlan){
   const empty=!insurancePlans.length;
-  $('#insurance-section .insurance-workspace').hidden=empty;$('#serviceSuggest').hidden=empty;$('#insEmpty').hidden=!empty;
+  $('#insurance-section .insurance-workspace').hidden=empty;$('#insSummary').hidden=empty;$('#insEmpty').hidden=!empty;
   $('#insurance-section .ins-intro').hidden=empty&&state.selfPay;
   if(empty){
     $('#insEmpty').innerHTML=state.selfPay
@@ -897,10 +958,10 @@ function renderInsurance(index=state.currentPlan){
   // Service chip: just the service name. Green when the response confirms it's covered, red when it doesn't.
   const covTitle=(result?.detail||'').replace(/"/g,'&quot;');
   const covChip={confirmed:`<span class="cov-chip ok" title="${type} covered · ${covTitle}"><i data-lucide="circle-check"></i> ${type}</span>`,review:`<span class="cov-chip bad" title="${type} not covered by this response · ${covTitle}"><i data-lucide="circle-x"></i> ${type}</span>`,na:'',unchecked:''}[coverage];
-  $('#planPills').innerHTML=st?`<div class="cov-strip"><span class="cov-chip ${st==='active'?'ok':'bad'}"><i data-lucide="${st==='active'?'circle-check':'circle-x'}"></i> ${st==='active'?'Active':'Inactive'}</span>${covChip}</div><span class="cov-checked"><i data-lucide="calendar-check"></i> Eligibility checked ${plan.check.at}</span>`:'<span class="cov-checked is-quiet"><i data-lucide="circle-dashed"></i> Eligibility not checked yet. Status and coverage are unverified.</span>';
+  $('#planPills').innerHTML='';   // eligibility results show below, in the eligibility check
   // Conflict with the EC response for this plan: what differs, from where, and how to resolve it. Values are fixed in the fields below.
   const conflicts=insConflicts(plan),found=$('#planDiscovered');
-  found.hidden=!conflicts.length&&st!=='inactive'&&!(st==='active'&&coverage==='review');
+  found.hidden=true;   // eligibility results show below
   found.className=`plan-discovered ${conflicts.length?'is-conflict':'is-info'}`;
   found.id='planDiscovered';
   found.innerHTML=conflicts.length
@@ -913,10 +974,15 @@ function renderInsurance(index=state.currentPlan){
   const hasResponse=Boolean(plan.check)&&!state.checkingPlan;
   // Plans not in the patient's record (added by hand or read from an upload) can be removed from this intake.
   const removable=!plan.systemRank?`<button class="text-btn plan-remove" data-plan-remove="${index}" title="Remove from this intake. It isn’t in the patient’s record."><i data-lucide="trash-2"></i> Remove</button>`:'';
-  $('#planActions').innerHTML=`${removable}${hasResponse?`<button class="small-btn" data-plan-response="${index}"><i data-lucide="file-search"></i> View Response</button>`:''}<button class="small-btn" data-plan-check ${state.checkingPlan||state.checkingEligibility?'disabled':''} title="Checks ${plan.name} only">${state.checkingPlan?'<span class="spinner"></span> Checking…':`<i data-lucide="refresh-cw"></i> ${plan.check?.service===state.serviceType?'Re-check':'Check'} This Insurance`}</button>`;
+  $('#planActions').innerHTML=`${!plan.userAdded&&plan.docId?`<button type="button" class="text-btn ins-view-card" data-ins-preview="${index}"><i data-lucide="eye"></i> View Card</button>`:''}${removable}`;
+  // While this insurance's new card is extracting, its fields are read-only so edits aren't overwritten.
+  const extracting=planExtracting(plan,index);
+  $('#insurance-section .plan-detail').classList.toggle('is-extracting',Boolean(extracting));
+  $('#planAiNote').hidden=!extracting;$('#planAiNote').className='plan-ai-note ins-extracting-note';
+  $('#planAiNote').innerHTML=extracting?`<span class="spinner"></span><span>Extracting <b>${extracting}</b>. These details are read-only until it finishes.</span>`:'';
   const fixes=aiFixesFor(plan);
   const ecDiff=Object.fromEntries(conflicts.map(c=>[c.label,c]));
-  $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>`<label class="ins-field ${fixes[label]?'ai-fixed':''} ${ecDiff[label]?'ec-conflict':''} ${insRequiredFields.includes(label)&&!insFieldOf(plan,label)?'is-missing':''}"><span class="ins-label">${label}${insRequiredFields.includes(label)&&!insFieldOf(plan,label)?'<em class="miss-chip">Missing</em>':''}${fixes[label]?`<span class="ins-ai"><button type="button" class="ai-info" data-ins-ai="${label}" aria-label="Resolved by AI. View how AI resolved ${label}" title="Resolved by AI · view details" aria-expanded="false"><i data-lucide="sparkles"></i></button></span>`:''}</span>${label==='Relationship to insured'?`<select class="ins-input ins-select" data-plan-field="${fieldIndex}" aria-label="${label}"><option value="" ${!insRelationships.includes(value)?'selected':''}>Select relationship</option>${insRelationships.map(o=>`<option ${o===value?'selected':''}>${o}</option>`).join('')}</select>`:`<input class="ins-input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value.replace(/"/g,'&quot;')}" placeholder="Not provided" aria-label="${label}" autocomplete="off">`}${ecDiff[label]?`<span class="ec-diff"><span>EC response: <b>${ecDiff[label].ec}</b></span><button type="button" class="text-btn" data-ec-use="${fieldIndex}">Use ${ecDiff[label].ec}</button><button type="button" class="text-btn" data-ec-keep="${fieldIndex}">Keep ${ecDiff[label].intake}</button></span>`:''}</label>`).join('');
+  $('#insuranceFields').innerHTML=plan.fields.map(([label,value],fieldIndex)=>`<label data-field-label="${label}" class="ins-field ${fixes[label]?'ai-fixed':''} ${ecDiff[label]?'ec-conflict':''} ${(insRequiredFields.includes(label)&&!insFieldOf(plan,label))||(label==='Health insurance company'&&plan.payerUnmapped)?'is-missing':''}"><span class="ins-label">${label}${label==='Health insurance company'&&plan.payerUnmapped?'<em class="miss-chip">Not mapped</em>':insRequiredFields.includes(label)&&!insFieldOf(plan,label)?'<em class="miss-chip">Missing</em>':''}${fixes[label]?`<span class="ins-ai"><button type="button" class="ai-info" data-ins-ai="${label}" aria-label="Resolved by AI. View how AI resolved ${label}" title="Resolved by AI · view details" aria-expanded="false"><i data-lucide="sparkles"></i></button></span>`:''}</span>${label==='Health insurance company'&&plan.payerUnmapped?`<select class="ins-input ins-select" data-plan-field="${fieldIndex}" data-payer-map aria-label="Select the payer" ${extracting?'disabled':''}><option value="" selected>Select payer</option>${(payerOptions[plan.id]||[]).map(o=>`<option>${o}</option>`).join('')}</select><small class="ins-map-hint">Read from document: ${plan.payerRead||value}</small>`:label==='Relationship to insured'?`<select class="ins-input ins-select" data-plan-field="${fieldIndex}" aria-label="${label}" ${extracting?'disabled':''}><option value="" ${!insRelationships.includes(value)?'selected':''}>Select relationship</option>${insRelationships.map(o=>`<option ${o===value?'selected':''}>${o}</option>`).join('')}</select>`:`<input class="ins-input" data-plan-field="${fieldIndex}" value="${value==='Not provided'?'':value.replace(/"/g,'&quot;')}" placeholder="Not provided" aria-label="${label}" autocomplete="off" ${extracting?'disabled':''}>`}${ecDiff[label]?`<span class="ec-diff"><span>EC response: <b>${ecDiff[label].ec}</b></span><button type="button" class="text-btn" data-ec-use="${fieldIndex}">Use ${ecDiff[label].ec}</button><button type="button" class="text-btn" data-ec-keep="${fieldIndex}">Keep ${ecDiff[label].intake}</button></span>`:''}</label>`).join('');
   const missing=insurancePlans.reduce((n,p)=>n+insMissingFields(p).length,0);
   const pill=$('#insMissing');if(pill){pill.hidden=!missing;pill.innerHTML=missing?`<i data-lucide="circle-x"></i> ${missing} missing`:'';}
   renderEligibility();
@@ -929,12 +995,11 @@ function renderEligibility(){
   const allChecked=insurancePlans.every(plan=>plan.check?.service===state.serviceType);
   const button=$('#checkEligibility');
   const locked=false;   // the "are these all the plans?" step was removed; checks are always available
-  button.disabled=!insurancePlans.length||state.checkingEligibility||locked;
-  $('#serviceTrigger').disabled=locked;$('#serviceSuggest').classList.toggle('is-locked',locked);
-  button.classList.toggle('primary',!allChecked&&!state.checkingEligibility);
-  const n=insurancePlans.length;
-  button.innerHTML=state.checkingEligibility?'<span class="spinner"></span> Checking…':`<i data-lucide="${allChecked?'refresh-cw':'shield-check'}"></i> ${allChecked?'Re-check':'Check'} ${n===1?'Eligibility':`All Insurance (${n})`}`;
-  $('#eligibilityMeta').textContent=state.checkingEligibility?`Checking ${type.id} eligibility for all plans…`:'';
+  const toSend=insurancePlans.filter(plan=>planNeedsCall(plan));
+  const anyChecked=insurancePlans.some(plan=>planHasResult(plan));
+  button.disabled=!insurancePlans.length||state.checkingEligibility;
+  button.title='';
+  button.innerHTML=state.checkingEligibility?'<span class="spinner"></span> Checking…':`<i data-lucide="${anyChecked?'refresh-cw':'shield-check'}"></i> ${anyChecked?'Re-check Insurance':'Check Insurance'}`;
 
   renderCoverageConfirm();
   renderEcWhy();
@@ -958,7 +1023,7 @@ document.addEventListener('keydown',event=>{
 });
 // Second insurance layout: payer order on the left, the selected plan's details on the right, one eligibility check for all plans below.
 // Demo: Apple Health came in without the relationship to the insured, so it's filled in here like Gender in Patient Demographics.
-const insAlt={sel:0,menuOpen:false,drag:null,checklistOpen:0,missing:{medicaid:['Relationship to insured']},filled:{}};
+const insAlt={sel:0,menuOpen:false,drag:null,checklistOpen:0,missing:{},filled:{}};
 const insAltIsMissing=(plan,label)=>insAlt.missing[plan.id]?.includes(label);
 const insAltGaps=plan=>(insAlt.missing[plan.id]||[]).filter(label=>!insAlt.filled[plan.id]?.[label]).length;
 // View checklist: what to get right on insurance, in a drawer from the right.
@@ -974,6 +1039,43 @@ function renderInsChecklist(){
     return `<section class="ins-cl-card ${open?'open':''}"><button type="button" class="ins-cl-head" data-ins-cl="${index}" aria-expanded="${open}"><span class="ins-cl-icon"><i data-lucide="${icon}"></i></span><strong>${title}</strong><i class="ins-cl-chevron" data-lucide="chevron-down"></i></button>${open?`<p class="ins-cl-body">${body}</p>`:''}</section>`;}).join('');
   icons();
 }
+// "Go to fix": open that insurance in Part 1 and highlight the field to correct.
+document.addEventListener('click',event=>{
+  const fix=event.target.closest('[data-ins-fix]');if(!fix)return;
+  const [index,label]=fix.dataset.insFix.split('|');renderInsurance(+index);
+  const field=$(`#insuranceFields [data-field-label="${label}"]`);if(!field)return;
+  field.scrollIntoView({behavior:'smooth',block:'center'});
+  field.classList.remove('is-flash');void field.offsetWidth;field.classList.add('is-flash');
+  setTimeout(()=>field.querySelector('input,select')?.focus({preventScroll:true}),350);
+});
+// Check one insurance right after its details were edited (or it was added after the last check).
+async function checkOneInsurance(index){
+  const plan=insurancePlans[index];if(!plan||payerNotMapped(plan)||state.checkingEligibility)return;
+  const svc=state.serviceType;
+  state.checkingEligibility=true;state.checkingIds=new Set([plan.id]);renderEligibility();
+  await wait(900);
+  state.checkingEligibility=false;state.checkingIds=null;
+  const at=nowStamp();plan.ecSeen=true;plan.check={service:svc,at};plan.checkedServices={...plan.checkedServices,[svc]:at};plan.sig=planSig(plan);plan.cached=false;
+  state.insOpen=undefined;renderInsurance();
+  toast(`${plan.name}: ${insUndetermined(plan)?'payer couldn’t confirm it':plan.status==='inactive'?'inactive':plan.results[svc]?.eligible?`active · ${svc} covered`:`active · ${svc} not covered`}`);
+}
+document.addEventListener('click',event=>{const b=event.target.closest('[data-ins-check-one]');if(b){event.stopPropagation();checkOneInsurance(+b.dataset.insCheckOne);}});
+let ecDrag=null;
+$('#insEcRows').addEventListener('dragstart',event=>{const row=event.target.closest('[data-ec-drag]');if(!row)return;ecDrag=+row.dataset.ecDrag;row.classList.add('dragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',String(ecDrag));}catch(error){}});
+$('#insEcRows').addEventListener('dragover',event=>{
+  if(ecDrag===null)return;event.preventDefault();
+  const row=event.target.closest('[data-ec-drag]');$$('#insEcRows .ins-ec-item').forEach(item=>item.classList.remove('drop-above','drop-below'));
+  if(!row||+row.dataset.ecDrag===ecDrag)return;
+  const box=row.getBoundingClientRect();row.classList.add(event.clientY<box.top+box.height/2?'drop-above':'drop-below');
+});
+$('#insEcRows').addEventListener('drop',event=>{
+  event.preventDefault();const row=event.target.closest('[data-ec-drag]');if(ecDrag===null||!row){ecDrag=null;return;}
+  const from=ecDrag,target=+row.dataset.ecDrag,box=row.getBoundingClientRect(),below=event.clientY>=box.top+box.height/2;
+  const ids=currentOrder(),[moved]=ids.splice(from,1);let to=target+(below?1:0);if(from<to)to--;ids.splice(to,0,moved);ecDrag=null;
+  if(!sameOrder(ids,currentOrder()))setPlanOrder(ids,`${insurancePlans[from].name} moved to ${planRank(to).toLowerCase()}`,true);else renderInsurance();
+});
+$('#insEcRows').addEventListener('dragend',()=>{ecDrag=null;$$('#insEcRows .ins-ec-item').forEach(item=>item.classList.remove('dragging','drop-above','drop-below'));});
+document.addEventListener('click',event=>{const tab=event.target.closest('[data-response-tab]');if(tab)renderEligibilityResponse(+tab.dataset.responseTab);});
 function closeInsChecklist(){const drawer=$('#insChecklist');if(!drawer.open||drawer.classList.contains('is-closing'))return;drawer.classList.add('is-closing');setTimeout(()=>{drawer.classList.remove('is-closing');drawer.close();},200);}
 function renderInsuranceAlt(){
   const n=insurancePlans.length,svc=state.serviceType,type=serviceTypes.find(item=>item.id===svc),running=state.checkingEligibility,suggested=suggestedService();
@@ -983,11 +1085,26 @@ function renderInsuranceAlt(){
   const withResult=insurancePlans.filter(has),anyResult=withResult.length>0;
   const active=withResult.filter(plan=>plan.status!=='inactive'),covered=active.filter(plan=>plan.results[svc]?.eligible);
   const toSend=insurancePlans.filter(plan=>planNeedsCall(plan,svc));
-  // Toolbar: what the table says, then the service (AI suggested underneath) with Check Eligibility beside it.
-  const headline=running?`Checking ${svc} eligibility…`:!n?'No insurance yet':!anyResult?`${n} ${n===1?'plan':'plans'} · eligibility not checked yet`
-    :`${active.length} of ${n} plans active · ${covered.length} cover ${svc}${withResult.length<n?` · ${n-withResult.length} not checked`:''}`;
+  // Three steps: 1 verify the details, 2 check eligibility, 3 confirm the payer order. The first one not done is "Next".
+  const gapsTotal=insurancePlans.reduce((sum,item)=>sum+insAltGaps(item),0);
+  const done=[n>0&&Boolean(insAlt.verified)&&!gapsTotal,n>0&&anyResult&&!toSend.length&&!running,n>0&&Boolean(state.plansConfirmed)].map(Boolean);
+  const current=done.indexOf(false);
+  const stepState=i=>done[i]?'done':i===current?'current':'todo';
+  const steps=[
+    ['insStepVerify','Verify the details','Compare each plan with the insurance card: name, member ID, group number and plan dates.'],
+    ['insStepCheck','Check eligibility','The payer confirms the details are right and tells you if the patient has other insurance.'],
+    ['insStepOrder','Confirm the payer order','Who gets billed first. AI sorted the plans; drag them if the order is wrong.']
+  ];
+  steps.forEach(([id,title,desc],i)=>{const st=stepState(i);
+    $(`#${id}`).className=`ins-step is-${st}`;
+    $(`#${id}Head`).innerHTML=`<span class="ins-step-num">${done[i]?'<i data-lucide="check"></i>':i+1}</span><div class="ins-step-copy"><h4 id="${id}Title">${title}</h4><p>${desc}</p></div><span class="ins-step-state">${done[i]?'Done':i===current?'Next':'To do'}</span>`;});
+  $('#insAltProgress').innerHTML=!n?'':steps.map(([id,title],i)=>`<li class="is-${stepState(i)}"><a href="#${id}" data-ins-step="${id}"><span class="ins-progress-num">${done[i]?'<i data-lucide="check"></i>':i+1}</span><span>${title}</span></a></li>`).join('');
+  $('#insStepVerifyFoot').innerHTML=!n?'':gapsTotal
+    ?`<p class="ins-step-hint is-warn"><i data-lucide="circle-alert"></i> Add the ${gapsTotal} missing ${gapsTotal===1?'detail':'details'} to finish this step.</p><button type="button" class="small-btn" disabled><i data-lucide="check"></i> Details Are Correct</button>`
+    :done[0]?`<p class="ins-step-hint is-ok"><i data-lucide="circle-check"></i> You checked the details against the card.</p><button type="button" class="text-btn" data-ins-unverify>Undo</button>`
+    :`<p class="ins-step-hint"><i data-lucide="mouse-pointer-click"></i> Open a plan with the arrow to see and edit its details.</p><button type="button" class="small-btn ${current===0?'primary':''}" data-ins-verify><i data-lucide="check"></i> Details Are Correct</button>`;
   const checkLabel=!anyResult?'Check Eligibility':toSend.length?`Re-check ${toSend.length} ${toSend.length===1?'Plan':'Plans'}`:'Up to Date';
-  $('#insAltToolbar').innerHTML=!n?'':`<div class="cov-title"><h4>Plans &amp; Coverage</h4><p>${headline}</p></div>
+  $('#insAltToolbar').innerHTML=!n?'':`
     <div class="ins-tbl-service"><span class="suggest-label">Service</span>
       <div class="service-select"><button type="button" class="service-trigger" data-ins-alt-menu aria-haspopup="listbox" aria-expanded="${insAlt.menuOpen}"><i data-lucide="${type.icon}"></i><span>${type.id}</span><i class="service-chevron" data-lucide="chevron-down"></i></button>${insAlt.menuOpen?`<div class="service-menu" role="listbox">${serviceTypes.map(item=>`<button type="button" class="service-option ${item.id===svc?'selected':''}" role="option" aria-selected="${item.id===svc}" data-ins-alt-service="${item.id}"><i data-lucide="${item.icon}"></i><span><strong>${item.id}</strong><small>${item.description}</small></span>${item.id===svc?'<i class="service-check" data-lucide="check"></i>':''}</button>`).join('')}</div>`:''}</div>
       ${svc===suggested?'<span class="suggest-ai" title="Suggested from the prescription"><i data-lucide="sparkles"></i> AI suggested</span>':`<button type="button" class="text-btn suggest-ai" data-ins-alt-service="${suggested}"><i data-lucide="sparkles"></i> Use ${suggested}</button>`}
@@ -1020,14 +1137,30 @@ function renderInsuranceAlt(){
       </div>${open?`<div class="ins-row-detail"><div class="insurance-fields" data-alt-plan-fields="${index}">${fields}</div></div>`:''}</div>`;
   }).join('');
   $('#insAltPlans').innerHTML=!n?'<p class="empty-note">Add the patient’s insurance with “Add Insurance”.</p>':`<div class="ins-row ins-row-head" role="row"><span role="columnheader"><span class="sr-only">Details</span></span><span role="columnheader">Order</span><span role="columnheader">Plan</span><span role="columnheader">Status</span><span role="columnheader">${svc} coverage</span><span role="columnheader">Last check</span><span role="columnheader"><span class="sr-only">Reorder</span></span></div>${rows}`;
-  // Notes under the table: AI on inactive plans, and which plans a re-check would send.
+  // What the eligibility check answers. Before the check: the three questions. After: the payer's answers.
   const inactiveNames=withResult.filter(plan=>plan.status==='inactive').map(plan=>plan.name);
-  $('#insAltNotes').innerHTML=running||!anyResult?(!n||running?'':'<p class="ins-alt-why"><i data-lucide="shield-question"></i><span><b>Why check?</b> The payer confirms each plan is active, flags insurance you’re missing, and shows whether the services you’ll provide are covered, before you bill.</span></p>')
-    :`${inactiveNames.length?`<p class="cov-ai"><i data-lucide="sparkles"></i><span><b>AI:</b> ${inactiveNames.join(', ')} ${inactiveNames.length===1?'is':'are'} inactive and won’t be billed for this order.</span></p>`:''}`;
+  const conflicts=insurancePlans.flatMap((plan,i)=>insConflicts(plan).map(c=>({plan,i,c})));
+  const others=insOther();
+  const answer=(tone,icon,title,body='',action='')=>`<li class="ins-answer is-${tone}"><i data-lucide="${icon}"></i><span><b>${title}</b>${body?`<small>${body}</small>`:''}</span>${action}</li>`;
+  const answers=!n?'':running
+    ?answer('wait','loader','Asking the payer…',`Checking ${svc} eligibility for ${toSend.length||n} ${(toSend.length||n)===1?'plan':'plans'}.`)
+    :!anyResult
+    ?answer('ask','circle-dashed','Are the details correct?','The payer confirms the name, member ID and plan dates match its records.')
+      +answer('ask','circle-dashed','Does the patient have other insurance?','The payer tells you about plans that aren’t in this list yet.')
+      +answer('ask','circle-dashed',`Is each plan active and is ${svc} covered?`,'An inactive plan won’t pay, and active doesn’t always mean covered.')
+    :(conflicts.length
+      ?answer('warn','circle-alert',`${conflicts.length===1?'1 detail differs':`${conflicts.length} details differ`} from the payer’s records`,conflicts.map(x=>`${x.plan.name}: ${insLc(x.c.label)} is ${x.c.intake} here, ${x.c.ec} with the payer`).join('. ')+'. Fix it in step 1, then check again.',`<button type="button" class="text-btn" data-ins-open-plan="${conflicts[0].i}">Fix</button>`)
+      :answer('ok','circle-check','Details match the payer’s records'))
+     +(others.length
+      ?answer('warn','search-check','The payer lists other insurance',others.map(plan=>`${plan.name} mentions ${plan.otherCoverage.name}`).join('. ')+'. Add it if the patient still has it.',`<button type="button" class="text-btn" data-plan-response="${insurancePlans.indexOf(others[0])}">Review</button>`)
+      :answer('ok','circle-check','No other insurance found'))
+     +answer(covered.length?'ok':'warn',covered.length?'circle-check':'circle-alert',`${active.length} of ${n} ${n===1?'plan':'plans'} active · ${covered.length} ${covered.length===1?'covers':'cover'} ${svc}`,
+        [inactiveNames.length?`${inactiveNames.join(', ')} ${inactiveNames.length===1?'is':'are'} inactive and won’t be billed.`:'',withResult.length<n?`${n-withResult.length} not checked yet.`:''].filter(Boolean).join(' '));
+  $('#insAltNotes').innerHTML=answers?`<ul class="ins-answers">${answers}</ul>`:'';
   $('#insAltConfirm').innerHTML=n?payerOrderHtml():'';
-  const gaps=insurancePlans.reduce((sum,item)=>sum+insAltGaps(item),0),tag=$('#insAltStatusTag');
-  tag.className=`section-status ${gaps?'danger':'success'}`;
-  tag.innerHTML=gaps?`<i data-lucide="circle-x"></i> ${gaps} missing`:'<i data-lucide="circle-check"></i> Reviewed';
+  const tag=$('#insAltStatusTag'),doneCount=done.filter(Boolean).length;
+  tag.className=`section-status ${gapsTotal?'danger':doneCount===3?'success':''}`;
+  tag.innerHTML=!n?'':gapsTotal?`<i data-lucide="circle-x"></i> ${gapsTotal} missing`:doneCount===3?'<i data-lucide="circle-check"></i> Ready':`${doneCount} of 3 done`;
 }
 // Payer order: ask whether AI's order is right. Yes confirms; No opens an editor (arrows here, or drag rows in the table).
 function payerOrderHtml(){
@@ -1035,9 +1168,9 @@ function payerOrderHtml(){
   const inactive=plan=>planHasResult(plan,svc)&&plan.check?.service===svc&&plan.status==='inactive';
   const isAi=sameOrder(orderBy('aiRank'),currentOrder());
   if(state.plansConfirmed)return `<div class="po-done"><i data-lucide="circle-check"></i><b>Payer order confirmed</b><span class="po-inline">${plans.map((plan,i)=>`${i+1}. ${plan.name}`).join(' <i data-lucide="chevron-right"></i> ')}</span><button type="button" class="text-btn" data-order-edit>Change</button></div>`;
-  return `<div class="po-ask"><div class="po-head"><span class="po-icon"><i data-lucide="layers"></i></span><div><h4>Is this the right payer order?</h4><p>${isAi?'AI sorted the plans by coordination of benefits.':'You changed the order AI suggested.'} The primary is billed first. Not right? Drag the cards to reorder.</p></div>${isAi?'':'<button type="button" class="text-btn po-reset" data-order-ai><i data-lucide="sparkles"></i> Use AI Order</button>'}</div>
+  return `<div class="po-ask">
     <ol class="po-steps" id="poSteps">${plans.map((plan,i)=>`<li class="${inactive(plan)?'is-inactive':''}" draggable="true" data-po-drag="${i}" aria-label="${planRank(i)}: ${plan.name}. Drag to reorder."><span class="po-num">${i+1}</span><span class="po-step-copy"><small>${planRank(i)}${inactive(plan)?' · <em class="po-inactive">Inactive</em>':''}</small><b>${plan.name}</b>${plan.aiReason&&plan.aiRank===planRank(i)?`<span class="po-why"><i data-lucide="sparkles"></i> ${plan.aiReason}</span>`:''}</span><span class="po-grip" aria-hidden="true"><i data-lucide="grip-vertical"></i></span></li>`).join('')}</ol>
-    <div class="po-actions"><button type="button" class="small-btn primary" data-alt-confirm><i data-lucide="check"></i> Confirm Order</button></div></div>`;
+    <div class="po-actions"><span class="po-source">${isAi?'<i data-lucide="sparkles"></i> Sorted by AI using coordination of benefits':'You changed the order AI suggested.'}</span>${isAi?'':'<button type="button" class="text-btn po-reset" data-order-ai><i data-lucide="sparkles"></i> Use AI Order</button>'}<button type="button" class="small-btn primary" data-alt-confirm><i data-lucide="check"></i> Confirm Order</button></div></div>`;
 }
 // Payer order cards: drag one onto another's left or right half to move it there.
 let poDrag=null;
@@ -1065,6 +1198,10 @@ document.addEventListener('click',event=>{
   if(t.closest('[data-ins-checklist-close]')||t===$('#insChecklist')){closeInsChecklist();return;}
   const cl=t.closest('[data-ins-cl]');if(cl){const i=Number(cl.dataset.insCl);insAlt.checklistOpen=insAlt.checklistOpen===i?-1:i;renderInsChecklist();return;}
   const pick=t.closest('[data-alt-plan]');if(pick&&!t.closest('[data-plan-response],[data-alt-why],.ins-drag')&&(t.closest('.ins-expand')||!t.closest('button,a,input,select'))){const id=insurancePlans[Number(pick.dataset.altPlan)]?.id;insAlt.openId=insAlt.openId===id?null:id;insAltRefresh();return;}
+  if(t.closest('[data-ins-verify]')){insAlt.verified=true;insAlt.openId=null;insAltRefresh();toast('Details verified. Check eligibility next.');return;}
+  if(t.closest('[data-ins-unverify]')){insAlt.verified=false;insAltRefresh();return;}
+  const openPlan=t.closest('[data-ins-open-plan]');if(openPlan){insAlt.openId=insurancePlans[+openPlan.dataset.insOpenPlan]?.id;insAlt.verified=false;insAltRefresh();$('#insStepVerify').scrollIntoView({behavior:'smooth',block:'start'});return;}
+  const stepLink=t.closest('[data-ins-step]');if(stepLink){event.preventDefault();$(`#${stepLink.dataset.insStep}`).scrollIntoView({behavior:'smooth',block:'start'});return;}
   if(t.closest('[data-alt-confirm]')){state.plansConfirmed=true;renderInsurance();toast('Payer order confirmed');return;}
   if(t.closest('[data-order-edit]')){state.plansConfirmed=false;renderInsurance();return;}
   if(t.closest('[data-order-ai]')){setPlanOrder(orderBy('aiRank'),'Back to the order AI suggested',true);return;}
@@ -1076,6 +1213,7 @@ document.addEventListener('click',event=>{
 $('#insAltPlans').addEventListener('input',event=>{
   const input=event.target.closest('[data-alt-field]');if(!input)return;
   insurancePlans[insAlt.sel].fields[+input.dataset.altField][1]=input.value.trim()||'Not provided';
+  insAlt.verified=false;   // a changed detail needs another look
 });
 $('#insAltPlans').addEventListener('change',event=>{
   const pick=event.target.closest('[data-alt-missing]');
@@ -1135,7 +1273,10 @@ function insChecklistNeeded(){return state.phase==='review'&&insurancePlans.leng
 // Patient's relationship to the insured (subscriber), as used on claims.
 const insRelationships=['Self','Spouse','Child','Dependent','Life partner','Other'];
 const insRequiredFields=['Health insurance company','Relationship to insured','Member ID','Effective from'];
-const insMissingFields=plan=>insRequiredFields.filter(label=>!insFieldOf(plan,label));
+const insMissingFields=plan=>insRequiredFields.filter(label=>!insFieldOf(plan,label)||(label==='Health insurance company'&&plan.payerUnmapped));
+// Payer mapping: the name read from the document must match a payer in the system before eligibility can be checked.
+const payerOptions={medicaid:['Washington Apple Health (Medicaid) · WA HCA','Molina Healthcare of Washington · Apple Health','Amerigroup Washington · Apple Health','Coordinated Care of Washington · Apple Health']};
+const payerNotMapped=plan=>Boolean(plan.payerUnmapped);
 function insuranceGuideHtml(){
   const tips=[
     ['id-card','Details match the card','Name, date of birth, member ID, group number and plan dates match the latest card. One wrong character can get the claim rejected.'],
@@ -1147,19 +1288,71 @@ function insuranceGuideHtml(){
   const open=state.groupOpen?.insurance!==false;
   return `<div class="review-group ins-tips ${open?'':'is-collapsed'}" id="group-insurance">${groupHead('insurance','Insurance checklist','',open)}<div class="ins-tips-card" ${open?'':'hidden'}><p class="ins-tips-lead">Get these right to get paid on time.</p><ul class="ins-tips-list">${tips.map(([icon,title,body])=>`<li><details><summary><span class="ins-tip-icon"><i data-lucide="${icon}"></i></span><b>${title}</b><i class="ins-tip-chev" data-lucide="chevron-down"></i></summary><small>${body}</small></details></li>`).join('')}</ul><button type="button" class="text-btn ins-tips-go" data-jump-insurance>Go to Insurance <i data-lucide="arrow-right"></i></button></div></div>`;
 }
-// Inside "Check eligibility for": why a first-time user should run it.
+// ── Part 2 · Insurance summary: is each insurance active and does it cover the service? ──
+const fmtDate=value=>{const m=/^(\d\d)\/(\d\d)\/(\d{4})$/.exec(value||'');return m?new Date(+m[3],+m[1]-1,+m[2]).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';};
+const insChip=(tone,text)=>`<span class="ins-chip is-${tone}">${tone==='ok'?'<i data-lucide="check"></i>':tone==='bad'?'<i data-lucide="x"></i>':''}${text}</span>`;
+// A check error: the payer's records don't match a value on the card. Plain words, and which field to fix.
+const insCheckErrors=plan=>insConflicts(plan).map(c=>({label:c.label,text:`${c.label} doesn’t match the payer’s records. The card shows ${c.intake}; the payer has ${c.ec}.`}));
 function renderEcWhy(){
   const box=$('#ecWhy');if(!box)return;
-  const type=state.serviceType,checked=insurancePlans.length&&insurancePlans.every(plan=>plan.check?.service===type);
-  box.classList.toggle('is-checked',Boolean(checked));
-  box.innerHTML=checked
-    ?`<i data-lucide="circle-check"></i><span>Checked with each payer. Re-check after changing a plan or the service.</span>`
-    :`<i data-lucide="shield-question"></i><span><b>Why check?</b> The payer confirms each plan is active, flags insurance you’re missing, and shows whether the services you’ll provide are covered, before you bill.</span>`;
+  const svc=state.serviceType,n=insurancePlans.length,running=state.checkingEligibility;
+  if(!n){box.innerHTML='';$('#insEcRows').innerHTML='';$('#eligibilityMeta').innerHTML='';return;}
+  const list=names=>names.length<3?names.join(' and '):`${names.slice(0,-1).join(', ')}, and ${names[names.length-1]}`;
+  const has=plan=>planHasResult(plan,svc)&&plan.check?.service===svc;
+  const checked=insurancePlans.filter(has);
+  // 1. Insurance summary: what the patient has, and whether to run the eligibility check.
+  const fresh=insurancePlans.filter(plan=>!plan.systemRank&&!plan.userAdded);
+  const unmapped=insurancePlans.filter(payerNotMapped);
+  const missing=insurancePlans.filter(plan=>insMissingFields(plan).filter(label=>!(label==='Health insurance company'&&plan.payerUnmapped)).length);
+  const changed=checked.filter(plan=>planChanged(plan));
+  const s1=[n===1?`This patient has 1 insurance: ${insurancePlans[0].name}.`:`This patient has ${n} insurances: ${list(insurancePlans.map((plan,i)=>`${plan.name} (${planRank(i).toLowerCase()})`))}.`];
+  if(fresh.length)s1.push(`${list(fresh.map(plan=>plan.name))} ${fresh.length===1?'isn’t':'aren’t'} in the patient’s record yet.`);
+  if(unmapped.length)s1.push(`The system couldn’t match ${list(unmapped.map(plan=>plan.name))} to a payer. Select the payer so ${unmapped.length===1?'it':'they'} can be checked.`);
+  if(missing.length)s1.push(`${list(missing.map(plan=>plan.name))} ${missing.length===1?'is':'are'} missing required details.`);
+  if(n>1&&!insOrderConfirmed())s1.push('AI sorted the payer order. Confirm it in the eligibility check below.');
+  if(!checked.length)s1.push(n===1?`We recommend checking eligibility to confirm it’s active and covers ${svc}.`:`None have been checked yet. We recommend checking eligibility for all of them before ordering ${svc}.`);
+  else if(changed.length)s1.push(`${list(changed.map(plan=>plan.name))} changed since the last eligibility check. We recommend checking again.`);
+  else if(checked.length<n)s1.push(`We recommend checking eligibility for ${list(insurancePlans.filter(plan=>!has(plan)).map(plan=>plan.name))}.`);
+  box.innerHTML=s1.join(' ');
+  // 2. Eligibility check table, in payer order: Insurance | Status | <service>. Drag to reorder.
+  const multi=n>1,confirmed=insOrderConfirmed(),ai=insAiOrder(),aiMatches=ai&&sameOrder(ai,currentOrder());
+  // Before any eligibility check: just the payer order (AI sorted, why, drag, Confirm Order). Status and coverage columns come after a check.
+  const showEc=running||checked.length>0;
+
+  const rows=insurancePlans.map((plan,index)=>{
+    const checking=running&&state.checkingIds?.has(plan.id),done=has(plan)&&!checking;
+    const err=done?insConflicts(plan)[0]:null,inactive=plan.status==='inactive',res=plan.results[svc];
+    const fixed=done&&!err&&planChanged(plan);
+    const dash='<span class="ins-ec-dash">—</span>';
+    const status=checking?'<span class="ins-chip is-wait"><span class="spinner"></span>Checking</span>':!done||fixed?dash:err?insChip('bad','Error'):inactive?insChip('bad','Inactive'):insChip('ok','Active');
+    // Every service checked for this insurance, by name: green when covered, red when not.
+    const cover=checking||!done||fixed||err?dash:`<span class="ins-ec-svcs">${checkedServicesOf(plan).map(id=>{const ok=!inactive&&plan.results[id]?.eligible;return `<span class="ins-chip is-${ok?'ok':'bad'}" title="${id} ${ok?'covered':'not covered'}"><i data-lucide="${ok?'check':'x'}"></i>${id}</span>`;}).join('')}</span>`;
+    const note=err?`<div class="ins-ec-note is-error"><span>${err.label} doesn’t match the payer (card ${err.intake}, payer ${err.ec}).</span><button type="button" class="text-btn" data-ins-fix="${index}|${err.label}">Fix</button></div>`
+      :fixed?`<div class="ins-ec-note"><span>Details changed since the last check.</span><button type="button" class="text-btn" data-ins-check-one="${index}">Check this insurance</button></div>`
+      :!done&&!checking&&checked.length&&!payerNotMapped(plan)?`<div class="ins-ec-note"><span>Not checked yet.</span><button type="button" class="text-btn" data-ins-check-one="${index}">Check this insurance</button></div>`:'';
+    return `<div class="ins-ec-item ${err?'is-error':''}" ${multi?`draggable="true" data-ec-drag="${index}"`:''}><div class="ins-ec-row">${multi?'<span class="ins-ec-grip" title="Drag to change the payer order" aria-hidden="true"><i data-lucide="grip-vertical"></i></span>':'<span></span>'}<span class="ins-ec-name"><b>${plan.name}</b><small>${planRank(index)}${plan.aiReason?`<span class="plan-why-btn" role="button" tabindex="0" data-plan-why="${plan.id}" aria-label="Why AI ranks ${plan.name} ${plan.aiRank.toLowerCase()}" title="Why ${plan.aiRank.toLowerCase()}?"><i data-lucide="sparkles"></i></span>`:''}${(()=>{const at=plan.checkedServices?.[svc];if(!at||checking)return '';const [day,time]=at.split(' · ');return `<span class="ins-ec-when-row">· Checked ${day===todayStamp()?`today, ${time}`:at}</span>`;})()}</small></span>${showEc?`<span class="ins-ec-cell">${status}</span><span class="ins-ec-cell">${cover}</span>`:''}</div>${note}</div>`;
+  }).join('');
+  // Where the order came from: AI (hover the sparkle on a row for why), or the user.
+  // Payer order is confirmed right where it's shown: in the table header, next to where the order came from.
+  const orderSrc=!multi?'':confirmed?'':aiMatches?'<span class="ins-ec-ai-tag"><i data-lucide="sparkles"></i> AI sorted</span>':ai?'<span class="ins-ec-ai-tag is-user">Your order</span><button type="button" class="text-btn ins-ec-reset" data-cob-apply>Use AI order</button>':'';
+  const orderTag=!multi?'':confirmed?'<span class="ins-ec-confirmed"><i data-lucide="circle-check"></i> Order confirmed</span>':orderSrc;
+  const head=`<div class="ins-ec-row ins-ec-row-head"><span></span><span class="ins-ec-head-name">${showEc?'Insurance':'Payer order'} ${orderTag}</span>${showEc?'<span>Status</span><span>Service coverage</span>':''}</div>`;
+  $('#insEcRows').innerHTML=!multi&&!showEc?'':`<div class="ins-ec-table ${showEc?'':'is-order-only'}">${head}${multi&&!confirmed?`<div class="ins-ec-hint"><i data-lucide="sparkles"></i><span>${insAiOrder()?'AI sorted the insurance order.':'AI couldn’t sort the insurance order.'} Drag a row to change it.</span></div>`:''}${rows}</div>`;
+  // After the table: ask the user to confirm the payer order, then the eligibility check below.
+  $('#insEcOrder').innerHTML=!multi?''
+    :confirmed?`<p class="ins-po-done"><i data-lucide="circle-check"></i><span><b>Coordination of benefits confirmed.</b> ${insurancePlans.map(plan=>plan.name).join(' → ')}</span><button type="button" class="text-btn" data-cob-change>Change</button></p>`
+    :`<div class="ins-po-ask"><span class="ins-po-q"><b>Confirm the coordination of benefits</b><small>Are these all of the patient’s current insurances, in the right billing order? The primary is billed first, then the secondary. Ask about any other plan, such as a spouse’s plan or a new card, and add it with Add Insurance above.</small></span><span class="ins-po-actions"><button type="button" class="small-btn primary" data-cob-confirm><i data-lucide="check"></i> Yes, Confirm</button></span></div>`;
+  $('#insEcView').hidden=!checked.length||running;
+  // Last eligibility check for this service.
+  const stamps=insurancePlans.map(plan=>plan.checkedServices?.[svc]).filter(Boolean);
+  $('#insEcLast').innerHTML='';   // each row shows its own last check
+  const run=state.insRun;
+  $('#checkEligibility').classList.toggle('primary',!running&&insurancePlans.some(plan=>planNeedsCall(plan)));
 }
 document.addEventListener('click',event=>{
   if(!event.target.closest('[data-jump-insurance]'))return;
   if(innerWidth<=1180)setSourceDrawer(false,true);
-  const section=$('#insurance-alt-section');section?.scrollIntoView({behavior:'smooth',block:'start'});
+  const section=$('#insurance-section');section?.scrollIntoView({behavior:'smooth',block:'start'});
 });
 function renderCoverageConfirm(){
   const box=$('#coverageConfirm'),n=insurancePlans.length;
@@ -1201,9 +1394,11 @@ function suggestedService(){
 function renderServiceSuggest(allChecked){
   // AI pre-selects the service type from the prescribed items; a quiet tag says so, or offers it back if the user changed it.
   const suggested=suggestedService();
+  const codes=[...new Set(prescriptions.flatMap(rx=>rx.items.flatMap(item=>item.lines.map(line=>line.code).filter(Boolean))))];
+  const from=codes.length?` (${codes.slice(0,3).join(', ')}${codes.length>3?'…':''})`:'';
   $('#serviceSuggestAi').innerHTML=state.serviceType===suggested
-    ?`<span class="ai-suggested" title="Suggested by AI from the prescribed items"><i data-lucide="sparkles"></i> AI suggested</span>`
-    :`<button class="text-btn" data-use-suggested><i data-lucide="sparkles"></i> Use AI suggestion (${suggested})</button>`;
+    ?`<span class="ins-ai-chip" title="Suggested by AI from the prescribed items"><i data-lucide="sparkles"></i> AI suggested</span>`
+    :`<i data-lucide="info"></i> The prescribed items${from} are usually checked as ${suggested}. <button type="button" class="text-btn" data-use-suggested>Use ${suggested}</button>`;
 }
 
 // A plan's details at its last check. If they change, the saved result no longer applies.
@@ -1211,13 +1406,22 @@ const planSig=plan=>JSON.stringify(plan.fields);
 const planChanged=plan=>plan.sig!==undefined&&plan.sig!==planSig(plan);
 const planHasResult=(plan,svc=state.serviceType)=>Boolean(plan.checkedServices?.[svc]);
 // Only these go to the payer: never checked for this service, details changed, or inactive last time.
-const planNeedsCall=(plan,svc=state.serviceType)=>!planHasResult(plan,svc)||planChanged(plan)||plan.status==='inactive';
+const todayStamp=()=>new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+function planNeedsCall(plan,svc=state.serviceType){
+  if(!planHasResult(plan,svc))return 'never checked';
+  if(planChanged(plan))return 'updated';
+  if(insConflicts(plan).length)return 'had an error';
+  if(plan.checkedServices[svc].split(' · ')[0]!==todayStamp())return 'older result';
+  return '';   // Active and Eligible, unchanged, checked today: reuse it
+}
 async function checkEligibility(force=false){
-  const svc=state.serviceType,queue=insurancePlans.filter(plan=>force||planNeedsCall(plan,svc));
-  if(!queue.length){toast('Every plan is up to date. Nothing to send to the payer.');return;}
+  const svc=state.serviceType,queue=insurancePlans.filter(plan=>!payerNotMapped(plan)&&(force||planNeedsCall(plan,svc)));
+  if(!queue.length){toast('Every insurance is up to date for today.');return;}
   state.checkingEligibility=true;state.checkingIds=new Set(queue.map(plan=>plan.id));renderEligibility();
   await wait(900);
   const ids=state.checkingIds;state.checkingEligibility=false;state.checkingIds=null;
+  const reasons={updated:'updated','had an error':'re-checked after an error',inactive:'',"not eligible":'','older result':'','never checked':''};
+  state.insRun={checked:queue.map(plan=>({name:plan.name,reason:reasons[planNeedsCall(plan,svc)]||''})),reused:insurancePlans.filter(plan=>!ids.has(plan.id)).map(plan=>plan.name)};
   const at=nowStamp();
   insurancePlans.forEach(plan=>{
     plan.ecSeen=true;
@@ -1227,7 +1431,7 @@ async function checkEligibility(force=false){
   insAlt.lastRun={sent:ids.size,saved:insurancePlans.length-ids.size};
   renderInsurance();
   const saved=insurancePlans.length-ids.size;
-  if(saved){toast(`${svc} eligibility checked for ${ids.size} ${ids.size===1?'plan':'plans'} · ${saved} unchanged ${saved===1?'plan':'plans'} used the saved result`);return;}
+  if(saved){toast(`Checked ${ids.size} ${ids.size===1?'insurance':'insurances'} · reused today’s result for ${saved}`);return;}
   const covered=insurancePlans.filter(plan=>planResult(plan).eligible).length;
   const found=insurancePlans.filter(plan=>plan.otherCoverage).length;
   toast(`${state.serviceType} eligibility checked · ${covered} of ${insurancePlans.length} plans cover ${state.serviceType}${found?` · other insurance found on ${found} ${found===1?'plan':'plans'}`:''}`);
@@ -1251,7 +1455,8 @@ function issueCount(){ return [state.mobile,state.provider,state.product,state.p
 function reviewItems(){
   return [
     // Eligibility checks are optional, so an unchecked plan is not a review item.
-    insurancePlans.length&&!state.plansConfirmed&&{id:'insurance-alt-section',label:'Payer order not confirmed',detail:'AI sorted the plans. Check the order and confirm it',section:'Insurance',severity:'missing'},
+    insurancePlans.length&&!state.plansConfirmed&&{id:'insurance-section',label:'Verify coordination of benefits',detail:'Confirm all current insurances are listed and who pays first',section:'Insurance',severity:'missing'},
+    !prescriptions.length&&{id:'prescription-section',label:'Prescription not added',detail:'None was found in the documents · add one to continue',section:'Prescription',severity:'missing'},
     !state.mobile&&{id:'mobileField',label:'Mobile phone number',detail:'Digits look blurry',section:'Contact information',severity:'warning'},
     !state.provider&&{id:'providerField',label:'Ordering physician',detail:'Not found in the NPI registry · search to add',section:'Prescription 1',severity:'missing'},
     !state.product&&{id:'rx-rx1-item-1',label:'Medicare coverage for E0601',detail:'Choose the policy that applies',section:'Prescription 1',severity:'missing',tag:'Select'}
@@ -1269,7 +1474,7 @@ function manualGaps(){
     const id=rx.main?'prescription-section':`rx-section-${rx.id}`,section=`Prescription ${i+1}`;
     if(!rx.physician.npi)gaps.push({id,label:'Ordering physician',detail:'Search by name or NPI to add',section,severity:'missing'});
     if(!rx.icd.length)gaps.push({id,label:'Diagnosis (ICD-10)',detail:'Add at least one ICD-10 code',section,severity:'missing'});
-    if(!rx.items.some(item=>item.lines.some(l=>l.code)))gaps.push({id,label:'Prescribed items',detail:'Search a HCPCS code or bundle to add an item',section,severity:'missing'});
+    if(!rx.items.some(item=>item.lines.some(l=>l.code)))gaps.push({id,label:'Prescribed items',detail:'Search a HCPCS code to add an item',section,severity:'missing'});
   });
   return gaps;
 }
@@ -1311,7 +1516,7 @@ const requiredHint='Almost there. Finish these to unlock the next action.';
 // Once the intake is complete it opens read-only. Edit reopens it (back to In progress) until the user marks it complete again.
 function intakeLocked(){return state.phase==='review'&&!state.editingComplete&&!state.completing&&!(state.extractingDocs?.size)&&!reviewItems().some(item=>item.severity==='missing');}
 // Controls that only read (view details, open a document, see a response) stay usable while locked.
-const lockKeep='[data-open-checklist],[data-cob-why],[data-plan],[data-ai-info],[data-ins-ai],[data-plan-response],[data-plan],[data-plan-why],[data-item-docs],[data-open-plan-source],[data-guide-step],[data-on-file],[data-document],[data-doc],[data-gallery-doc],[data-preview-doc],.ai-info,.ins-step-btn';
+const lockKeep='[data-open-checklist],[data-cob-why],[data-plan],[data-ai-info],[data-ins-ai],[data-plan-response],[data-plan],[data-plan-why],[data-item-docs],[data-open-plan-source],[data-guide-step],[data-on-file],[data-document],[data-doc],[data-gallery-doc],[data-preview-doc],.ai-info,.ins-step-btn,[data-ins-row],#insEcView,[data-response-tab],[data-ins-preview]';
 function applyIntakeLock(){
   const area=$('.review-area');if(!area)return;
   const locked=intakeLocked();
@@ -1336,7 +1541,7 @@ document.addEventListener('click',event=>{
   if(event.target.closest('[data-edit-intake]')){state.editingComplete=true;renderReviewMenu();applyIntakeLock();toast('Intake is back in progress. Mark it complete when you’re done.');return;}
   if(event.target.closest('[data-mark-complete]')){
     if(reviewItems().some(item=>item.severity==='missing')){setSourceDrawer(true,true);setSideTab('review');return;}
-    state.editingComplete=false;state.justCompleted=true;renderReviewMenu();state.justCompleted=false;applyIntakeLock();toast('Intake complete. It’s read-only now.');
+    state.editingComplete=false;state.everCompleted=true;state.justCompleted=true;renderReviewMenu();if(typeof syncNextLock==='function')syncNextLock();state.justCompleted=false;applyIntakeLock();toast('Intake complete. It’s read-only now; select Edit to make changes.');
   }
 });
 function renderGuidance(){
@@ -1352,6 +1557,8 @@ function renderGuidance(){
   box.className=`header-notice ${required?'is-required':state.editingComplete?'is-editing':'is-clear'}${!required&&state.justCompleted?' notice-enter':''}`;
   box.innerHTML=required
     ?`<span class="notice-icon"><i data-lucide="list-checks"></i><b>${required}</b></span><span class="notice-copy"><strong>${requiredTitle(required)}</strong><small>${requiredHint}</small></span><button type="button" class="notice-btn" data-guidance-review>Review Now <i data-lucide="arrow-right"></i></button>`
+    :state.editingComplete&&!state.everCompleted
+    ?`<span class="notice-icon"><i data-lucide="check"></i></span><span class="notice-copy"><strong>Ready to complete</strong><small>${insurancePlans.length&&!insurancePlans.some(plan=>plan.check)?'All required items are done. Eligibility hasn’t been checked yet, but you can still complete the intake.':'All required items are done.'}</small></span><button type="button" class="notice-btn" data-mark-complete><i data-lucide="check"></i> Mark Complete</button>`
     :state.editingComplete
     ?`<span class="notice-icon"><i data-lucide="pencil"></i></span><span class="notice-copy"><strong>In progress · editing</strong><small>Make your changes, then mark the intake complete.</small></span><button type="button" class="notice-btn" data-mark-complete><i data-lucide="check"></i> Mark Complete</button>`
     :`<span class="notice-icon"><i data-lucide="check"></i></span><span class="notice-copy"><strong>Intake complete</strong><small>Read-only. Edit to make changes.</small></span><button type="button" class="notice-btn notice-btn-quiet" data-edit-intake><i data-lucide="pencil"></i> Edit</button><button type="button" class="notice-btn" data-guidance-next>See next steps <i data-lucide="arrow-right"></i></button>`;
@@ -1412,7 +1619,7 @@ function renderReviewMenu(){
   const rail=$('#railCount');rail.textContent=total;rail.hidden=!total;rail.classList.toggle('has-required',count>0);
   const completing=state.completing;
   const extractingN=state.extractingDocs?.size||0;
-  $('#reviewPopoverTitle').textContent=extractingN?'Back in draft · extracting new info':count?requiredTitle(count):completing?'All required items done':state.editingComplete?'In progress · editing':'Intake complete';
+  $('#reviewPopoverTitle').textContent=extractingN?'Back in draft · extracting new info':count?requiredTitle(count):completing?'All required items done':state.editingComplete?(state.everCompleted?'In progress · editing':'Ready to complete'):'Intake complete';
   $('.review-list-head').style.display=count||completing?'':'none';   // the completion card carries the title
   $('#reviewPopoverSub').hidden=!count;$('#reviewPopoverSub').textContent=extractingN?'New document info is being added to the intake.':required.every(item=>item.newInfoKey)?'Check what the new document added. Then the intake is complete again.':requiredHint;
   const row=item=>item.loading
@@ -1421,7 +1628,7 @@ function renderReviewMenu(){
   const optionalRows=[...warnings,...aiItems.map(item=>({...item,severity:'ai',tag:'AI resolved'}))];
   // Required review finished: celebrate the finished intake and point straight at what happens next.
   const plansN=insurancePlans.length,rxN=prescriptions.length;
-  const done=`<div class="review-done intake-ready"><span class="ready-badge"><i data-lucide="check"></i></span><b class="ready-title">${state.editingComplete?'In progress · editing':'Intake complete'}</b><small class="ready-sub">${plansN} insurance ${plansN===1?'plan':'plans'} · ${rxN} ${rxN===1?'prescription':'prescriptions'}</small></div>`
+  const done=`<div class="review-done intake-ready"><span class="ready-badge"><i data-lucide="check"></i></span><b class="ready-title">${state.editingComplete?(state.everCompleted?'In progress · editing':'Ready to complete'):'Intake complete'}</b><small class="ready-sub">${plansN} insurance ${plansN===1?'plan':'plans'} · ${rxN} ${rxN===1?'prescription':'prescriptions'}</small>${state.editingComplete?'<button type="button" class="primary-action ready-complete" data-mark-complete><i data-lucide="check"></i> Mark Complete</button>':''}</div>`
 ;
   const doneRow=(item,i)=>`<div class="review-item is-done" style="--i:${i}"><span class="ri-check" aria-hidden="true"><i data-lucide="check"></i></span><span class="review-copy"><b>${item.label}</b><small>Done</small></span></div>`;
   const ready=state.justCompleted?done.replace('review-done intake-ready','review-done intake-ready is-entering'):done;
@@ -1555,7 +1762,6 @@ document.addEventListener('click',event=>{
   if(target.dataset.plan!==undefined){
     const plan=insurancePlans[+target.dataset.plan];renderInsurance(+target.dataset.plan);
     // The card opens its source in the document panel: the insurance card on the right side, or the page it was read from.
-    if(plan&&!plan.userAdded&&plan.docId)openDocument(plan.docId,/·\s*back/i.test(plan.source)?'back':'front');
     return;
   }
   if(target.dataset.planEdit!==undefined){state.editingPlan=true;renderInsurance();$('[data-plan-field]')?.focus();return;}
@@ -1575,11 +1781,11 @@ document.addEventListener('click',event=>{
   if(target.dataset.otherSkip!==undefined){insurancePlans[+target.dataset.otherSkip].otherCoverage.resolved='unavailable';state.onHold=false;renderInsurance();toast('Marked not available. The intake can move on.');return;}
   if(target.dataset.otherHold!==undefined){state.onHold=true;renderInsurance();toast('Intake on hold until the patient’s other insurance is added.');return;}
   if(target.dataset.resumeHold!==undefined){state.onHold=false;renderInsurance();toast('Intake resumed.');return;}
-  if(target.dataset.cobApply!==undefined){const ai=insAiOrder();if(ai)setPlanOrder(ai,'AI order restored. Review it, then confirm.');return;}
-  if(target.dataset.cobConfirm!==undefined){state.cob={order:currentOrder().join(),at:nowStamp().split(' · ')[1]};renderInsurance();toast(`Payer order confirmed: ${insurancePlans.map(plan=>plan.name).join(', then ')}`);return;}
+  if(target.dataset.cobApply!==undefined){const ai=insAiOrder();if(ai)setPlanOrder(ai,'AI order restored. Review it, then confirm.',true);return;}
+  if(target.dataset.cobConfirm!==undefined){state.cob={order:currentOrder().join(),at:nowStamp().split(' · ')[1]};state.plansConfirmed=true;renderInsurance();toast(`Payer order confirmed: ${insurancePlans.map(plan=>plan.name).join(', then ')}`);return;}
   if(target.dataset.planRemove!==undefined){const [removed]=insurancePlans.splice(+target.dataset.planRemove,1);insurancePlans.forEach(plan=>{if(plan.otherCoverage?.resolved==='added'&&plan.otherCoverage.addedId===removed.id)delete plan.otherCoverage.resolved;});if(state.cob)state.cob=null;renderInsurance(0);toast(`${removed.name} removed from this intake`);return;}
   if(target.dataset.selfPay){state.selfPay=target.dataset.selfPay==='on';renderInsurance();toast(state.selfPay?'Marked as self-pay. No insurance review needed.':'Self-pay removed');return;}
-  if(target.dataset.cobChange!==undefined){state.cob=null;renderInsurance();return;}
+  if(target.dataset.cobChange!==undefined){state.cob=null;state.plansConfirmed=false;renderInsurance();return;}
   if(target.dataset.otherDismiss!==undefined){$('#eligibilityDialog').close();insurancePlans[+target.dataset.otherDismiss].otherCoverage.resolved='dismissed';renderInsurance();toast('Reviewed. The plan wasn’t added.');return;}
   if(target.dataset.otherUndo!==undefined){delete insurancePlans[+target.dataset.otherUndo].otherCoverage.resolved;renderInsurance();return;}
   if(target.dataset.ecUse!==undefined||target.dataset.ecKeep!==undefined){
@@ -1664,7 +1870,9 @@ document.addEventListener('click',event=>{
 
 $('#collapseSources').addEventListener('click',()=>setSourceDrawer(false));
 $('#expandReview').addEventListener('click',()=>setSourceDrawer(true));
-$('#checkEligibility').addEventListener('click',()=>checkEligibility());
+// Nothing changed since today's check? Re-check sends every insurance again.
+$('#checkEligibility').addEventListener('click',()=>checkEligibility(!insurancePlans.some(plan=>planNeedsCall(plan))));
+$('#insEcView').addEventListener('click',()=>{const i=insurancePlans.findIndex(plan=>planResult(plan));if(i>=0)renderEligibilityResponse(i);});
 const setServiceMenu=open=>{$('#serviceMenu').hidden=!open;$('#serviceTrigger').setAttribute('aria-expanded',open);if(open){renderServiceMenu();$('#serviceMenu .selected')?.focus();}};
 $('#serviceTrigger').addEventListener('click',()=>setServiceMenu($('#serviceMenu').hidden));
 $('#serviceMenu').addEventListener('click',event=>{const option=event.target.closest('[data-service-type]');if(!option)return;state.serviceType=option.dataset.serviceType;setServiceMenu(false);renderInsurance();$('#serviceTrigger').focus();});
@@ -1813,7 +2021,7 @@ state.extractingDocs=state.extractingDocs||new Map();   // id -> file name
 state.newInfo=state.newInfo||[];                         // [{key,file,label,detail,target}]
 function newInfoFor(file){
   const kind=docCategory(file);
-  if(kind==='Insurance card')return {target:'insurance-alt-section',detail:'Insurance details read from the card · check the insurance section'};
+  if(kind==='Insurance card')return {target:'insurance-section',detail:'Insurance details read from the card · check the insurance section'};
   if(kind==='Prescription')return {target:'prescriptions',detail:'Prescription details added · check the items and physician'};
   if(kind==='Photo ID'||kind==='Consent form')return {target:'demographics-section',detail:'Patient details compared with the record'};
   return {target:'prescriptions',detail:'Clinical details added as supporting documentation'};
@@ -1821,7 +2029,7 @@ function newInfoFor(file){
 function startExtractingDocs(files){
   if(state.phase!=='review')return;
   files.forEach(file=>state.extractingDocs.set(file.id,file.name));
-  renderReviewMenu();
+  renderInsurance();renderReviewMenu();
 }
 function finishExtractingDocs(files){
   files.forEach(file=>{
@@ -1849,27 +2057,21 @@ async function reextractDocuments(onlyId){
   done.forEach(file=>{file.processing=false;file.pendingExtract=false;file.meta='Extracted · Added to this intake';});
   state.reextracting=false;
   held.forEach(file=>state.extractingDocs.delete(file.id));
-  if(!done.length){renderDocuments();renderReviewMenu();if(held.length)openDupDialog();return;}
+  if(!done.length){renderDocuments();renderInsurance();renderReviewMenu();if(held.length)openDupDialog();return;}
   // Ask before feeding the new info into the intake: it can change what's already there.
   done.forEach(file=>{state.extractingDocs.delete(file.id);file.meta='Extracted · Waiting for you';});
   state.feedPending=done;
-  renderDocuments();renderReviewMenu();
+  renderDocuments();renderInsurance();renderReviewMenu();
   if(held.length)openDupDialog();else openFeedDialog();
 }
 // ---------- Feed extracted info into the intake ----------
+// No "Add the new information?" dialog: extracted info goes straight into the intake.
+// Fields that disagree still show both values so the user picks one on the intake.
 function openFeedDialog(){
-  const files=state.feedPending||[];if(!files.length||$('#feedDialog').open)return;
-  $('#feedTitle').textContent='Add the new information to this intake?';
-  $('#feedBody').innerHTML=`AI finished reading ${files.length===1?`<b>${files[0].name}</b>`:`<b>${files.length} documents</b>`}. Adding it may change information already on this intake.`;
-  $('#feedDialog').showModal();icons();
+  const files=state.feedPending||[];if(!files.length)return;
+  state.feedPending=null;feedExtraction(files);
 }
 $('#dupDialog').addEventListener('close',()=>openFeedDialog());
-$('#feedDialog').addEventListener('close',()=>{
-  const files=state.feedPending||[];state.feedPending=null;if(!files.length)return;
-  if($('#feedDialog').returnValue==='feed'){feedExtraction(files);return;}
-  files.forEach(file=>{file.meta='Extracted · Not added to this intake';});
-  renderDocuments();toast('The intake wasn’t changed. The document is kept with the intake.');
-});
 // Fields where the new document disagrees with the intake: both values stay until the user picks one.
 const dupFieldDemo=[
   {key:'email',cell:'emailField',label:'Email',incoming:'a.botosh@email.com'},
@@ -2160,8 +2362,8 @@ function itemHtml(rx,item){
 }
 function itemsHtml(rx){
   return `${rx.items.some(item=>item.kindAi!==false)?'<p class="ai-kind-note"><i data-lucide="sparkles"></i><span>AI grouped the prescribed products into <b>bundles</b> and <b>single items</b> and matched their HCPCS codes. Open an item’s codes to check them.</span></p>':''}<div class="rx-items">${rx.items.map(item=>itemHtml(rx,item)).join('')||'<p class="empty-note">No items yet</p>'}</div>
-    ${hcpcsSearchHtml(rx.id,{placeholder:'Search a HCPCS code or bundle, e.g. A7034, nasal mask or CPAP starter kit',button:'Add item'})}
-    <p class="inline-hint">Pick a HCPCS code or a bundle to add it as an item. To build your own bundle, choose Create a bundle in the search results.</p>`;
+    ${hcpcsSearchHtml(rx.id,{placeholder:'Search a HCPCS code, e.g. A7034 or nasal mask',button:'Add item'})}
+    <p class="inline-hint">Pick a HCPCS code to add it as an item.</p>`;
 }
 // Each prescription carries its own physician note.
 function noteHtml(rx){
@@ -2186,7 +2388,10 @@ function rxSectionHtml(rx,index){
 function renderPrescriptions(){
   $('#hcpcsOptions').innerHTML=Object.entries(hcpcsCatalog).map(([code,desc])=>`<option value="${code}">${desc}</option>`).join('');
   $('#icdOptions').innerHTML=Object.entries(icdCatalog).map(([code,desc])=>`<option value="${code}">${desc}</option>`).join('');
-  $('#prescriptions').innerHTML=prescriptions.map(rxSectionHtml).join('');
+  $('#prescriptions').innerHTML=prescriptions.length?prescriptions.map(rxSectionHtml).join('')
+    :`<section class="review-card rx-card" id="prescription-section"><div class="card-header"><div><span class="section-icon"><i data-lucide="notebook-tabs"></i></span><div><h3>Prescription</h3></div></div><span class="section-status">None on file</span></div>
+       <div class="sec-empty"><i data-lucide="file-x"></i><span><b>No prescription in this intake</b>None was found in the documents. Add the prescription to continue, or upload it in Documents.</span><button type="button" class="small-btn primary" data-add-rx-empty><i data-lucide="plus"></i> Add Prescription</button></div></section>`;
+  $('#addPrescription').hidden=!prescriptions.length;
   prescriptions.forEach(setRxStatus);
   icons();
 }
@@ -2270,12 +2475,11 @@ function matchBundles(query){
   return systemBundles.map(b=>{const hw=words(`${b.name} ${b.terms}`);const hits=qw.filter(w=>hw.some(h=>h===w||h.startsWith(w)||(w.length>3&&h.startsWith(w.slice(0,4))))).length;return {b,score:hits/qw.length};})
     .filter(r=>r.score>=.5).sort((a,b)=>b.score-a.score).slice(0,2).map(r=>r.b);
 }
-// Search results: bundles first, then single HCPCS codes.
-const searchMatches=query=>[...matchBundles(query).map(bundle=>({bundle})),...matchHcpcs(query)];
+// Search results: single HCPCS codes only.
+const searchMatches=query=>matchHcpcs(query);
 function suggestionsHtml(key,matches,active=0){
-  const query=suggestState[key]?.query||'';
-  const create=key.includes('|')?'':`<button type="button" class="ai-suggest-row ai-suggest-create" data-new-bundle="${key}"><span class="ai-suggest-name"><strong><i data-lucide="boxes"></i> Create a bundle${query?` “${escAttr(query)}”`:''}</strong><small>Name it, then add its HCPCS codes</small></span><span></span><span></span></button>`;
-  if(!matches.length)return `<div class="ai-suggest-empty"><i data-lucide="search-x"></i> No HCPCS code or bundle matches. Try a code like A7034 or different words.</div>${create}`;
+  const create='';
+  if(!matches.length)return `<div class="ai-suggest-empty"><i data-lucide="search-x"></i> No HCPCS code matches. Try a code like A7034 or different words.</div>${create}`;
   const row=(m,i)=>m.bundle
     ?`<button type="button" role="option" class="ai-suggest-row ${i===active?'active':''}" aria-selected="${i===active}" data-pick-bundle="${key}" data-bundle="${systemBundles.indexOf(m.bundle)}"><span class="ai-suggest-name"><strong>${m.bundle.name}</strong><small>${m.bundle.codes.join(', ')}</small></span><span class="hcpcs-badge bundle">Bundle · ${m.bundle.codes.length} codes</span><span></span></button>`
     :`<button type="button" role="option" class="ai-suggest-row ${i===active?'active':''}" aria-selected="${i===active}" data-pick-hcpcs="${key}" data-code="${m.code}"><span class="ai-suggest-name"><strong>${m.unverified?'Code not in catalog':hcpcsCatalog[m.code]}</strong>${m.unverified?'<small>Add only if you’ve verified the code</small>':''}</span><span class="hcpcs-badge">${m.code}</span><span></span></button>`;
@@ -2301,6 +2505,7 @@ function openItemDocs(rxId,itemId){
   if(!$('#itemDocsDialog').open)$('#itemDocsDialog').showModal();
 }
 function addPrescription(){
+  if(!prescriptions.length){$('#prescriptions').innerHTML='';$('#addPrescription').hidden=false;}   // replace the empty state
   const rx={id:`rx${Date.now()}`,docId:'',source:'',date:'',manual:true,physician:{first:'',last:'',npi:'',specialty:'',enrollment:[]},icd:[],items:[],note:{text:'',signed:true}};
   prescriptions.push(rx);
   $('#prescriptions').insertAdjacentHTML('beforeend',rxSectionHtml(rx,prescriptions.length-1));
@@ -2325,7 +2530,7 @@ $('#prescriptions').addEventListener('submit',event=>{
   if(form.dataset.hcpcsSearch){
     const key=form.dataset.hcpcsSearch,s=suggestState[key];
     const pick=s&&s.query===value&&s.matches.length?s.matches[s.active]:searchMatches(value)[0];
-    if(!pick){toast('No HCPCS code or bundle matches. Pick one from the list.');return;}
+    if(!pick){toast('No HCPCS code matches. Pick one from the list.');return;}
     if(pick.bundle)addBundle(key,pick.bundle);else addHcpcs(key,pick.code);
   }
 });
@@ -2453,8 +2658,10 @@ function paCardHtml(pa){
 }
 function syncPriorAuthMeta(){
   $('#priorAuthMeta').textContent=`${priorAuthList.length} ${priorAuthList.length===1?'authorization':'authorizations'}`;
-  if(!priorAuthList.length)$('#priorAuthList').innerHTML='<p class="empty-note pa-empty">No prior authorizations on file.</p>';
+  if(!priorAuthList.length)$('#priorAuthList').innerHTML='<div class="sec-empty pa-empty"><i data-lucide="file-x"></i><span><b>No prior authorization on file</b>None was found in the documents. Add one if an item on the prescription needs it.</span></div>';
   else $('.pa-empty')?.remove();
+  const st=$('#prior-auth-section .section-status');if(st){st.className=`section-status ${priorAuthList.length?'success':''}`;st.innerHTML=priorAuthList.length?'<i data-lucide="circle-check"></i> Reviewed':'None on file';}
+  if(typeof icons==='function')icons();
   if(typeof refreshItemDocs==='function'&&$('[data-items]'))refreshItemDocs();
 }
 function renderPriorAuths(){$('#priorAuthList').innerHTML=priorAuthList.map(paCardHtml).join('');syncPriorAuthMeta();icons();}
@@ -2499,19 +2706,19 @@ function precheckSummary(results){const warnings=results.filter(r=>r.status==='w
 function renderPrecheck(){
   const results=state.precheck,section=$('#precheckResult');
   section.hidden=!results;if(!results)return;
-  section.innerHTML=`<header><span class="pill ${results.some(r=>r.status==='warn')?'warning':'success'}"><i data-lucide="${results.some(r=>r.status==='warn')?'triangle-alert':'circle-check'}"></i> ${precheckSummary(results)}</span><h3 id="precheckTitle">Pre-Check Results</h3><small>Run ${state.precheckAt}</small></header><ul>${results.map(r=>`<li class="${r.status}"><i data-lucide="${r.status==='pass'?'circle-check':'triangle-alert'}"></i><span><b>${r.title}</b><small>${r.detail}</small></span></li>`).join('')}</ul>`;
+  section.innerHTML=`<header><span class="pill ${results.some(r=>r.status==='warn')?'warning':'success'}"><i data-lucide="${results.some(r=>r.status==='warn')?'triangle-alert':'circle-check'}"></i> ${precheckSummary(results)}</span><h3 id="precheckTitle">Order Readiness</h3><small>Run ${state.precheckAt}</small></header><ul>${results.map(r=>`<li class="${r.status}"><i data-lucide="${r.status==='pass'?'circle-check':'triangle-alert'}"></i><span><b>${r.title}</b><small>${r.detail}</small></span></li>`).join('')}</ul>`;
   icons();
 }
 async function runPrecheck(button){
-  button.disabled=true;button.innerHTML='<span class="spinner"></span> Running pre-check…';
+  button.disabled=true;button.innerHTML='<span class="spinner"></span> Checking readiness…';
   await wait(1200);
   state.precheck=precheckResults();state.precheckAt='just now';
   renderPrecheck();
-  $('#nextActionTitle').textContent='Work Queue';
-  $('#nextActionReason').textContent=`Pre-check ${precheckSummary(state.precheck).toLowerCase()}. Send it to the Work Queue to create the orders, refills and appointments.`;
-  button.disabled=false;button.innerHTML='<i data-lucide="arrow-right"></i> Work Queue';button.dataset.postAction='Work Queue';
-  $('#otherActionButtons').innerHTML='<button class="secondary-action compact" data-post-action="Run pre-check again">Run Pre-Check Again</button>';
-  icons();toast(`Pre-check ${precheckSummary(state.precheck).toLowerCase()}`);
+  $('#nextActionTitle').textContent='Create order';
+  $('#nextActionReason').textContent=`Readiness check: ${precheckSummary(state.precheck).toLowerCase()}. Create the orders next, or see what needs attention first.`;
+  button.disabled=false;button.innerHTML='<i data-lucide="arrow-right"></i> Create Order';button.dataset.postAction='Create order';
+  $('#otherActionButtons').innerHTML='<button class="secondary-action compact" data-post-action="Check readiness again">Check Readiness Again</button>';
+  icons();toast(`Readiness check: ${precheckSummary(state.precheck).toLowerCase()}`);
   $('#precheckResult').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 // Physician details as shown in the review, carried to the pre-check.
@@ -2562,8 +2769,9 @@ function createOrder(){
 function handlePostAction(action,button){
   const left=requiredReviewsLeft();
   if(left){openReviewGate(left);return;}
-  if(action==='Start pre-check'||action==='Run pre-check again'){try{sessionStorage.removeItem('signeticIntakeFull');sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(intakeSnapshot()));}catch(error){}location.href='precheck.html';return;}
-  if(action==='Work Queue'||action==='Work queue'||action==='Start fulfillment'||action==='Create order'||action==='Create order without pre-check'){startFulfillment();return;}
+  if(action==='Check order readiness'||action==='Check readiness again'||action==='Start pre-check'||action==='Run pre-check again'){try{sessionStorage.removeItem('signeticIntakeFull');sessionStorage.setItem('signeticIntakeOrder',JSON.stringify(intakeSnapshot()));}catch(error){}location.href='precheck.html';return;}
+  if(action==='View prescriptions'||action==='Intake history'){location.href='patient-record.html?tab=intakes&from=intake';return;}
+  if(action==='Go to needs attention'||action==='Go to patient to-dos'||action==='Work Queue'||action==='Work queue'||action==='Start fulfillment'||action==='Create order'||action==='Create order without pre-check'){startFulfillment();return;}
   if(action==='Schedule setup appointment'){toast('Setup appointment selected · opens scheduling');return;}
   toast(`${action} selected`);
 }
@@ -2611,6 +2819,8 @@ renderDocuments();
 renderDuplicateFindings();
 renderPatientMatches();
 renderInsurance();
+(function(){const e=(new URLSearchParams(location.search).get('empty')||'').split(',');if(e.includes('rx')){prescriptions.splice(0);state.provider=true;state.product=true;}if(e.includes('pa'))priorAuthList.splice(0);})();
+document.addEventListener('click',event=>{if(event.target.closest('[data-add-rx-empty]'))addPrescription();});
 renderPrescriptions();
 renderPriorAuths();
 enableInlineEditing();
@@ -2695,7 +2905,7 @@ function openChecklist(){
     ['package-check','Covers the services','Active doesn’t mean covered. Make sure the insurance covers the services and items the patient will receive.']
   ];
   // Everything visible at once: a short list to read top to bottom, no expanding.
-  $('#insChecklistBody').innerHTML=`<ol class="ins-ck-list">${tips.map(([icon,title,body])=>`<li><span class="ins-ck-icon"><i data-lucide="${icon}"></i></span><div><b>${title}</b><p>${body}</p></div></li>`).join('')}</ol>`;
+  $('#insChecklistDrawerBody').innerHTML=`<ol class="ins-ck-list">${tips.map(([icon,title,body])=>`<li><span class="ins-ck-icon"><i data-lucide="${icon}"></i></span><div><b>${title}</b><p>${body}</p></div></li>`).join('')}</ol>`;
   $('#insChecklistScrim').hidden=false;$('#insChecklistDrawer').hidden=false;icons();
   $('#insChecklistDrawer [data-close-checklist]').focus();
 }
@@ -2721,7 +2931,9 @@ document.addEventListener('click',event=>{
 let dragPlan=null;
 $('#insuranceFields').addEventListener('input',event=>{
   const input=event.target.closest('[data-plan-field]');if(!input)return;
-  insurancePlans[state.currentPlan].fields[+input.dataset.planField][1]=input.value.trim()||'Not provided';
+  const plan=insurancePlans[state.currentPlan];
+  if(input.dataset.payerMap!==undefined){if(!input.value)return;plan.payerRead=plan.payerRead||plan.fields[+input.dataset.planField][1];plan.payerUnmapped=false;}
+  plan.fields[+input.dataset.planField][1]=input.value.trim()||'Not provided';
 });
 $('#insuranceFields').addEventListener('change',event=>{if(event.target.closest('[data-plan-field]'))renderInsurance();});
 $('#insuranceFields').addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.matches('[data-plan-field]'))event.target.blur();});
@@ -2735,17 +2947,17 @@ $('#planList').addEventListener('drop',event=>{
   let to=target+(below?1:0);if(dragPlan<to)to--;
   ids.splice(to,0,moved);
   const name=insurancePlans[dragPlan].name;dragPlan=null;
-  if(!sameOrder(ids,currentOrder()))setPlanOrder(ids,`${name} moved to ${planRank(to).toLowerCase()}`);else renderPlanList();
+  if(!sameOrder(ids,currentOrder()))setPlanOrder(ids,`${name} moved to ${planRank(to).toLowerCase()}`,true);else renderPlanList();
 });
 document.addEventListener('click',event=>{const side=event.target.closest('[data-card-side]');if(side)setCardSide(side.dataset.cardSide);});
 $('#planList').addEventListener('dragend',()=>{dragPlan=null;$$('.plan-row').forEach(item=>item.classList.remove('dragging','drop-above','drop-below'));});
 $('#planList').addEventListener('keydown',event=>{
-  if(!event.altKey||(event.key!=='ArrowUp'&&event.key!=='ArrowDown')||insOrderConfirmed())return;
+  return;   // reordering happens in the eligibility check table
   const button=event.target.closest('[data-plan]');if(!button)return;
   event.preventDefault();const from=+button.dataset.plan,to=from+(event.key==='ArrowUp'?-1:1);
   if(to<0||to>=insurancePlans.length)return;
   const ids=currentOrder();[ids[from],ids[to]]=[ids[to],ids[from]];
-  state.currentPlan=from;setPlanOrder(ids,`${insurancePlans[from].name} moved to ${planRank(to).toLowerCase()}`);
+  state.currentPlan=from;setPlanOrder(ids,`${insurancePlans[from].name} moved to ${planRank(to).toLowerCase()}`,true);
   $(`[data-plan="${to}"]`)?.focus();
 });
 
@@ -2788,9 +3000,9 @@ $('#addPlanForm').addEventListener('submit',event=>{
   insurancePlans.push(plan);ids.splice(position,0,plan.id);state.selfPay=false;
   if(state.pendingOther){state.pendingOther.otherCoverage.resolved='added';state.pendingOther.otherCoverage.addedId=plan.id;state.pendingOther=null;state.onHold=false;}
   $('#addPlanDialog').close();
-  state.currentPlan=position;setPlanOrder(ids);state.currentPlan=position;renderInsurance(position);
+  state.currentPlan=position;setPlanOrder(ids,'',true);state.currentPlan=position;renderInsurance(position);
   toast(`${plan.name} added as ${planRank(position).toLowerCase()} coverage`);
-  if(form.checkNow.checked)checkPlanEligibility();
+
 });
 
 // ---------- Manual intake: pick the patient, then type the prescription (no documents, no AI extraction) ----------
@@ -2881,14 +3093,14 @@ $('#prescriptions').addEventListener('change',refreshRxStatus);
     load();state.extractionComplete=true;state.patientResolved=true;state.patientLinked=true;state.knownPatient='ashlynn';
     setPhase('review');
     if(screen==='review-new'){[...extraUploadBatches[0],...extraUploadBatches[1]].forEach(file=>documents.push({...file,meta:'Extracting…',pendingExtract:true,processing:true,uploadedAt:todayLabel()}));setViewerTab('files');setTimeout(()=>reextractDocuments(),400);}
-    if(['review-done','complete','complete-ready','complete-stale'].includes(screen))state.cob={order:currentOrder().join(),at:'9:42 AM'};
+    if(['review-done','complete','complete-ready','complete-stale'].includes(screen))state.cob={order:currentOrder().join(),at:'9:42 AM'};state.plansConfirmed=true;
     if(['review-done','complete-ready','complete-stale'].includes(screen)){
       // Demo: the two required items (gender, ordering physician) are already filled in.
       $('#genderInput').value='Female';if($('#mobileInput'))$('#mobileInput').value='(415) 220-8841';$('#toast').classList.remove('show');
     }
     if(screen==='complete-stale')state.nextStale=true;
     updateProgress();renderDocuments();
-    if(screen.startsWith('complete'))showPostIntake();
+    if(screen.startsWith('complete')){state.editingComplete=false;state.everCompleted=true;showPostIntake();}
     if(new URLSearchParams(location.search).get('side')==='review'){setSourceDrawer(true,true);setSideTab('review');}
   }
 })();
@@ -3021,3 +3233,10 @@ document.addEventListener('click',event=>{
   renderDocuments();updateProgress();
   openDupDialog();
 });
+
+// Preview an insurance card on purpose (eye icon or View Card), not by selecting the insurance.
+document.addEventListener('click',event=>{
+  const b=event.target.closest('[data-ins-preview]');if(!b)return;
+  event.stopPropagation();event.preventDefault();
+  const plan=insurancePlans[+b.dataset.insPreview];if(plan?.docId)openDocument(plan.docId,/·\s*back/i.test(plan.source)?'back':'front');
+},true);

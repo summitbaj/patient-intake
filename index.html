@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="fluent/fluent-tokens.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-modern.css">
-  <link rel="stylesheet" href="upload-start.css">
+  <link rel="stylesheet" href="upload-start.css?v=20261106n">
   <link rel="stylesheet" href="past-intakes.css">
   <link rel="stylesheet" href="fluent/fluent-components.css">
 </head>
@@ -101,7 +101,7 @@
       <button class="review-collapsed-tab" id="expandReview" aria-label="Open actions" title="Open actions"><i data-lucide="panel-left-open"></i><span>Action</span><b id="railCount" hidden>0</b></button>
       <div class="viewer-tabs side-tabs" role="tablist" aria-label="Actions sidebar">
         <button role="tab" id="tabReview" data-side-tab="review" aria-selected="true" aria-controls="reviewList"><i data-lucide="list-checks"></i> Action <b id="reviewTabCount">0</b></button>
-        <button role="tab" id="tabHistory" data-side-tab="history" aria-selected="false" aria-controls="historyList"><i data-lucide="history"></i> Past Intakes <b id="historyTabCount">0</b></button>
+        <button role="tab" id="tabHistory" data-side-tab="history" aria-selected="false" aria-controls="historyList" hidden><i data-lucide="history"></i> Past Intakes <b id="historyTabCount">0</b></button>
         <button class="icon-btn collapse-btn" id="collapseSources" aria-label="Close actions" title="Close actions"><i data-lucide="panel-left-close"></i></button>
       </div>
       <div class="source-content history-list" id="historyList" role="tabpanel" aria-labelledby="tabHistory" hidden></div>
@@ -115,6 +115,7 @@
             <span class="recommendation-label"><i data-lucide="sparkles"></i> Recommended next</span>
             <h3 id="nextActionTitle"></h3>
             <p id="nextActionReason"></p>
+            <div class="next-svc-list" id="nextServiceList"></div>
             <button class="primary-action next-action-primary" id="recommendedAction" data-post-action></button>
           </section>
           <section class="precheck-result" id="precheckResult" aria-labelledby="precheckTitle" hidden></section>
@@ -144,20 +145,20 @@
       <section class="review-card" id="contact-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="contact"></i></span><div><h3>Contact Information</h3><p>7 of 8 fields complete</p></div></div><span class="section-status warning"><i data-lucide="triangle-alert"></i> 1 needs review</span></div>
         <div class="data-group"><div class="compact-fields">
-          <div id="emailField"><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence">AI resolved</em><button type="button" class="ai-info" data-ai-info aria-label="How AI resolved mobile number" aria-expanded="false"><i data-lucide="info"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div id="homePhoneField"><span>Home phone number</span><strong>(206) 555-0142</strong></div>
+          <div id="emailField"><span>Email</span><strong>ashlynn.botosh@email.com</strong></div><div class="ai-cell" id="mobileField"><span class="cell-label">Mobile number<em class="ai-chip confidence ai-confidence" hidden>Edited</em><button type="button" class="ai-info" data-ai-info aria-label="Resolved by AI. View how AI resolved mobile number" title="Resolved by AI · view details" aria-expanded="false"><i data-lucide="sparkles"></i></button></span><strong id="mobileValue">(415) 220-8841</strong></div><div id="homePhoneField"><span>Home phone number</span><strong>(206) 555-0142</strong></div>
           <div class="wide"><span>Street address</span><strong>1234 Healthways Blvd, Suite 200</strong></div>
           <div><span>City</span><strong>Seattle</strong></div><div><span>State/Province</span><strong>WA</strong></div>
           <div><span>ZIP code</span><strong>98101</strong></div>
         </div></div>
       </section>
 
-      <section class="review-card" id="insurance-section" hidden>
+      <section class="review-card" id="insurance-section">
         <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3><p id="insuranceMeta">3 coverage plans</p></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on File</button><button type="button" class="text-btn header-link" id="addPlan"><i data-lucide="plus"></i> Add Insurance</button></div><span class="section-status danger" id="insMissing" hidden></span></div></div>
-        <div class="ins-intro-row"><p class="ins-intro">Accurate, up-to-date insurance helps reduce claim denials and reimbursement delays. Review every known plan, confirm the payer order, and verify coverage for the date of service and the services being provided.</p><button type="button" class="text-btn ins-checklist-link" id="insChecklistLink" data-open-checklist><i data-lucide="list-checks"></i> View checklist</button></div>
+        <div class="ins-intro-row"><p class="ins-intro"><i data-lucide="list-checks"></i><span>Accurate, up-to-date insurance prevents claim denials and payment delays. Before you continue, make sure every plan is captured, in the right order, and active for this service. <button type="button" class="text-btn ins-checklist-link" id="insChecklistLink" data-open-checklist>See the 5 things to check <i data-lucide="arrow-right"></i></button></span></p></div>
         <div class="ins-found-list" id="insFound" hidden></div>
         <div class="ins-empty-state" id="insEmpty" hidden></div>
         <div class="insurance-workspace">
-          <aside class="plan-list" id="insOrder" aria-label="Payer order"><p class="plan-list-head"><span>Payer order</span><span class="pill neutral" id="orderSource">Not confirmed</span></p><div id="planList" role="list"></div><div class="order-hint cob-panel" id="orderNotice"></div></aside>
+          <aside class="plan-list" id="insOrder" aria-label="Insurances"><p class="plan-list-head"><span>Insurances</span><span class="pill neutral" id="orderSource" hidden></span></p><div id="planList" role="list"></div><div class="order-hint cob-panel" id="orderNotice"></div></aside>
           <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
             <p class="plan-discovered" id="planDiscovered" hidden></p>
             <p class="plan-ai-note" id="planAiNote" hidden></p>
@@ -165,32 +166,71 @@
           </div>
         </div>
         <div class="coverage-confirm" id="coverageConfirm"></div>
-        <div class="service-suggest" id="serviceSuggest">
-          <span class="suggest-label" id="serviceSuggestText">Check eligibility for</span>
-          <div class="service-select">
-            <span class="sr-only" id="serviceTypeLabel">Service type</span>
-            <button class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
-            <div class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></div>
+        <!-- Under the plans: 1) a short AI summary of the patient's insurance, 2) the eligibility check and its results. -->
+        <div class="ins-below" id="insSummary">
+          <div class="ins-ec" id="serviceSuggest">
+            <div class="ins-ec-head">
+              <b id="serviceSuggestText">Eligibility check</b>
+              <small>Confirms each insurance is active and covers the service, and that the details match the payer’s records. Checking before you order helps prevent claim denials and payment delays.</small>
+            </div>
+            <div id="insEcRows"></div>
+            <div class="ins-ai ins-ai-after">
+              <span class="ins-ai-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
+              <div class="ins-ai-body"><b>Insurance summary</b><p id="ecWhy"></p></div>
+            </div>
+            <div class="ins-ec-foot">
+              <div class="ins-ec-order" id="insEcOrder"></div>
+            </div>
+            <div class="ins-ec-run">
+              <p class="ins-ec-run-why"><b>Check eligibility</b>Make sure the right insurance is on file: each plan is active and covers the service. Checking before you order helps prevent claim denials.</p>
+              <div class="ins-ec-service">
+                <label class="ins-ec-service-label" id="serviceTypeLabel">Service</label>
+                <span class="service-select">
+                  <button type="button" class="service-trigger" id="serviceTrigger" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="serviceTypeLabel serviceTrigger"><i data-lucide="package"></i><span id="serviceTriggerText">DME</span><i class="service-chevron" data-lucide="chevron-down"></i></button>
+                  <span class="service-menu" id="serviceMenu" role="listbox" aria-labelledby="serviceTypeLabel" hidden></span>
+                </span>
+                <span class="ins-ec-service-hint" id="serviceSuggestAi"></span>
+              </div>
+              <div class="ins-ec-buttons">
+                <span class="ins-ec-last" id="insEcLast"></span>
+                <button type="button" class="text-btn ins-ec-viewlink" id="insEcView" hidden>View response</button>
+                <button type="button" class="small-btn primary" id="checkEligibility"><i data-lucide="shield-check"></i> Check Insurance</button>
+              </div>
+            </div>
+            <p id="eligibilityMeta" hidden></p>
           </div>
-          <span class="suggest-ai" id="serviceSuggestAi"></span>
-          <span class="eligibility-meta" id="eligibilityMeta"></span>
-          <button class="small-btn" id="checkEligibility" disabled><i data-lucide="refresh-cw"></i> Check Eligibility</button>
-          <div class="ec-why" id="ecWhy"></div>
         </div>
         <div class="hold-banner" id="holdBanner" hidden></div>
         <div class="elig-summary" id="eligSummary" hidden></div>
       </section>
 
-      <section class="review-card ins-alt-card" id="insurance-alt-section">
+      <section class="review-card ins-alt-card" id="insurance-alt-section" hidden>
         <div class="card-header"><div><span class="section-icon"><i data-lucide="shield-check"></i></span><div><h3>Insurance Information</h3></div></div><div class="card-header-end"><div class="card-header-links"><button type="button" class="text-btn header-link" data-on-file><i data-lucide="id-card"></i> Insurance on File</button><button type="button" class="text-btn header-link" data-ins-alt-add><i data-lucide="plus"></i> Add Insurance</button></div><span class="section-status" id="insAltStatusTag"></span></div></div>
         <div class="ins-alt-intro">
-          <p>Accurate, up-to-date insurance helps reduce claim denials and reimbursement delays. Review every known plan, confirm the payer order, and verify coverage for the date of service and the services being provided.</p><button type="button" class="text-btn ins-alt-checklist-link" data-ins-alt-checklist aria-haspopup="dialog" aria-controls="insChecklist"><i data-lucide="list-checks"></i> View checklist</button>
+          <p>Three steps to get the insurance right, so claims get paid on time.</p><button type="button" class="text-btn ins-alt-checklist-link" data-ins-alt-checklist aria-haspopup="dialog" aria-controls="insChecklist"><i data-lucide="list-checks"></i> View checklist</button>
         </div>
+        <ol class="ins-progress" id="insAltProgress" aria-label="Insurance steps"></ol>
         <div class="ins-alt-list">
-          <div class="ins-tbl-bar" id="insAltToolbar"></div>
-          <div class="ins-tbl" id="insAltPlans" role="table" aria-label="Insurance plans in payer order"></div>
-          <div class="ins-tbl-notes" id="insAltNotes"></div>
-          <div class="ins-alt-confirm" id="insAltConfirm"></div>
+          <section class="ins-step" id="insStepVerify" aria-labelledby="insStepVerifyTitle">
+            <div class="ins-step-head" id="insStepVerifyHead"></div>
+            <div class="ins-step-body">
+              <div class="ins-tbl" id="insAltPlans" role="table" aria-label="Insurance plans in payer order"></div>
+              <div class="ins-step-foot" id="insStepVerifyFoot"></div>
+            </div>
+          </section>
+          <section class="ins-step" id="insStepCheck" aria-labelledby="insStepCheckTitle">
+            <div class="ins-step-head" id="insStepCheckHead"></div>
+            <div class="ins-step-body">
+              <div class="ins-tbl-bar" id="insAltToolbar"></div>
+              <div class="ins-tbl-notes" id="insAltNotes"></div>
+            </div>
+          </section>
+          <section class="ins-step" id="insStepOrder" aria-labelledby="insStepOrderTitle">
+            <div class="ins-step-head" id="insStepOrderHead"></div>
+            <div class="ins-step-body">
+              <div class="ins-alt-confirm" id="insAltConfirm"></div>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -340,19 +380,6 @@
     </form>
   </dialog>
 
-  <dialog class="confirm-dialog feed-dialog" id="feedDialog" aria-labelledby="feedTitle" aria-describedby="feedBody">
-    <form method="dialog">
-      <header class="modal-head"><h2 id="feedTitle">Add the new information to this intake?</h2></header>
-      <div class="modal-body">
-        <p id="feedBody">AI finished reading the document. Adding it may change information already on this intake.</p>
-        <p class="feed-note"><i data-lucide="info"></i><span>Some fields may end up with two values: the one on the intake and the new one. You’ll pick which to keep, right on the intake.</span></p>
-      </div>
-      <div class="confirm-actions">
-        <button class="footer-btn" value="skip">Not Now</button>
-        <button class="footer-btn primary" value="feed" autofocus>Add Information</button>
-      </div>
-    </form>
-  </dialog>
   <dialog class="confirm-dialog" id="cancelIntakeDialog" aria-labelledby="cancelIntakeTitle" aria-describedby="cancelIntakeBody">
     <form method="dialog">
       <header class="modal-head"><h2 id="cancelIntakeTitle">Cancel this intake?</h2></header>
@@ -369,6 +396,7 @@
   <dialog class="confirm-dialog response-dialog" id="eligibilityDialog" aria-labelledby="eligibilityDialogTitle">
     <form method="dialog">
       <header class="modal-head"><h2 id="eligibilityDialogTitle"></h2><button class="icon-btn" value="close" aria-label="Close"><i data-lucide="x"></i></button></header>
+      <div class="response-tabs" id="eligibilityTabs" role="tablist" aria-label="Eligibility response by insurance" hidden></div>
       <div class="modal-body"><p class="modal-sub" id="eligibilityDialogMeta"></p><div id="eligibilityDialogBody"></div></div>
       <div class="confirm-actions"><button class="footer-btn" value="close">Close</button></div>
     </form>
@@ -378,7 +406,7 @@
     <form id="addPlanForm" novalidate>
       <header class="modal-head"><h2 id="addPlanTitle">Add Insurance</h2><button class="icon-btn" type="button" data-close-add-plan aria-label="Close"><i data-lucide="x"></i></button></header>
       <div class="modal-body">
-      <p class="modal-sub">Enter the details from the patient’s insurance card. You can check eligibility after saving.</p>
+      <p class="modal-sub">Enter the details from the patient’s insurance card. Check eligibility from the insurance summary after saving.</p>
 
       <button type="button" class="card-scan" id="scanCard"><i data-lucide="scan-line"></i><span><strong>Upload insurance card</strong><small>AI fills in the fields for you to review</small></span></button>
 
@@ -394,7 +422,6 @@
         <label><span>Effective to</span><input class="input" type="date" name="to"></label>
       </div>
       <p class="form-error" id="addPlanError" hidden>Fill in the required fields marked with *.</p>
-      <label class="check-row"><input type="checkbox" name="checkNow" checked> Check eligibility after adding</label>
       </div>
       <div class="confirm-actions"><button class="footer-btn" type="button" data-close-add-plan>Cancel</button><button class="footer-btn primary" type="submit">Add Insurance</button></div>
     </form>
@@ -450,16 +477,16 @@
 
   <!-- Insurance checklist: a side drawer opened from "View checklist" -->
   <div class="ins-drawer-scrim" id="insChecklistScrim" hidden></div>
-  <aside class="ins-drawer" id="insChecklistDrawer" role="dialog" aria-modal="true" aria-labelledby="insChecklistTitle" hidden>
-    <header class="ins-drawer-head"><div><small>Insurance checklist</small><h2 id="insChecklistTitle">Get these right to get paid on time.</h2></div><button type="button" class="icon-btn" data-close-checklist aria-label="Close checklist"><i data-lucide="x"></i></button></header>
-    <div class="ins-drawer-body" id="insChecklistBody"></div>
+  <aside class="ins-drawer" id="insChecklistDrawer" role="dialog" aria-modal="true" aria-labelledby="insChecklistDrawerTitle" hidden>
+    <header class="ins-drawer-head"><div><small>Insurance checklist</small><h2 id="insChecklistDrawerTitle">Get these right to get paid on time.</h2></div><button type="button" class="icon-btn" data-close-checklist aria-label="Close checklist"><i data-lucide="x"></i></button></header>
+    <div class="ins-drawer-body" id="insChecklistDrawerBody"></div>
   </aside>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="scenario.js"></script>
   <script src="past-intakes.js"></script>
-  <script src="app.js"></script>
-  <script src="proto-nav.js"></script>
+  <script src="app.js?v=20261107c"></script>
+  <script src="proto-nav.js?v=20261106x"></script>
 </body>
 </html>

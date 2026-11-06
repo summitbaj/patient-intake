@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Coverage Pre-check | Signetic</title>
+  <title>Readiness Check | Signetic</title>
   <link rel="stylesheet" href="fluent/fabric-core.min.css">
   <link rel="stylesheet" href="fluent/fluent-tokens.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-modern.css">
   <link rel="stylesheet" href="precheck.css">
   <link rel="stylesheet" href="past-intakes.css">
-  <link rel="stylesheet" href="precheck-matrix.css">
+  <link rel="stylesheet" href="precheck-matrix.css?v=20261107a">
   <link rel="stylesheet" href="fluent/fluent-components.css">
 </head>
 <body class="ms-Fabric intake-page precheck-page">
@@ -47,13 +47,13 @@
     </div>
   </nav>
 
-  <header class="shell-commands page-header"><h1 class="page-title" id="pkTitle">Pre-check</h1><div class="header-notice" aria-hidden="true"></div><div class="header-actions"><a class="cancel-intake-btn" id="pcBack" href="index.html"><i data-lucide="arrow-left"></i> Back to Intake</a></div></header>
+  <header class="shell-commands page-header"><h1 class="page-title" id="pkTitle">Readiness check</h1><div class="header-notice" aria-hidden="true"></div><div class="header-actions"><a class="cancel-intake-btn" id="pcBack" href="patient-record.html?tab=intakes"><i data-lucide="arrow-left"></i> Back to Patient Record</a></div></header>
 
   <div class="app-body">
     <main class="pq-page pq-layout" id="pqLayout">
       <div class="pr-main">
         <header class="pr-top">
-          <div class="pr-title"><span class="ai-label"><i data-lucide="sparkles"></i> AI coverage pre-check</span><p class="pk-sub" id="pkPatient"></p></div>
+          <div class="pr-title"><span class="ai-label"><i data-lucide="sparkles"></i> AI readiness check</span><p class="pk-sub" id="pkPatient"></p></div>
           <p class="pk-disclaimer"><i data-lucide="info"></i> Decision support only. It doesn’t guarantee coverage, payment or reimbursement. The provider makes the final determination before dispensing.</p>
         </header>
         <div class="pr-body">
@@ -63,7 +63,8 @@
             <footer class="pr-footer">
               <div class="pk-footer-status" id="pkFooterStatus" aria-live="polite"></div>
               <div class="pk-footer-actions">
-                                <button class="footer-btn primary" id="pcCreateOrder">Create Order <i data-lucide="arrow-right"></i></button>
+                                <a class="footer-btn" id="pcNeedsAttention" href="patient-record.html?pane=workqueue&from=readiness"><i data-lucide="list-todo"></i> Needs Attention</a>
+                                <button class="footer-btn primary" id="pcCreateOrder">Prepare Orders <i data-lucide="arrow-right"></i></button>
               </div>
             </footer>
           </section>
@@ -79,8 +80,8 @@
   <script src="orders-data.js"></script>
   <script src="intake-demo.js"></script>
   <script src="past-intakes.js"></script>
-  <script src="precheck.js"></script>
-  <script src="precheck-matrix.js"></script>
-  <script src="proto-nav.js"></script>
+  <script src="precheck.js?v=20261107c"></script>
+  <script src="precheck-matrix.js?v=20261107b"></script>
+  <script src="proto-nav.js?v=20261106x"></script>
 </body>
 </html>
