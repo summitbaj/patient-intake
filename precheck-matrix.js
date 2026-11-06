@@ -52,25 +52,25 @@
     const ecBtn=!readOnly&&key==='payer'&&/not checked/i.test(check.summary)?`<button type="button" class="small-btn primary" data-rc-ec="${line.id}"><i data-lucide="shield-check"></i> Check Eligibility</button>`:'';
     const actions=readOnly?'':`<span class="pm-fix-actions">${ecBtn}${review}${canUpload?`<label class="small-btn pm-upload"><input type="file" hidden data-pm-upload="${target.id}:${key}"><i data-lucide="upload"></i> Upload ${key==='documents'&&/prior authorization/.test(check.summary)?'Prior Authorization':'Document'}</label>`:''}<button type="button" class="small-btn ${check.status==='pass'?'':'primary'}" data-pm-recheck="${target.id}" ${busy?'disabled':''}>${busy?'<span class="spinner"></span> Re-checking…':`<i data-lucide="refresh-cw"></i> Re-check ${target.code}`}</button></span>`;
     return `<div class="pm-panel" role="region" aria-label="${line.code} ${check.label}">
-      <nav class="pm-tabs" aria-label="Checks for ${line.code}">${pmCols.map(([k,label,ic])=>{const st=sourceCheck(line,k).check?.status||'pass';return `<button type="button" class="pm-tab ${k===key?'active':''}" data-pm-cell="${line.id}:${k}"><i data-lucide="${ic}"></i><span>${label}</span><i class="pm-dot ${st}" data-lucide="${icon[st]}"></i></button>`;}).join('')}</nav>
       <div class="pm-panel-body">
-        <header class="pm-panel-head"><div><b>${check.label}</b><small>${esc(check.summary)}</small></div><span class="section-status ${pillClass[check.status]}"><i data-lucide="${icon[check.status]}"></i> ${checkPill[check.status][1]}</span></header>
+        <header class="pm-panel-head"><div><b>${pmCols.find(([k])=>k===key)[1]} · ${line.code}</b><small>${esc(check.summary)}</small></div><span class="section-status ${pillClass[check.status]}"><i data-lucide="${icon[check.status]}"></i> ${checkPill[check.status][1]}</span></header>
         ${base?`<p class="pm-inherit"><i data-lucide="link-2"></i><span><b>Shared with ${base.code}.</b> ${line.code} is covered under the ${base.code} criteria in this ${line.item.bundle?'bundle':'prescription'}. Fix it on ${base.code} and every linked supply updates.</span><button type="button" class="text-btn" data-pm-goto="${base.id}:${key}">Open ${base.code}</button></p>`
           :dependents.length&&inheritedKeys.includes(key)?`<p class="pm-inherit is-base"><i data-lucide="link-2"></i><span><b>Base criteria for ${dependents.length} ${dependents.length===1?'supply':'supplies'}.</b> ${dependents.map(l=>l.code).join(', ')} inherit${dependents.length===1?'s':''} this result.</span></p>`:''}
         ${check.status!=='pass'&&check.action?`<div class="pm-fix ${check.status}"><i data-lucide="${check.status==='warn'?'eye':'wrench'}"></i><div><b>${check.status==='warn'?'To review':'Action required'}</b><p>${esc(check.action)}</p></div>${actions}</div>`:actions?`<div class="pm-panel-actions">${actions}</div>`:''}
         <div class="pm-detail">${check.body||''}</div>
+        <p class="pm-hint"><i data-lucide="mouse-pointer-click"></i> Select another category in the row to see its details.</p>
       </div>
     </div>`;
   }
 
   function row(line){
     const st=lineStatus(line),open=pm.open===line.id,busy=pm.busy.has(line.id),isBase=lines.some(l=>baseLine(l)===line);
-    return `<div class="pm-row-group ${open?'open':''}" id="pm-line-${line.id}">
+    return `<div class="pm-row-group ${open?'open':''} ${line.item?.bundle?'in-bundle':''}" id="pm-line-${line.id}">
       <div class="pm-row ${st}" role="row">
         <span role="cell"><button type="button" class="pm-expand" data-pm-row="${line.id}" aria-expanded="${open}" aria-label="${open?'Hide':'Show'} ${line.code} details"><i data-lucide="chevron-right"></i></button></span>
         <span class="pm-item" role="rowheader"><span class="pm-code">${line.code}</span><span class="pm-desc" title="${esc(line.description)}">${esc(line.description)}</span>${isBase?'<small class="pm-base"><i data-lucide="link-2"></i> Base for linked supplies</small>':''}</span>
         ${pmCols.map(([key])=>`<span role="cell">${cell(line,key)}</span>`).join('')}
-        <span class="pm-result" role="cell">${busy?'<span class="pm-status busy"><span class="spinner"></span> Re-checking</span>':`<span class="pm-status ${st}"><i data-lucide="${icon[st]}"></i> ${resultText[st]}</span>`}${readOnly?'':`<button type="button" class="icon-btn pm-recheck" data-pm-recheck="${line.id}" title="Re-check ${line.code}" aria-label="Re-check ${line.code}" ${busy?'disabled':''}><i data-lucide="refresh-cw"></i></button>`}</span>
+        <span class="pm-result" role="cell">${busy?'<span class="pm-status busy"><span class="spinner"></span> Re-checking</span>':`<span class="rt-pill ${st}"><span class="rt-dot"></span>${resultText[st]}</span>`}</span>
       </div>
       ${open?panel(line):''}
     </div>`;
@@ -130,19 +130,20 @@ if(pm.seen.has(line.id))return;pm.seen.add(line.id);const first=pmCols.find(([ke
         <div class="rh-top"><span class="section-icon"><i data-lucide="shield-check"></i></span><div class="rh-title"><h3>Readiness check</h3><p>${sub}</p></div>
           ${readOnly?'':`<button type="button" class="small-btn rh-recheck" data-pm-recheck-all><i data-lucide="refresh-cw"></i> Re-check All</button>`}</div>
         <div class="rh-stats">
-          <div class="rh-stat pass"><i data-lucide="circle-check"></i><b>${count('pass')}</b><span>Met</span></div>
-          <div class="rh-stat warn"><i data-lucide="eye"></i><b>${count('warn')}</b><span>Needs review</span></div>
-          <div class="rh-stat fail"><i data-lucide="circle-x"></i><b>${count('fail')}</b><span>Action required</span></div>
+          <div class="rh-stat pass"><span class="rh-stat-icon"><i data-lucide="circle-check"></i></span><b>${count('pass')}</b><span>Met</span></div>
+          <div class="rh-stat warn"><span class="rh-stat-icon"><i data-lucide="eye"></i></span><b>${count('warn')}</b><span>Needs review</span></div>
+          <div class="rh-stat fail"><span class="rh-stat-icon"><i data-lucide="circle-x"></i></span><b>${count('fail')}</b><span>Action required</span></div>
           <div class="rh-meta"><span><i data-lucide="calendar-check"></i> Checked ${pm.checkedAt}</span></div>
         </div>
       </section>
       ${rxList.map((rx,ri)=>{const ls=rx.items.flatMap(item=>item.lines),n=st=>ls.filter(l=>lineStatus(l)===st).length;return `<section class="pm-rx">
         <header class="pm-rx-head"><div><b>${rxId(ri)}</b><small>${rx.physician?`Dr. ${esc(rx.physician)}`:'Ordering physician not added'}${rx.npi?` · NPI ${esc(rx.npi)}`:''} · ${plural(ls.length,'code')}</small></div>
           <span class="rc-counts"><span class="pass"><i data-lucide="circle-check"></i> ${n('pass')} met</span>${n('warn')?`<span class="warn"><i data-lucide="eye"></i> ${n('warn')} needs review</span>`:''}${n('fail')?`<span class="fail"><i data-lucide="circle-x"></i> ${n('fail')} action required</span>`:''}</span></header>
-        <div class="rt-table"><div class="rt-row rt-head"><span>Item</span><span>Readiness by category</span><span>Status</span></div>
+        <div class="pm-tablewrap"><div class="pm-table rt-matrix" role="table" aria-label="${rxId(ri)} readiness">
+          <div class="pm-row pm-head" role="row"><span role="columnheader"><span class="sr-only">Details</span></span><span role="columnheader">Item</span>${pmCols.map(([,label,ic])=>`<span role="columnheader"><i data-lucide="${ic}"></i> ${label}</span>`).join('')}<span role="columnheader">Status</span></div>
           ${rx.items.map(item=>{const base=item.lines.find(l=>lines.some(x=>baseLine(x)===l));
-            return `${item.bundle?`<div class="rc-bundle"><i data-lucide="boxes"></i><b>${esc(item.name)}</b><span class="pill neutral">Bundle · ${plural(item.lines.length,'code')}</span>${base?`<span class="pm-shared"><i data-lucide="link-2"></i> Supplies share ${base.code}’s medical criteria</span>`:''}</div>`:''}<div class="${item.bundle?'rt-in-bundle':''}">${item.lines.map(tableRow).join('')}</div>`;}).join('')}
-        </div>
+            return `${item.bundle?`<div class="rc-bundle"><i data-lucide="boxes"></i><b>${esc(item.name)}</b><span class="pill neutral">Bundle · ${plural(item.lines.length,'code')}</span>${base?`<span class="pm-shared"><i data-lucide="link-2"></i> Supplies share ${base.code}’s medical criteria</span>`:''}</div>`:''}${item.lines.map(row).join('')}`;}).join('')}
+        </div></div>
       </section>`;}).join('')}
     </div>
     <footer class="pr-footer pm-footer"><div class="pk-footer-status ${flaggedNow?'todo':'done'}"><span class="pk-status-icon"><i data-lucide="${flaggedNow?'list-checks':'check'}"></i></span><span><b>${flaggedNow?`${count('fail')?`${plural(count('fail'),'code')} need action`:''}${count('fail')&&count('warn')?' · ':''}${count('warn')?`${plural(count('warn'),'code')} to review`:''}`:'All codes met'}</b><span class="v2-next">across ${plural(rxList.length,'prescription')}</span></span></div><p class="rh-verify"><i data-lucide="sparkles"></i><span>These results are AI-generated. <b>Verify them before you ${fromOrder?'save the order':'prepare orders'}.</b></span></p><div class="pk-footer-actions">${fromOrder?'':'<a class="footer-btn" href="patient-record.html?pane=workqueue&from=readiness"><i data-lucide="list-todo"></i> Needs Attention</a>'}<button class="footer-btn primary" type="button" data-pm-go>${fromOrder?'Save to order':'Prepare Orders'} <i data-lucide="arrow-right"></i></button></div></footer>`;
@@ -224,7 +225,7 @@ if(pm.seen.has(line.id))return;pm.seen.add(line.id);const first=pmCols.find(([ke
       recheck(ids,'Eligibility checked · Medicare Part B and Aetna Choice POS II active, DME covered');return;}
     const c=t.closest('[data-pm-cell]');if(c){const [id,key]=c.dataset.pmCell.split(':');const same=pm.open===+id&&pm.key===key&&!c.classList.contains('pm-tab');pm.open=same?null:+id;pm.key=key;render();return;}
     const r=t.closest('[data-pm-row]');if(r){const id=+r.dataset.pmRow;if(pm.open===id)pm.open=null;else{pm.open=id;const line=lines[id];pm.key=(pmCols.find(([k])=>sourceCheck(line,k).check?.status!=='pass')||pmCols[0])[0];}render();return;}
-    const g=t.closest('[data-pm-goto]');if(g){const [id,key]=g.dataset.pmGoto.split(':');pm.cats.add(`${id}:${key}`);render();$(`#pm-line-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'});return;}
+    const g=t.closest('[data-pm-goto]');if(g){const [id,key]=g.dataset.pmGoto.split(':');pm.open=+id;pm.key=key;render();$(`#pm-line-${id}`)?.scrollIntoView({behavior:'smooth',block:'center'});return;}
     const rc=t.closest('[data-pm-recheck]');if(rc){recheck([+rc.dataset.pmRecheck]);return;}
     if(t.closest('[data-pm-recheck-all]')){recheck(lines.map(l=>l.id));return;}
     const rx=t.closest('[data-pm-recheck-rx]');if(rx){const ids=rxList[+rx.dataset.pmRecheckRx].items.flatMap(item=>item.lines).map(l=>l.id);recheck(ids);return;}
