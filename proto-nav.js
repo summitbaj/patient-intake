@@ -32,7 +32,7 @@
   ];
   const params=new URLSearchParams(location.search);
   const rawPage=location.pathname.split('/').pop()||'index.html';
-  // Insurance design versions: Version 1 is index.html, Version 2 (one insurance table) is index-insurance-v2.html. Same screens otherwise.
+  // One insurance design (the one-table version, formerly Version 2) lives in index.html.
   const V2='index-insurance-v2.html',isV2=rawPage===V2;
   const version=isV2?'2':'1',pageFor={'1':'index.html','2':V2};
   const page=isV2?'index.html':rawPage;
@@ -164,7 +164,6 @@
     <button class="pn-current" data-pn="menu" aria-haspopup="true" aria-expanded="false"><b>${screens[current].label}</b><span class="pn-count">${current+1}/${screens.length}</span></button>
     <div class="pn-nav"><button class="pn-arrow" data-pn="prev" aria-label="Previous screen" title="Previous (Alt+←)">‹ Prev</button><button class="pn-arrow" data-pn="next" aria-label="Next screen" title="Next (Alt+→)">Next ›</button></div>
     <div class="pn-path"><span class="pn-path-label" id="pnPathLabel">Scenario</span><div class="pt-seg" role="radiogroup" aria-labelledby="pnPathLabel"><button role="radio" data-path="happy" title="No errors: nothing to confirm, nothing to review, every code qualifies">Happy path</button><button role="radio" data-path="issues" title="A few errors to work through: missing gender and mobile number, document conflicts, flagged codes">With issues</button></div></div>
-    <div class="pn-path pn-version"><span class="pn-path-label" id="pnVersionLabel">Design version</span><div class="pt-seg" role="radiogroup" aria-labelledby="pnVersionLabel"><button role="radio" data-version="1" title="Insurance list and details, AI summary, eligibility check table">Version 1</button><button role="radio" data-version="2" title="One insurance table: details open only when needed">Version 2</button></div></div>
     <button class="pn-theme-btn" data-pn="theme" aria-expanded="false" aria-controls="pnTheme">◐ Theme</button>
     <p class="pn-demo" hidden>Demo view · changes aren’t saved. <a href="${inVersion('index.html')}">Open my intake</a></p>
     <button class="pn-reset" data-pn="reset" title="Clear saved progress and start a new intake">↺ Reset prototype</button>
@@ -205,7 +204,7 @@
     location.reload();
   });
   // Insurance design switch: same screen and settings, other version.
-  const versionBox=root.querySelector('.pn-version');
+  const versionBox=root.querySelector('.pn-version')||document.createElement('div');
   versionBox.hidden=!isIntake;
   versionBox.querySelectorAll('[data-version]').forEach(b=>b.setAttribute('aria-checked',String(b.dataset.version===version)));
   versionBox.addEventListener('click',event=>{

@@ -450,3 +450,94 @@ html.pc-embed .pm-hint{display:none}
 .rh-stat.warn .rh-stat-icon{background:var(--amber-soft);color:var(--amber)}
 .rh-stat.fail .rh-stat-icon{background:var(--red-soft);color:var(--red)}
 .rh-stat{min-width:172px}
+
+/* Summary boxes removed: only the "Checked" date stays, right-aligned under the title */
+.rh-stats.rh-stats-meta{display:flex;justify-content:flex-end;padding-top:0}
+.rh-stats.rh-stats-meta .rh-meta{margin-left:auto}
+.rh-checked{display:inline-flex;align-items:center;gap:6px;margin-left:auto;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.rh-checked .lucide{width:14px;height:14px;color:var(--blue,#0f6cbd)}
+.rh-top .rh-checked+.rh-recheck{margin-left:12px}
+.rh>.rh-top:last-child{border-bottom:0}
+.rh-title .rh-checked{margin:4px 0 0;font-size:12px}
+.rh-top{flex-wrap:wrap}
+.rh-title{flex:1 1 220px;min-width:0}
+
+/* Small screens: the three columns stack (item, categories, status) and the header row is hidden */
+@media (max-width:640px){
+  .rt-row{grid-template-columns:minmax(0,1fr)}
+  .rt-head{display:none}
+  .rt-cat-head{grid-template-columns:18px 112px minmax(0,1fr) 16px}
+}
+
+/* Upload from the check that needs it */
+.up-box{display:grid;gap:10px;margin:0 0 12px;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--white)}
+.up-need{display:flex;gap:10px;align-items:flex-start}
+.up-need>.lucide{width:18px;height:18px;color:#c50f1f;flex:none;margin-top:1px}
+.up-need b{display:block;font-size:13px}
+.up-need small{display:block;font-size:12.5px;color:var(--ink);line-height:1.45;margin-top:2px}
+.up-drop{display:flex;align-items:center;gap:10px;padding:12px;border:1px dashed var(--blue-line,#b4d6fa);border-radius:6px;background:var(--blue-soft,#ebf3fc);cursor:pointer}
+.up-drop:hover,.up-drop.over{border-color:var(--primary,#0f6cbd);background:#deecf9}
+.up-drop>.lucide{width:18px;height:18px;color:var(--primary,#0f6cbd);flex:none}
+.up-drop b{display:block;font-size:13px;color:var(--primary,#0f6cbd)}
+.up-drop small{display:block;font-size:12px;color:var(--muted)}
+.up-box.is-busy,.up-box.is-done{grid-template-columns:auto 1fr;align-items:center;gap:10px}
+.up-box.is-busy .spinner{width:16px;height:16px}
+.up-box.is-busy b,.up-box.is-done b{display:block;font-size:13px}
+.up-box.is-busy small,.up-box.is-done small{display:block;font-size:12px;color:var(--muted)}
+.up-box.is-done{border-color:#9fd89f;background:#f1faf1}
+.up-box.is-done>.lucide{width:18px;height:18px;color:#107c10}
+
+/* Documents + Insurance eligibility, above the results */
+.ri{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin:12px 0 18px}
+.ri-card{border:1px solid var(--line);border-radius:6px;background:var(--white);padding:14px 16px;display:grid;gap:12px;align-content:start;transition:box-shadow .3s}
+.ri-card.flash{box-shadow:0 0 0 3px var(--blue-line,#b4d6fa)}
+.ri-card>header{display:flex;align-items:flex-start;gap:10px}
+.ri-card>header>div{flex:1;min-width:0}
+.ri-card>header b{display:block;font-size:14px}
+.ri-card>header small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.ri-card>header .small-btn{flex:none;white-space:nowrap}
+.ri-icon{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--blue-soft,#ebf3fc);color:var(--primary,#0f6cbd);flex:none}
+.ri-icon .lucide{width:16px;height:16px}
+.ri-need{border:1px solid #f1bbbc;background:#fdf3f4;border-radius:6px;padding:10px 12px}
+.ri-need>b{font-size:12.5px;color:#a4262c}
+.ri-need ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}
+.ri-need li{display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:start;font-size:12.5px;line-height:1.4}
+.ri-need li .lucide{width:14px;height:14px;color:#c50f1f;margin-top:2px}
+.ri-need li small{font-weight:600;color:var(--ink);white-space:nowrap}
+.ri-ok{display:flex;align-items:center;gap:6px;margin:0;font-size:12.5px;color:#107c10}
+.ri-ok .lucide{width:14px;height:14px}
+.ri-drop{display:flex;align-items:center;gap:10px;padding:12px;border:1px dashed var(--blue-line,#b4d6fa);border-radius:6px;background:var(--blue-soft,#ebf3fc);cursor:pointer}
+.ri-drop:hover,.ri-drop.over{border-color:var(--primary,#0f6cbd);background:#deecf9}
+.ri-drop>.lucide{width:18px;height:18px;color:var(--primary,#0f6cbd);flex:none}
+.ri-drop b{display:block;font-size:13px;color:var(--primary,#0f6cbd)}
+.ri-drop small{display:block;font-size:12px;color:var(--muted)}
+.ri-docs{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px}
+.ri-doc{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;font-size:12px;background:var(--white)}
+.ri-doc .lucide{width:13px;height:13px;color:var(--muted)}
+.ri-doc em{font-style:normal;font-size:11px;font-weight:600;color:var(--primary,#0f6cbd)}
+.ri-doc.is-busy{border-color:var(--blue-line,#b4d6fa)}
+.ri-doc .spinner{width:12px;height:12px}
+.ri-plans{list-style:none;margin:0;padding:0;display:grid}
+.ri-plan{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:2px 10px;align-items:center;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+.ri-plan:first-child{border-top:0}
+.ri-rank{font-size:12px;color:var(--muted)}
+.ri-plan small{grid-column:2/4;font-size:11.5px;color:var(--muted)}
+.ri-plan small:empty{display:none}
+.ri-ec-res{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;white-space:nowrap}
+.ri-ec-res .lucide{width:14px;height:14px}
+.ri-ec-res.ok{color:#107c10}.ri-ec-res.warn{color:#8a5a00}.ri-ec-res.bad{color:#a4262c}.ri-ec-res.is-busy{color:var(--muted)}
+.ri-ec-res .spinner{width:12px;height:12px}
+.ri-link{display:inline-flex;align-items:center;gap:4px;font-size:12.5px;color:var(--primary,#0f6cbd);text-decoration:none;justify-self:start}
+.ri-link .lucide{width:13px;height:13px}
+@media (max-width:640px){.ri-plan{grid-template-columns:minmax(0,1fr)}.ri-plan small{grid-column:auto}}
+
+/* Readiness check header: subtle "Add documents in the intake" link, and the eligibility popup */
+.rh-add-docs{display:inline-flex;align-items:center;gap:5px;margin-left:12px;font-size:12px;color:var(--primary,#0f6cbd);text-decoration:none}
+.rh-add-docs:hover{text-decoration:underline}
+.rh-add-docs .lucide{width:13px;height:13px}
+.rh-top .rh-ec{margin-left:auto}
+.rh-top .rh-ec+.rh-recheck{margin-left:8px}
+.ec-dialog{width:min(560px,calc(100vw - 32px))}
+.ec-dialog .modal-sub{margin:0 0 12px;font-size:13px;color:var(--muted)}
+.ec-dialog .ri-link{margin-top:12px}
+.ec-dialog .footer-btn .spinner{width:12px;height:12px;margin-right:6px}

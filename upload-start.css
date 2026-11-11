@@ -1388,3 +1388,53 @@ body.phase-upload #cancelUpload{display:none!important}
 .v2t-cob.is-done{border-color:transparent;background:var(--green-soft)}
 .v2t-cob.is-done em{color:var(--green)}
 .ins-one-ai[hidden]{display:none!important}
+
+/* Loader: keep the spinner round wherever it sits (it was collapsing to a sliver as an inline span). */
+.spinner{display:inline-block;flex:0 0 auto;box-sizing:border-box;aspect-ratio:1;vertical-align:middle}
+.file-state{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px}
+.file-state .spinner{width:16px;height:16px}
+.file-meta-row .file-status .spinner{width:10px;height:10px;border-width:1.5px}
+
+/* Collapsed sections show a one-line summary under the title instead of their details */
+.review-card .card-summary{display:none;margin:2px 0 0;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.review-card.is-collapsible>.card-header{flex-wrap:nowrap}
+.review-card.is-collapsible>.card-header>div:first-child{flex:1 1 auto;min-width:0}
+.review-card.is-collapsible>.card-header>div:first-child>div{min-width:0}
+.review-card.is-collapsible>.card-header>.card-toggle-chevron,.review-card.is-collapsible .card-header-end{flex:none}
+.review-card.is-collapsed .card-header .card-summary{display:block!important}
+.review-card.is-collapsed .card-header h3+p:not(.card-summary){display:none}
+.review-card.is-collapsible>.card-header{gap:12px}
+.review-card.is-collapsible>.card-header:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.review-card.is-collapsible>.card-header>.card-toggle-chevron{margin-left:4px}
+
+/* Upload errors: rejected files alert, and a failed file row */
+.up-alert{margin:0 0 12px;border:1px solid #f1bbbc;background:#fdf3f4;border-radius:var(--fluent-corner-2,4px);padding:10px 12px;color:var(--ink)}
+.up-alert-head{display:flex;align-items:center;gap:8px}
+.up-alert-head>.lucide{width:16px;height:16px;color:#c50f1f;flex:none}
+.up-alert-head strong{font-size:13px;flex:1}
+.up-alert-head .icon-btn{width:24px;height:24px}
+.up-alert ul{list-style:none;margin:6px 0 0;padding:0 0 0 24px;display:grid;gap:4px}
+.up-alert li{display:grid;font-size:12px;line-height:1.4}
+.up-alert li b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.up-alert li span{color:var(--muted)}
+.file-item.is-failed{border-color:#f1bbbc!important;background:#fdf3f4!important}
+.file-meta-row .file-status.bad{background:#fde7e9;color:#c50f1f}
+.file-meta-row .file-status .lucide{width:12px;height:12px}
+.file-error-text{flex-basis:100%;font-size:11px;color:#a4262c;margin-top:2px}
+.file-meta-row{flex-wrap:wrap}
+.retry-btn{white-space:nowrap}
+.retry-btn .lucide{width:13px;height:13px}
+.footer-note-bad{display:inline-flex;align-items:center;gap:6px;color:#a4262c}
+.footer-note-bad .lucide{width:14px;height:14px}
+@media(max-width:700px){.retry-btn{font-size:0;gap:0;padding:6px}.retry-btn .lucide{width:15px;height:15px}}
+
+/* Extraction failure: the progress box turns into an error with Try Again */
+.processing.is-failed{border-color:#f1bbbc;background:#fdf3f4}
+.processing.is-failed .processing-top .spinner{display:none}
+.processing.is-failed .processing-top>span:first-child::before{content:"";width:14px;height:14px;border-radius:50%;background:#c50f1f;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-1 5h2v7h-2Zm0 9h2v2h-2Z'/%3E%3C/svg%3E") center/contain no-repeat;flex:none}
+.processing.is-failed #processingLabel{color:#a4262c}
+.processing-error{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:8px;font-size:12px;line-height:1.45;color:var(--ink)}
+.processing-error .small-btn{flex:none;white-space:nowrap}
+.processing-error .lucide{width:13px;height:13px}
+#unreadIssue .extract-document>.lucide{color:#c50f1f}
+.issue-resolved.is-busy{color:var(--muted)}

@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="fluent/fluent-tokens.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="theme-modern.css">
-  <link rel="stylesheet" href="upload-start.css?v=20261106n">
+  <link rel="stylesheet" href="upload-start.css?v=20261110c">
   <link rel="stylesheet" href="past-intakes.css">
   <link rel="stylesheet" href="fluent/fluent-components.css">
 </head>
@@ -56,7 +56,7 @@
         <header class="us-hero">
           <span class="us-hero-icon"><i data-lucide="sparkles"></i></span>
           <h2 id="startTitle">Upload Patient Documents</h2>
-          <p id="startLead">Add prescriptions, insurance cards, referrals, and clinical records. Nothing is processed until you select Extract.</p>
+          <p id="startLead">Add prescriptions, insurance cards, medical records, and prior authorizations. Nothing is processed until you select Extract.</p>
         </header>
         <div class="us-grid">
           <div class="us-col">
@@ -66,6 +66,7 @@
               <span>PDF, JPG or PNG up to <b>10 MB</b> per file</span>
               <span class="us-browse">Browse &amp; Upload Files</span>
             </label>
+            <div class="up-alert" id="uploadErrors" role="alert" hidden></div>
             <section class="us-uploads" id="uploadList" aria-labelledby="uploadListTitle" hidden>
               <header><strong id="uploadListTitle">Uploaded documents</strong><span id="uploadListCount">0 documents</span></header>
               <div class="us-upload-list file-list list" id="uploadQueue"></div>
@@ -74,10 +75,10 @@
           <div class="us-or" role="separator"><span>or</span></div>
           <div class="us-col">
             <section class="us-record" id="recordCard" aria-labelledby="recordCardTitle">
-              <header class="us-record-head"><span class="us-record-icon"><i data-lucide="users"></i></span><div><h3 id="recordCardTitle">Pull from a Patient’s Record</h3><p id="recordCardLead">Patients waiting in the intake queue. Pick documents straight from their record.</p></div></header>
+              <header class="us-record-head"><span class="us-record-icon"><i data-lucide="users"></i></span><div><h3 id="recordCardTitle">Pull from a Patient’s Record</h3><p id="recordCardLead">Patients you’ve worked on recently. Pick documents straight from their record.</p></div></header>
               <div class="us-linked" id="linkedPatient" hidden></div>
-              <label class="us-search" id="patientSearch"><i data-lucide="search"></i><input id="patientSearchInput" type="text" placeholder="Find another patient by name or ID" aria-label="Find another patient" autocomplete="off"></label>
-              <span class="us-label" id="recordListLabel">In the intake queue</span>
+              <label class="us-search" id="patientSearch"><i data-lucide="search"></i><input id="patientSearchInput" type="text" placeholder="Find another patient by name or DOB" aria-label="Find another patient" autocomplete="off"></label>
+              <span class="us-label" id="recordListLabel">Recent patients</span>
               <div class="us-patients" id="recordList"></div>
             </section>
             <section class="us-manual" aria-labelledby="manualTitle">
@@ -157,7 +158,7 @@
         <div class="ins-intro-row"><p class="ins-intro"><i data-lucide="list-checks"></i><span>Accurate, up-to-date insurance prevents claim denials and payment delays. Before you continue, make sure every plan is captured, in the right order, and active for this service. <button type="button" class="text-btn ins-checklist-link" id="insChecklistLink" data-open-checklist>See the 5 things to check <i data-lucide="arrow-right"></i></button></span></p></div>
         <div class="ins-found-list" id="insFound" hidden></div>
         <div class="ins-empty-state" id="insEmpty" hidden></div>
-        <div class="insurance-workspace">
+        <div class="insurance-workspace" hidden>
           <aside class="plan-list" id="insOrder" aria-label="Insurances"><p class="plan-list-head"><span>Insurances</span><span class="pill neutral" id="orderSource" hidden></span></p><div id="planList" role="list"></div><div class="order-hint cob-panel" id="orderNotice"></div></aside>
           <div class="plan-detail"><div class="plan-detail-head"><div><strong id="planName">Medicare Part B</strong><div class="plan-pills" id="planPills"></div></div><div class="plan-actions" id="planActions"></div></div>
             <p class="plan-discovered" id="planDiscovered" hidden></p>
@@ -167,17 +168,11 @@
         </div>
         <div class="coverage-confirm" id="coverageConfirm"></div>
         <!-- Under the plans: 1) a short AI summary of the patient's insurance, 2) the eligibility check and its results. -->
-        <div class="ins-below" id="insSummary">
+        <!-- One table: each insurance is one row in payer order with its eligibility. Details open only when needed. -->
+        <div class="ins-one" id="insSummary">
           <div class="ins-ec" id="serviceSuggest">
-            <div class="ins-ec-head">
-              <b id="serviceSuggestText">Eligibility check</b>
-              <small>Confirms each insurance is active and covers the service, and that the details match the payer’s records. Checking before you order helps prevent claim denials and payment delays.</small>
-            </div>
             <div id="insEcRows"></div>
-            <div class="ins-ai ins-ai-after">
-              <span class="ins-ai-icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
-              <div class="ins-ai-body"><b>Insurance summary</b><p id="ecWhy"></p></div>
-            </div>
+            <p class="ins-one-ai ins-ai-after" hidden><i data-lucide="sparkles"></i><span id="ecWhy"></span></p>
             <div class="ins-ec-foot">
               <div class="ins-ec-order" id="insEcOrder"></div>
             </div>
@@ -198,7 +193,9 @@
               </div>
             </div>
             <p id="eligibilityMeta" hidden></p>
+            <span id="serviceSuggestText" hidden></span>
           </div>
+          <div id="insHold" hidden></div>
         </div>
         <div class="hold-banner" id="holdBanner" hidden></div>
         <div class="elig-summary" id="eligSummary" hidden></div>
@@ -276,7 +273,7 @@
           <button class="icon-btn" id="collapseViewer" aria-label="Collapse documents panel" title="Collapse"><i data-lucide="panel-right-close"></i></button>
         </div>
         <section class="viewer-files" id="viewerFiles" role="tabpanel" aria-labelledby="tabFiles">
-        <header class="upload-intro"><div><h2>Upload Patient Documents</h2><p>Add prescriptions, insurance cards, referrals and clinical records, then extract.</p></div><button class="footer-btn primary extract-btn" id="extractDocuments" disabled><i data-lucide="sparkles"></i><span>Extract<span class="extract-more">&nbsp;documents</span></span></button></header>
+        <header class="upload-intro"><div><h2>Upload Patient Documents</h2><p>Add prescriptions, insurance cards, medical records and prior authorizations, then extract.</p></div><button class="footer-btn primary extract-btn" id="extractDocuments" disabled><i data-lucide="sparkles"></i><span>Extract<span class="extract-more">&nbsp;documents</span></span></button></header>
         <div class="reextract-bar" id="reextractBar" hidden><span><b id="reextractCount">New documents</b><small>Existing files aren’t affected.</small></span><button class="footer-btn primary extract-btn is-ready" id="reextractBtn"><i data-lucide="sparkles"></i> Extract New</button></div>
         <label class="drop-zone" id="dropZone" for="fileInput">
           <input id="fileInput" type="file" multiple accept=".pdf,.png,.jpg,.jpeg" hidden>
@@ -286,9 +283,10 @@
         </label>
 
         <div class="processing" id="processing" hidden>
-          <div class="processing-top"><span><span class="spinner"></span><b id="processingLabel">Reading document</b></span><span id="processingPercent">20%</span></div>
-          <div class="progress-track"><span id="processingBar"></span></div>
-          <div class="process-steps" id="processSteps">Extracting data</div>
+          <div class="processing-top"><span><span class="spinner"></span><b id="processingLabel">Extracting…</b></span><span id="processingPercent">0%</span></div>
+          <span id="processingBar" hidden></span>
+          <div class="processing-error" id="processingError" hidden></div>
+          
         </div>
 
         <div class="files-toolbar is-view-only">
@@ -319,7 +317,7 @@
 
   <dialog class="confirm-dialog resolve-dialog" id="resolveDialog" aria-labelledby="resolveTitle">
     <header class="modal-head"><h2 id="resolveTitle">Confirm before we upload the intake</h2></header>
-    <div class="extraction-issues modal-body" id="extractionIssues"><section class="extraction-issue" id="patientIssue"><div class="issue-title"><span class="issue-number">1</span><div><strong>Which patient is this?</strong><span>Choose one record, or create a new one.</span></div><b>Required</b></div><div id="extractionPatientMatches"></div><button class="create-new-patient" data-extract-new-patient><i data-lucide="user-plus"></i><span><strong>None of these</strong><small>Create a new patient record</small></span><i data-lucide="chevron-right"></i></button></section><section class="extraction-issue" id="documentIssue"><div class="issue-title"><span class="issue-number" id="documentIssueNumber">2</span><div><strong>What should we do with similar documents?</strong><span id="documentIssueHint">Decide how to store the same and similar documents.</span></div><b>Required</b></div><div id="extractionDocumentMatches"></div></section><div class="extraction-waiting" id="extractionWaiting" hidden></div></div>
+    <div class="extraction-issues modal-body" id="extractionIssues"><section class="extraction-issue" id="patientIssue"><div class="issue-title"><span class="issue-number">1</span><div><strong>Which patient is this?</strong><span>Choose one record, or create a new one.</span></div><b>Required</b></div><div id="extractionPatientMatches"></div><button class="create-new-patient" data-extract-new-patient><i data-lucide="user-plus"></i><span><strong>None of these</strong><small>Create a new patient record</small></span><i data-lucide="chevron-right"></i></button></section><section class="extraction-issue" id="documentIssue"><div class="issue-title"><span class="issue-number" id="documentIssueNumber">2</span><div><strong>What should we do with similar documents?</strong><span id="documentIssueHint">Decide how to store the same and similar documents.</span></div><b>Required</b></div><div id="extractionDocumentMatches"></div></section><section class="extraction-issue" id="unreadIssue" hidden><div class="issue-title"><span class="issue-number" id="unreadIssueNumber">3</span><div><strong>Some documents couldn’t be read</strong><span>Try again, or continue without them.</span></div><b>Required</b></div><div id="unreadList"></div></section><div class="extraction-waiting" id="extractionWaiting" hidden></div></div>
   </dialog>
 
   <dialog class="confirm-dialog resolve-dialog" id="dupDialog" aria-labelledby="dupTitle">
@@ -486,7 +484,7 @@
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="scenario.js"></script>
   <script src="past-intakes.js"></script>
-  <script src="app.js?v=20261107c"></script>
-  <script src="proto-nav.js?v=20261106x"></script>
+  <script src="app.js?v=20261111d"></script>
+  <script src="proto-nav.js?v=20261110b"></script>
 </body>
 </html>
