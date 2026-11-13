@@ -1438,3 +1438,36 @@ body.phase-upload #cancelUpload{display:none!important}
 .processing-error .lucide{width:13px;height:13px}
 #unreadIssue .extract-document>.lucide{color:#c50f1f}
 .issue-resolved.is-busy{color:var(--muted)}
+
+/* Drop zone matches the right column: top of "Pull from a Patient's Record" to the bottom of "No Documents?" */
+@media(min-width:901px){
+  .us-grid{flex:none}
+  .us-col:first-child:not(:has(.us-uploads:not([hidden]))) .us-drop{min-height:240px}
+}
+
+/* Upload error alert: 16px above, red close icon, bulleted file names */
+.up-alert{margin:16px 0 12px}
+.up-alert-head .icon-btn,.up-alert-head .icon-btn .lucide{color:#c50f1f}
+.up-alert-head .icon-btn:hover{background:#fde7e9}
+.up-alert ul{list-style:disc;padding-left:40px}
+.up-alert li{display:list-item}
+.up-alert li::marker{color:#c50f1f}
+.up-alert li b{display:block}
+.up-alert li span{display:block}
+/* Retry on a failed upload: medium size, like the other inline buttons */
+.file-item .retry-btn{display:inline-flex;align-items:center;gap:6px;height:28px;min-height:28px;padding:0 10px;font-size:12.5px;font-weight:600;line-height:1}
+.file-item .retry-btn .lucide{width:14px;height:14px}
+/* Upload screen: group titles (New Uploads, From {patient}) without the line under them */
+.us-uploads .file-group-title{border-bottom:0;padding-bottom:0;margin-bottom:8px}
+/* A red icon sits on a subtle red circle, never the blue base */
+.resolve-dialog #unreadIssue .extract-document>.lucide{background:#fde7e9;color:#c50f1f}
+/* Extraction didn't finish: text on the left, Try Again on the right; type matches the other alert boxes */
+.processing.is-failed{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:16px;row-gap:4px;padding:10px 12px}
+.processing.is-failed .processing-top{grid-column:1;margin:0}
+.processing.is-failed .processing-top>span:first-child{display:inline-flex;align-items:center;gap:8px}
+.processing.is-failed #processingLabel{font-size:13px;font-weight:600;line-height:18px}
+.processing.is-failed #processingPercent{display:none}
+.processing.is-failed .processing-error{display:contents}
+.processing.is-failed .processing-error>span{grid-column:1;padding-left:22px;font-size:12px;line-height:1.45;color:var(--ink)}
+.processing.is-failed .processing-error .small-btn{grid-column:2;grid-row:1/span 2;align-self:center;display:inline-flex;align-items:center;gap:6px;height:28px;min-height:28px;padding:0 10px;font-size:12.5px;font-weight:600}
+.processing.is-failed .processing-error .lucide{width:14px;height:14px}

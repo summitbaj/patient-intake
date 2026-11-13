@@ -252,7 +252,7 @@ function renderStartScreen(){
     if(!file.uploadedAt&&!file.fromRecord)file.uploadedAt=today;
     if(file.failed){
       const actions=`<button type="button" class="small-btn retry-btn" data-retry-upload="${file.id}" aria-label="Retry uploading ${file.name}"><i data-lucide="rotate-cw"></i> Retry</button><button type="button" class="icon-btn trash-btn" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove from this intake"><i data-lucide="trash-2"></i></button>`;
-      return fileRow(file,actions,'<span class="file-status bad"><i data-lucide="circle-alert"></i> Upload failed</span><span class="file-error-text">The connection was lost. Retry or remove this file.</span>','uploaded is-failed');
+      return fileRow(file,actions,'<span class="file-error-text">The connection was lost. Retry or remove this file.</span>','uploaded is-failed');
     }
     const trailing=file.uploading?'<span class="file-state"><span class="spinner"></span></span>'
       :`<button type="button" class="icon-btn trash-btn" data-remove-upload="${file.id}" aria-label="Remove ${file.name}" title="Remove from this intake"><i data-lucide="trash-2"></i></button>`;
