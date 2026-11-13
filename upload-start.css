@@ -1471,3 +1471,39 @@ body.phase-upload #cancelUpload{display:none!important}
 .processing.is-failed .processing-error>span{grid-column:1;padding-left:22px;font-size:12px;line-height:1.45;color:var(--ink)}
 .processing.is-failed .processing-error .small-btn{grid-column:2;grid-row:1/span 2;align-self:center;display:inline-flex;align-items:center;gap:6px;height:28px;min-height:28px;padding:0 10px;font-size:12.5px;font-weight:600}
 .processing.is-failed .processing-error .lucide{width:14px;height:14px}
+
+/* Insurance Information: 16px under the header for the intro box, and above the insurance table */
+#insurance-section .ins-intro-row{padding:16px 16px 0}
+#insurance-section .ins-one{margin:16px 16px 8px}
+.ins-one .ins-ec-table{margin:14px 14px 0}
+/* Expanded insurance: View Card and Mark as Expired on top of the details */
+.ins-one-slot>#planActions{display:flex;justify-content:flex-end;gap:16px;margin:0 0 10px}
+/* The AI icon on a field is just the icon: no blue box behind it */
+.ins-field .ins-ai{padding:0;border:0;border-radius:0;background:none}
+.ins-ec-name .plan-why-btn:hover,.ins-ec-name .plan-why-btn:focus-visible{background:transparent}
+/* Table header: "Insurance" starts at the left edge, 16px in */
+.ins-one .ins-ec-row-head{padding-left:16px}
+.ins-one .ins-ec-row-head>span:nth-child(1),.ins-one .ins-ec-row-head>span:nth-child(2){display:none}
+.ins-one .ins-ec-row-head>.ins-ec-head-name{grid-column:1/4}
+/* Open row: View Card and Mark as Expired sit on the right of the insurance's header */
+.ins-one .ins-ec-item.is-open .ins-ec-name{grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:center}
+.ins-one .ins-ec-item.is-open .ins-ec-name>b,.ins-one .ins-ec-item.is-open .ins-ec-name>small{grid-column:1}
+.ins-ec-acts{grid-column:2;grid-row:1/span 2;align-self:center;display:flex;align-items:center}
+.ins-ec-acts>#planActions{display:flex;align-items:center;gap:16px;margin:0}
+.ins-ec-acts>#planActions:empty{display:none}
+/* Mark as Expired is low priority: grey, red only on hover */
+.plan-remove[data-expire="on"]{color:var(--muted)}
+.plan-remove[data-expire="on"]:hover,.plan-remove[data-expire="on"]:focus-visible{color:var(--red)}
+/* Every row: View Card and Mark as Expired on the right of the insurance name (not only when open) */
+.ins-one .ins-ec-item .ins-ec-name{grid-template-columns:minmax(0,1fr) auto;column-gap:16px;align-items:center}
+.ins-one .ins-ec-item .ins-ec-name>b,.ins-one .ins-ec-item .ins-ec-name>small{grid-column:1}
+.ins-ec-acts{gap:16px}
+.ins-ec-acts:empty{display:none}
+.ins-one-slot #planActions{display:none!important}
+/* Same type and icon size for both actions */
+.ins-ec-acts .text-btn{display:inline-flex;align-items:center;gap:5px;height:auto;min-height:0;padding:0;font-size:13px;font-weight:600;white-space:nowrap}
+.ins-ec-acts .text-btn .lucide{width:14px;height:14px}
+.ins-ec-acts .plan-remove{color:var(--muted)}
+.ins-ec-acts .plan-remove:hover,.ins-ec-acts .plan-remove:focus-visible{color:var(--red)}
+.ins-ec-acts .plan-remove[data-expire="off"]:hover{color:var(--primary)}
+.ins-ec-acts .text-btn{font-weight:400}

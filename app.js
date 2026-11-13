@@ -1072,10 +1072,7 @@ function renderInsurance(index=state.currentPlan){
   const hasResponse=Boolean(plan.check)&&!state.checkingPlan;
   // Plans not in the patient's record (added by hand or read from an upload) can be removed from this intake.
   // New plans (not in the patient record) can be removed. Plans in the record can't be deleted, only marked as expired.
-  const removable=!plan.systemRank?`<button class="text-btn plan-remove" data-plan-remove="${index}" title="Remove from this intake. It isn’t in the patient’s record."><i data-lucide="trash-2"></i> Remove</button>`
-    :plan.expired?`<button class="text-btn plan-remove" data-plan-expire="${index}" data-expire="off" title="Mark this plan as active again"><i data-lucide="rotate-ccw"></i> Mark as Active</button>`
-    :`<button class="text-btn plan-remove" data-plan-expire="${index}" data-expire="on" title="This plan is in the patient’s record, so it can’t be deleted. Mark it as expired so it isn’t billed."><i data-lucide="calendar-x"></i> Mark as Expired</button>`;
-  $('#planActions').innerHTML=`${plan.userAdded||!plan.docId?'':planHasCard(plan)?`<button type="button" class="text-btn ins-view-card" data-ins-preview="${index}"><i data-lucide="eye"></i> View Card</button>`:`<button type="button" class="text-btn ins-view-card" data-ins-preview="${index}"><i data-lucide="file-text"></i> View Source</button>`}${removable}`;
+  $('#planActions').innerHTML=planActionsHtml(plan,index);
   // While this insurance's new card is extracting, its fields are read-only so edits aren't overwritten.
   const extracting=planExtracting(plan,index);
   $('#insurance-section .plan-detail').classList.toggle('is-extracting',Boolean(extracting));
@@ -1091,6 +1088,20 @@ function renderInsurance(index=state.currentPlan){
   renderEligibility();
 }
 
+// View Card / View Source and Remove / Mark as Expired for one insurance (shown on each row of the insurance table).
+function planActionsHtml(plan,index){
+  const removable=!plan.systemRank?`<button class="text-btn plan-remove" data-plan-remove="${index}" title="Remove from this intake. It isn’t in the patient’s record."><i data-lucide="trash-2"></i> Remove</button>`
+    :plan.expired?`<button class="text-btn plan-remove" data-plan-expire="${index}" data-expire="off" title="Mark this plan as active again"><i data-lucide="rotate-ccw"></i> Mark as Active</button>`
+    :`<button class="text-btn plan-remove" data-plan-expire="${index}" data-expire="on" title="This plan is in the patient’s record, so it can’t be deleted. Mark it as expired so it isn’t billed."><i data-lucide="calendar-x"></i> Mark as Expired</button>`;
+  return `${plan.userAdded||!plan.docId?'':planHasCard(plan)?`<button type="button" class="text-btn ins-view-card" data-ins-preview="${index}"><i data-lucide="eye"></i> View Card</button>`:`<button type="button" class="text-btn ins-view-card" data-ins-preview="${index}"><i data-lucide="file-text"></i> View Source</button>`}${removable}`;
+}
+// Row actions: the same two on every insurance. View Card opens its card (or the document it came from).
+function insRowActions(plan,index){
+  const view=plan.userAdded?'':`<button type="button" class="text-btn ins-view-card" data-ins-preview="${index}"><i data-lucide="eye"></i> View Card</button>`;
+  const expire=plan.expired?`<button class="text-btn plan-remove" data-plan-expire="${index}" data-expire="off" title="Mark this plan as active again"><i data-lucide="rotate-ccw"></i> Mark as Active</button>`
+    :`<button class="text-btn plan-remove" data-plan-expire="${index}" data-expire="on" title="Mark it as expired so it isn’t billed."><i data-lucide="calendar-x"></i> Mark as Expired</button>`;
+  return view+expire;
+}
 function renderEligibility(){
   const type=serviceTypes.find(item=>item.id===state.serviceType);
   $('#serviceTriggerText').textContent=type.id;
@@ -1442,7 +1453,7 @@ function renderEcWhy(){
     return `<div class="ins-ec-item ${open?'is-open':''} ${und?'is-warn':''}" ${multi?`draggable="true" data-ec-drag="${index}"`:''}>
       <div class="ins-ec-row" data-ins-row="${index}">${multi?'<span class="ins-ec-grip" title="Drag to change the payer order" aria-hidden="true"><i data-lucide="grip-vertical"></i></span>':'<span></span>'}
         <button type="button" class="ins-one-toggle" data-ins-row="${index}" aria-expanded="${open}" aria-label="${open?'Hide':'Show'} ${plan.name} details"><i data-lucide="chevron-right"></i></button>
-        <span class="ins-ec-name"><b>${plan.name}${tags}${!plan.userAdded&&plan.docId?`<button type="button" class="ins-eye" data-ins-preview="${index}" aria-label="Preview the ${plan.name} card" title="Preview card"><i data-lucide="eye"></i></button>`:''}</b><small>${plan.expired?'Not in billing order':planRank(index)}${plan.expired?'':why}${(()=>{const at=plan.checkedServices?.[svc];if(!at||checking)return '';const [day,time]=at.split(' · ');return `<span class="ins-ec-when-row">· Checked ${day===todayStamp()?`today, ${time}`:at}</span>`;})()}</small></span>
+        <span class="ins-ec-name"><b>${plan.name}${tags}</b><small>${plan.expired?'Not in billing order':planRank(index)}${plan.expired?'':why}${(()=>{const at=plan.checkedServices?.[svc];if(!at||checking)return '';const [day,time]=at.split(' · ');return `<span class="ins-ec-when-row">· Checked ${day===todayStamp()?`today, ${time}`:at}</span>`;})()}</small><span class="ins-ec-acts">${insRowActions(plan,index)}</span></span>
         ${showEc?`<span class="ins-ec-cell">${status}</span><span class="ins-ec-cell">${cover}</span>`:''}</div>
       ${open?`<div class="ins-one-detail">${note}<div class="ins-one-slot"></div></div>`:''}</div>`;
   }).join('');
@@ -1452,7 +1463,8 @@ function renderEcWhy(){
   const head=`<div class="ins-ec-row ins-ec-row-head"><span></span><span></span><span class="ins-ec-head-name">Insurance ${orderTag}</span>${showEc?'<span>Status</span><span>Service coverage</span>':''}</div>`;
   $('#insEcRows').innerHTML=`<div class="ins-ec-table ${showEc?'':'is-order-only'}">${head}<div class="ins-ec-hint"><i data-lucide="sparkles"></i><span>${box.innerHTML}${multi&&!confirmed?` ${insAiOrder()?'AI sorted the order':insurancePlans.every(plan=>plan.onFile)?'This is the order in the patient’s record':'AI couldn’t sort the order'}; drag a row to change it.`:''}</span></div>${rows}</div>`;
   const slot=$('#insEcRows .ins-one-slot');
-  if(slot)['#planAiNote','#insuranceFields','#planActions'].forEach(sel=>{const el=$(sel);if(el)slot.appendChild(el);});
+  if(slot)['#planAiNote','#insuranceFields'].forEach(sel=>{const el=$(sel);if(el)slot.appendChild(el);});
+  const pa=$('#planActions');if(slot&&pa)slot.appendChild(pa);   // kept for state; the row shows its own actions
   // After the table: ask the user to confirm the payer order, then the eligibility check below.
   $('#insEcOrder').innerHTML=!multi?''
     :`<label class="v2t-cob ${confirmed?'is-done':''}"><input type="checkbox" data-cob-toggle ${confirmed?'checked':''}><span><b>These are all of the patient’s current insurances, in billing order</b><small>Coordination of benefits: the primary is billed first, then the secondary. Ask about any other plan, such as a spouse’s plan or a new card, and add it with Add Insurance.</small></span><em>${confirmed?'Confirmed':'Required'}</em></label>`;

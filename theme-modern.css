@@ -230,3 +230,13 @@ body .review-area>.ai-review-guidance .guidance-actions{flex:0 0 auto;margin-lef
   body .review-area>.ai-review-guidance .guidance-actions{margin-left:0}
   body .review-area>.ai-review-guidance .guidance-icon{flex-basis:32px;width:32px;height:32px}
 }
+
+/* Cards and boxes use a subtle grey border, never a blue one */
+:root{--blue-line:var(--line);--ai-line:var(--line)}
+/* AI icons are just the icon: no blue circle or box behind them, at rest or on hover */
+body .ai-info,body .ai-info:hover,body .ai-info[aria-expanded=true]{background:transparent}
+body #nextPanel .recommendation-mark{background:transparent}
+
+/* Tooltips everywhere look like the AI explanation popover: white card, grey border, soft shadow */
+.app-tip{position:fixed;z-index:3000;max-width:min(300px,calc(100vw - 24px));padding:8px 12px;border:1px solid var(--line);border-radius:var(--fluent-corner-2,4px);background:var(--white,#fff);box-shadow:var(--fluent-depth-16,0 6px 14px rgba(0,0,0,.13));font-size:12px;font-weight:400;line-height:1.45;letter-spacing:0;text-transform:none;color:var(--text);pointer-events:none;white-space:normal}
+.app-tip[hidden]{display:none}
